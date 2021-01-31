@@ -382,7 +382,6 @@ const updateTouristSpot = async (req) => {
           oldCoverPhoto = { coverPhoto: touristSpotToEdit.coverPhoto };
           touristSpotToEdit.coverPhoto = req.body.coverPhoto;
         }
-
         touristSpotToEdit.name = req.body.name;
         touristSpotToEdit.completeAddress = `${req.body.barangay}, ${req.body.municipality}, ${req.body.city}`;
         touristSpotToEdit.address = {
@@ -424,25 +423,26 @@ const updateTouristSpot = async (req) => {
 };
 
 
+
 //NEW CHANGES.....
 const touristSpots = [
   {
     _id: "fake-tourist-spot-id",
     components: [
       {
-        _id: "text-1",
+        id: "text-1",
         type: "text",
         data: {
           text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-          style: ["text-center"]
         },
+        styles: ["text-center"]
       }, {
-        _id: "text-2",
+        id: "text-2",
         type: "text",
         data: {
           text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-          style: ["text-center"]
-        }
+        },
+        styles: ["text-center"]
       }
     ]
   }
@@ -452,4 +452,34 @@ module.exports.getDraftTouristSpotPage = (req, res) => {
   if (req.params.id == touristSpots[0]._id)
     return res.status(200).json(touristSpots[0])
   res.status(404).json({ message: "tourist spot not found" })
+}
+
+module.exports.addComponent = (req, res) => {
+  req.body['id'] = touristSpots[0].components.length + 1;
+  touristSpots[0].components.push(req.body)
+  console.log(touristSpots)
+  res.status(200).json(req.body)
+}
+
+
+module.exports.editComponent = (req, res) => {
+  let c = touristSpots[0].components;
+  touristSpots[0].components.forEach(comp => {
+    if (comp.id == req.params.id) {
+      touristSpots[0].components[c.indexOf(comp)] = req.body
+      console.log(touristSpots[0].components)
+      return res.status(200).json(req.body)
+    }
+  })
+  res.status(404).json({message: "not found"})
+
+}
+
+module.exports.deleteComponent = (req, res) => {
+  touristSpots[0].components = touristSpots[0].components.filter(comp => {
+    if (comp.id != req.params.id) {
+      return comp;
+    }
+  })
+  res.status(200).json({message: "successfully deleted!"})
 }

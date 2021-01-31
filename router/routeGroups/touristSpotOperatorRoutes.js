@@ -54,6 +54,9 @@ router.put(
 );
 
 router.get("/draftTouristSpotPage/:id", touristSpotCrud.getDraftTouristSpotPage)
+router.post("/addComponent", touristSpotCrud.addComponent)
+router.put("/editComponent/:id", touristSpotCrud.editComponent)
+router.delete("/deleteComponent/:id", touristSpotCrud.deleteComponent)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
