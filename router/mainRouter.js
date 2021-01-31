@@ -6,7 +6,7 @@ const checkIfAuthorized = require("../middlewares/checkIfAuthorized");
 
 router.use("/account", accountRoutes);
 router.use(
-  "/touristSpotOperator",
+  "/service-provider",
   checkIfAuthorized,
   touristSpotOperatorRoutes
 );

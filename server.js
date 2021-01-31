@@ -9,7 +9,7 @@ require("dotenv").config();
 const path = require("path");
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(dbConfig.online_db, {
+mongoose.connect(dbConfig.local_db, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
@@ -17,7 +17,7 @@ mongoose.connect(dbConfig.online_db, {
 
 var db = mongoose.connection;
 db.on("connected", () => {
-  console.log("connected to database" + dbConfig.online_db);
+  console.log("connected to database" + dbConfig.local_db);
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 

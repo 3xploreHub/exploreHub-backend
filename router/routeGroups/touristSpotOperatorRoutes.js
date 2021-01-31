@@ -53,5 +53,7 @@ router.put(
   touristSpotCrud.updateTouristSpot
 );
 
+router.get("/draftTouristSpotPage/:id", touristSpotCrud.getDraftTouristSpotPage)
+
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
