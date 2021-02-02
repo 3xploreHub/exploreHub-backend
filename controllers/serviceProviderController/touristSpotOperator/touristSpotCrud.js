@@ -434,7 +434,7 @@ const touristSpots = [
         type: "text",
         data: {
           text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-        },
+        }, 
         styles: ["text-center"]
       }, {
         id: "text-2",
@@ -446,7 +446,7 @@ const touristSpots = [
       }
     ]
   }
-]
+] 
 
 module.exports.getDraftTouristSpotPage = (req, res) => {
   if (req.params.id == touristSpots[0]._id)
@@ -457,7 +457,17 @@ module.exports.getDraftTouristSpotPage = (req, res) => {
 module.exports.addComponent = (req, res) => {
   req.body['id'] = touristSpots[0].components.length + 1;
   touristSpots[0].components.push(req.body)
-  console.log(touristSpots)
+  res.status(200).json(req.body)
+}
+
+module.exports.addComponenWithMedia = (req, res) => {
+  if (req.body.type == "photo") {
+    if (req.file) {
+      req.body['photo'] = req.file.filename;
+    }
+  }
+  req.body['id'] = touristSpots[0].components.length + 1;
+  touristSpots[0].components.push(req.body)
   res.status(200).json(req.body)
 }
 
