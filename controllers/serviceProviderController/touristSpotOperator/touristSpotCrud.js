@@ -424,17 +424,28 @@ const updateTouristSpot = async (req) => {
 
 
 
-//NEW CHANGES.....
+//NEW CHANGES.....====================================================
 const touristSpots = [
   {
     _id: "fake-tourist-spot-id",
     components: [
       {
+        id: "photo-1",
+        type: "photo",
+        data: [
+          {
+            _id: 0,
+            url: "http://localhost:3000/ExploreHub-1612618384958.png"
+          }
+        ],
+        styles: ["text-center"]
+      },
+      {
         id: "text-1",
         type: "text",
         data: {
           text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-        }, 
+        },
         styles: ["text-center"]
       }, {
         id: "text-2",
@@ -443,10 +454,11 @@ const touristSpots = [
           text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
         },
         styles: ["text-center"]
-      }
+      },
+
     ]
   }
-] 
+]
 
 module.exports.getDraftTouristSpotPage = (req, res) => {
   if (req.params.id == touristSpots[0]._id)
@@ -461,17 +473,33 @@ module.exports.addComponent = (req, res) => {
 }
 
 module.exports.addComponenWithMedia = (req, res) => {
-  console.log("THIS IS THE BODY========== ",req.file)
-  // if (req.body.type == "photo") {
-  //   if (req.file) {
-  //     req.body['photo'] = req.file.filename;
-  //   }
-  // }
-  // req.body['id'] = touristSpots[0].components.length + 1;
-  // touristSpots[0].components.push(req.body)
-  res.status(200).json({url: "http://localhost:3000/"+req.file.filename, _id:"123"})
-}
+  console.log("THIS IS THE BODY========== ", req.file)
 
+  let photo = {
+    url: "http://localhost:3000/" + req.file.filename,
+    _id: 0
+  };
+  let data = JSON.parse(req.body.values)
+  let done = false;
+  touristSpots[0].components.forEach(com => {
+    if (com.id == data.id) {
+      photo._id = com.data.length + 1;
+      com.data.push(photo);
+      touristSpots[0].components[touristSpots[0].components.indexOf(com)] = com;
+      done = true;
+    }
+  })
+  if (!done) {
+    data.data = [photo];
+    data.id = touristSpots[0].components.length + 1;
+    touristSpots[0].components.push(data)
+  }
+  touristSpots[0].components.forEach(d => {
+    if (d.id == data.id) {
+      res.status(200).json(d);
+    }
+  })
+}
 
 module.exports.editComponent = (req, res) => {
   let c = touristSpots[0].components;
@@ -482,7 +510,7 @@ module.exports.editComponent = (req, res) => {
       return res.status(200).json(req.body)
     }
   })
-  res.status(404).json({message: "not found"})
+  res.status(404).json({ message: "not found" })
 
 }
 
@@ -492,5 +520,19 @@ module.exports.deleteComponent = (req, res) => {
       return comp;
     }
   })
-  res.status(200).json({message: "successfully deleted!"})
+  res.status(200).json({ message: "successfully deleted!" })
+}
+
+module.exports.deleteImage = (req, res) => {
+  touristSpots[0].components = touristSpots[0].components.filter(comp => {
+    if (comp.id == req.body.componentId) {
+      comp = comp.data.filter(image => {
+        if (image._id != req.body.imageId) {
+          return image;
+        }
+      })
+    }
+    return comp;
+  })
+  res.status(200).json({ message: "deleted" })
 }

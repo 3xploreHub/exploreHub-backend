@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
     } else {
       cb("Invalid file type!", null);
     }
-    cb(null, "tourmeimage-" + Date.now() + "." + filetype);
+    cb(null, "ExploreHub-" + Date.now() + "." + filetype);
   },
 });
 

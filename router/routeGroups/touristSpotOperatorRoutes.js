@@ -58,6 +58,7 @@ router.post("/addComponent", touristSpotCrud.addComponent)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
 router.delete("/deleteComponent/:id", touristSpotCrud.deleteComponent)
 router.post("/addComponentWithMedia", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
+router.post("/deleteImage", touristSpotCrud.deleteImage)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
