@@ -461,14 +461,15 @@ module.exports.addComponent = (req, res) => {
 }
 
 module.exports.addComponenWithMedia = (req, res) => {
-  if (req.body.type == "photo") {
-    if (req.file) {
-      req.body['photo'] = req.file.filename;
-    }
-  }
-  req.body['id'] = touristSpots[0].components.length + 1;
-  touristSpots[0].components.push(req.body)
-  res.status(200).json(req.body)
+  console.log("THIS IS THE BODY========== ",req.file)
+  // if (req.body.type == "photo") {
+  //   if (req.file) {
+  //     req.body['photo'] = req.file.filename;
+  //   }
+  // }
+  // req.body['id'] = touristSpots[0].components.length + 1;
+  // touristSpots[0].components.push(req.body)
+  res.status(200).json({url: "http://localhost:3000/"+req.file.filename, _id:"123"})
 }
 
 

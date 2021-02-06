@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
-const path = require("path");
+const multer = require("multer");
 
 mongoose.set("useCreateIndex", true);
 mongoose.connect(dbConfig.local_db, {
@@ -21,6 +21,8 @@ db.on("connected", () => {
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
+// app.use(express.static(__dirname+'/uploads'));
+
 app.use(morgan("common"));
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -31,11 +33,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/static", express.static(path.join(__dirname, "uploads")));
-console.log(__dirname);
+var publicDir = require('path').join(__dirname, '/uploads');
+app.use(express.static(publicDir));
+
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
+// app.use(multer().array())
 
 app.use("/api", require("./router/mainRouter"));
 

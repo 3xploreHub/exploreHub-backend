@@ -46,7 +46,7 @@ router.put(
   uploadImage.uploadMulitpleImage,
   touristSpotCrud.addOtherFacility
 );
-
+  
 router.put(
   "/updateTouristSpot/:id",
   uploadImage.uploadSingleImage,
@@ -57,7 +57,7 @@ router.get("/draftTouristSpotPage/:id", touristSpotCrud.getDraftTouristSpotPage)
 router.post("/addComponent", touristSpotCrud.addComponent)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
 router.delete("/deleteComponent/:id", touristSpotCrud.deleteComponent)
-router.post("/addComponenWithMedia", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
+router.post("/addComponentWithMedia", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
