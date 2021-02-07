@@ -6,6 +6,7 @@
 // }
 
 const { json } = require("body-parser");
+const { ComponentModel } = require("../../../models/commonSchemas/component");
 const {
   extraServiceModel,
 } = require("../../../models/commonSchemas/extraService");
@@ -15,9 +16,9 @@ const {
 } = require("../../../models/commonSchemas/otherFacility");
 const { regulationModel } = require("../../../models/commonSchemas/regulation");
 const { roomModel } = require("../../../models/commonSchemas/room");
-const touristSpot = require("../../../models/touristSpot");
 const TouristSpot = require("../../../models/touristSpot");
 const touristSpotCategory = require("../../../models/touristSpotCategory");
+const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 const commonFunctions = require("./commonFunctions");
 
@@ -71,7 +72,6 @@ module.exports.createTouristSpot = async (req, res) => {
     commonFunctions.handleError(
       error,
       res,
-      "Error in creating new tourist spot: "
     );
   }
 };
@@ -228,10 +228,9 @@ module.exports.addRegulation = async (req, res) => {
       req.params.id,
       res,
       { regulations: validatedRegulation },
-      "regulation"
     );
   } catch (error) {
-    commonFunctions.handleError(error, res, "Error in adding regulation: ");
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -253,10 +252,9 @@ module.exports.addRoom = async (req, res) => {
       req.params.id,
       res,
       { rooms: validatedRoom },
-      "room"
     );
   } catch (error) {
-    commonFunctions.handleError(error, res, "Error in adding room: ");
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -275,10 +273,9 @@ module.exports.addFeature = async (req, res) => {
       req.params.id,
       res,
       { features: validatedFeature },
-      "room"
     );
   } catch (error) {
-    commonFunctions.handleError(error, res, "Error in adding feature: ");
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -298,14 +295,9 @@ module.exports.addExtraService = async (req, res) => {
       req.params.id,
       res,
       { extraServices: validatedExtraService },
-      "extra service"
     );
   } catch (error) {
-    commonFunctions.handleError(
-      error,
-      res,
-      "Error in adding the extra service: "
-    );
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -328,10 +320,9 @@ module.exports.addOtherFacility = async (req, res) => {
       req.params.id,
       res,
       { otherFacilities: validatedFacility },
-      "facility"
     );
   } catch (error) {
-    commonFunctions.handleError(error, res, "Error in adding facility: ");
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -360,7 +351,7 @@ module.exports.updateTouristSpot = async (req, res) => {
     const updateResult = await updateTouristSpot(req);
     res.status(200).json(updateResult);
   } catch (error) {
-    commonFunctions.handleError(error, res, "Error in updating tourist spot");
+    commonFunctions.handleError(error, res);
   }
 };
 
@@ -460,16 +451,16 @@ const touristSpots = [
   }
 ]
 
-module.exports.getDraftTouristSpotPage = (req, res) => {
-  if (req.params.id == touristSpots[0]._id)
-    return res.status(200).json(touristSpots[0])
-  res.status(404).json({ message: "tourist spot not found" })
-}
 
-module.exports.addComponent = (req, res) => {
-  req.body['id'] = touristSpots[0].components.length + 1;
-  touristSpots[0].components.push(req.body)
-  res.status(200).json(req.body)
+module.exports.addComponent = async (req, res) => {
+  try {
+    const validatedComponent = await ComponentModel.validate(req.body);
+    commonFunctions.add(TouristSpotPage, req.params.id, res, {
+      $addToSet: { components: validatedComponent }
+    });
+  } catch (error) {
+    commonFunctions.handleError(error, res);
+  }
 }
 
 module.exports.addComponenWithMedia = (req, res) => {
@@ -502,26 +493,41 @@ module.exports.addComponenWithMedia = (req, res) => {
 }
 
 module.exports.editComponent = (req, res) => {
-  let c = touristSpots[0].components;
-  touristSpots[0].components.forEach(comp => {
-    if (comp.id == req.params.id) {
-      touristSpots[0].components[c.indexOf(comp)] = req.body
-      console.log(touristSpots[0].components)
-      return res.status(200).json(req.body)
-    }
-  })
-  res.status(404).json({ message: "not found" })
-
+  TouristSpotPage.findById(req.params.id).then(doc => {
+    component = doc.components.id(req.body._id);
+    component["data"] = req.body.data;
+    component["style"] = req.body.styles;
+    doc.save().then((page, error) => {
+      if (error) {
+        return res.status(500).json({ type: 'internal_error', error: error })
+      }
+      res.status(200).json(component);
+    })
+  }).catch(err => {
+    console.log(err)
+    res.status(500).json({ type: "internal_error", error: err })
+  });
 }
 
 module.exports.deleteComponent = (req, res) => {
-  touristSpots[0].components = touristSpots[0].components.filter(comp => {
-    if (comp.id != req.params.id) {
-      return comp;
-    }
-  })
-  res.status(200).json({ message: "successfully deleted!" })
+  // try {
+  //   commonFunctions.add(TouristSpotPage, req.params.id, res, {
+  //     $pull: { 'components' : { '_id': ''+req.params.componentId+'' } }
+  //   }, false);
+  // } catch (error) {
+  //   console.log(error)
+  //   commonFunctions.handleError(error, res);
+  // }
+  TouristSpotPage.findById(req.params.id)
+    .then(page => {
+      page.components.pull(req.params.componentId)
+      page.save().then((error, result) => {
+        if (error) return res.status({ type: "internal_error", error: error })
+        res.status(200).json(result)
+      });
+    })
 }
+
 
 module.exports.deleteImage = (req, res) => {
   touristSpots[0].components = touristSpots[0].components.filter(comp => {
@@ -529,6 +535,8 @@ module.exports.deleteImage = (req, res) => {
       comp = comp.data.filter(image => {
         if (image._id != req.body.imageId) {
           return image;
+        } else {
+          deleteImage(image.url.split("/")[image.url.split("/").length - 1])
         }
       })
     }
@@ -536,3 +544,36 @@ module.exports.deleteImage = (req, res) => {
   })
   res.status(200).json({ message: "deleted" })
 }
+
+
+module.exports.createTouristSpotPage = (req, res) => {
+  const page = new TouristSpotPage();
+  page.creator = req.user._id;
+  page.save().then((createPage, error) => {
+    if (error) {
+      return res.status(500).json({
+        type: "internal_error",
+        message: "Unexpected error occured!",
+        error: error
+      })
+    }
+    res.status(200).json(createPage)
+  })
+}
+
+module.exports.retrieveToristSpotPage = (req, res) => {
+  TouristSpotPage.findById(req.params.id).then((page, error) => {
+    if (error) {
+      return res.status(500).json({
+        type: "internal_error",
+        message: "unexpected error occured!",
+        error: error
+      });
+    }
+    if (!page) {
+      return res.status(404).json({ type: "not_found" })
+    }
+    res.status(200).json(page);
+  })
+}
+

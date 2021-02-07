@@ -33,27 +33,28 @@ module.exports.retrieve = (
     });
 };
 
-module.exports.add = (model, touristSpotId, res, data, type) => {
+module.exports.add = (model, touristSpotId, res, data, returnData=true) => {
   model.findByIdAndUpdate(
     touristSpotId,
-    {
-      $addToSet: data,
-    },
+    data,
     { upsert: true },
-    function (err, updatedTouristSpot) {
+    function (err, result) {
       if (err) {
+        console.log("error= ", err)
         return res.status(500).json({
           type: "internal_error",
-          message: `has error in adding ${type}`,
           error: err,
         });
       }
-      res.status(200).json(updatedTouristSpot);
+      if (returnData) {
+        result = Object.values(Object.values(data)[0])[0];
+      }
+      res.status(200).json(result);
     }
   );
 };
 
-module.exports.handleError = (error, res, errorMessage) => {
+module.exports.handleError = (error, res) => {
   if (error.type == "validation_error") {
     return res.status(400).json(error);
   } else if (error.type == "unauthorized") {
@@ -67,7 +68,7 @@ module.exports.handleError = (error, res, errorMessage) => {
       message: "Object was not found",
     });
   }
-  console.error(errorMessage, error);
+  console.log(error)
   res.status(500).json({
     type: "internal_error",
     message: "unexpected error occured",

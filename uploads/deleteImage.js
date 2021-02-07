@@ -1,4 +1,3 @@
-// include node fs module
 var fs = require("fs");
 
 module.exports = (file) => {
