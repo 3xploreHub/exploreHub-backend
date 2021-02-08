@@ -53,13 +53,14 @@ router.put(
   touristSpotCrud.updateTouristSpot
 );
 
+router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
 router.post("/addComponent/:id", touristSpotCrud.addComponent)
-router.put("/editComponent/:id", touristSpotCrud.editComponent)
-router.delete("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
-router.post("/addComponentWithMedia", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
-router.post("/deleteImage", touristSpotCrud.deleteImage)
-router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)//retrieveToristSpotPage
 router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
+router.put("/editComponent/:id", touristSpotCrud.editComponent)
+router.post("/addComponentWithMedia/:id", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
+router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
+router.delete("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
+
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

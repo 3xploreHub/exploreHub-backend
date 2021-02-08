@@ -6,11 +6,14 @@
 // }
 
 const { json } = require("body-parser");
+const mongoose = require("mongoose");
+const { restart } = require("nodemon");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
 const {
   extraServiceModel,
 } = require("../../../models/commonSchemas/extraService");
 const { FeatureModel } = require("../../../models/commonSchemas/feature");
+const { ImageModel } = require("../../../models/commonSchemas/image");
 const {
   otherFacilityModel,
 } = require("../../../models/commonSchemas/otherFacility");
@@ -416,46 +419,16 @@ const updateTouristSpot = async (req) => {
 
 
 //NEW CHANGES.....====================================================
-const touristSpots = [
-  {
-    _id: "fake-tourist-spot-id",
-    components: [
-      {
-        id: "photo-1",
-        type: "photo",
-        data: [
-          {
-            _id: 0,
-            url: "http://localhost:3000/ExploreHub-1612618384958.png"
-          }
-        ],
-        styles: ["text-center"]
-      },
-      {
-        id: "text-1",
-        type: "text",
-        data: {
-          text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-        },
-        styles: ["text-center"]
-      }, {
-        id: "text-2",
-        type: "text",
-        data: {
-          text: "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Fuga cupiditate, ad ut dolores eligendi iure non necessitatibus corrupti ea quis?",
-        },
-        styles: ["text-center"]
-      },
 
-    ]
-  }
-]
+module.exports.addComponent = (req, res) => {
+  addNewComponent(req.body, req.params.id, res);
+}
 
-
-module.exports.addComponent = async (req, res) => {
+async function addNewComponent(component, touristSpotId, res) {
   try {
-    const validatedComponent = await ComponentModel.validate(req.body);
-    commonFunctions.add(TouristSpotPage, req.params.id, res, {
+    delete component._id;
+    const validatedComponent = await ComponentModel.validate(component);
+    commonFunctions.add(TouristSpotPage, touristSpotId, res, {
       $addToSet: { components: validatedComponent }
     });
   } catch (error) {
@@ -464,85 +437,60 @@ module.exports.addComponent = async (req, res) => {
 }
 
 module.exports.addComponenWithMedia = (req, res) => {
-  console.log("THIS IS THE BODY========== ", req.file)
+  const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
 
-  let photo = {
-    url: "http://localhost:3000/" + req.file.filename,
-    _id: 0
-  };
-  let data = JSON.parse(req.body.values)
-  let done = false;
-  touristSpots[0].components.forEach(com => {
-    if (com.id == data.id) {
-      photo._id = com.data.length + 1;
-      com.data.push(photo);
-      touristSpots[0].components[touristSpots[0].components.indexOf(com)] = com;
-      done = true;
-    }
-  })
-  if (!done) {
-    data.data = [photo];
-    data.id = touristSpots[0].components.length + 1;
-    touristSpots[0].components.push(data)
+  let component = JSON.parse(req.body.values)
+  console.log("image component: ", component)
+  if (component._id) {
+
+  } else {
+    component.data = [newImage];
+    addNewComponent(component, req.params.id, res);
   }
-  touristSpots[0].components.forEach(d => {
-    if (d.id == data.id) {
-      res.status(200).json(d);
-    }
-  })
 }
 
-module.exports.editComponent = (req, res) => {
-  TouristSpotPage.findById(req.params.id).then(doc => {
-    component = doc.components.id(req.body._id);
-    component["data"] = req.body.data;
-    component["style"] = req.body.styles;
-    doc.save().then((page, error) => {
-      if (error) {
-        return res.status(500).json({ type: 'internal_error', error: error })
+module.exports.editComponent = async (req, res) => {
+  try {
+    const validComponent = await ComponentModel.validate(req.body);
+    TouristSpotPage.update({ "_id": req.params.id, "components._id": req.body._id },
+      { $set: { "components.$.data": validComponent.data, "components.$.styles": validComponent.styles } })
+      .then(result => {
+        res.status(200).json({ message: "Component successfully updated", result: result });
+      }).catch(error => {
+        return res.status(500).json({ type: 'internal_error!', error: error });
+      })
+  } catch (error) {
+    commonFunctions.handleError(error, res)
+  }
+}
+
+module.exports.deleteComponent = async (req, res) => {
+  deleteItem({ _id: req.params.id }, { 'components': { '_id': req.params.componentId } }, res)
+}
+
+function deleteItem(query, condition, res) {
+  TouristSpotPage.updateOne(
+    query,
+    {
+      $pull: condition
+    }, { multi: true }, function (err, numberAffected) {
+      if (err) {
+        return res.status(500).json({ type: "internal_error", error: err });
       }
-      res.status(200).json(component);
-    })
-  }).catch(err => {
-    console.log(err)
-    res.status(500).json({ type: "internal_error", error: err })
-  });
-}
-
-module.exports.deleteComponent = (req, res) => {
-  // try {
-  //   commonFunctions.add(TouristSpotPage, req.params.id, res, {
-  //     $pull: { 'components' : { '_id': ''+req.params.componentId+'' } }
-  //   }, false);
-  // } catch (error) {
-  //   console.log(error)
-  //   commonFunctions.handleError(error, res);
-  // }
-  TouristSpotPage.findById(req.params.id)
-    .then(page => {
-      page.components.pull(req.params.componentId)
-      page.save().then((error, result) => {
-        if (error) return res.status({ type: "internal_error", error: error })
-        res.status(200).json(result)
-      });
-    })
+      res.status(200).json({
+        message: "Component successfully deleted",
+        result: numberAffected
+      })
+    });
 }
 
 
 module.exports.deleteImage = (req, res) => {
-  touristSpots[0].components = touristSpots[0].components.filter(comp => {
-    if (comp.id == req.body.componentId) {
-      comp = comp.data.filter(image => {
-        if (image._id != req.body.imageId) {
-          return image;
-        } else {
-          deleteImage(image.url.split("/")[image.url.split("/").length - 1])
-        }
-      })
-    }
-    return comp;
-  })
-  res.status(200).json({ message: "deleted" })
+  console.log("component id: ", req.body.component._id)
+  console.log("component ids: ", req.params.id)
+  console.log("component id: ", req.body.imageToDelete)
+  deleteItem({ _id: req.params.id, 'components._id': req.body.component._id },
+    { 'components.$.data': { '_id': req.body.imageToDelete } }, res)
 }
 
 

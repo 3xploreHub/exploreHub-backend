@@ -3,6 +3,7 @@ const deleteImage = require("../uploads/deleteImage");
 module.exports = (objSchema, value) => {
   return new Promise((resolve, reject) => {
     //check if tourist spot is existing....
+    
     const newObject = new objSchema(value);
     const validationError = newObject.validateSync();
 
