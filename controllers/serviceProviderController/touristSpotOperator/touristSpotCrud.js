@@ -459,14 +459,13 @@ module.exports.deleteComponent = async (req, res) => {
 }
 
 module.exports.deleteImage = (req, res) => {
-  helper.editComponent(TouristSpotPage, req.params.id, req.body.component._id,
+  helper.editComponent(TouristSpotPage, req.params.id, req.body.componentId,
     {
       $pull: {
-        "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageToDelete) },
+        "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
       }
-    }, res, { message: "Image successfully deleted" });
+    }, res, { imageUrl: req.body.imageUrl, message: "Successfull deleted" }, helper.deleteImage);
 }
-
 
 module.exports.createTouristSpotPage = (req, res) => {
   const page = new TouristSpotPage();

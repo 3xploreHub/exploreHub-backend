@@ -1,4 +1,5 @@
 const { ComponentModel } = require("../../../models/commonSchemas/component");
+const deleteImage = require("../../../uploads/deleteImage");
 
 module.exports.retrieve = (
   model,
@@ -69,10 +70,11 @@ module.exports.addNewComponent = async (model, component, id, res) => {
   }
 }
 
-module.exports.editComponent = (model, id, _id, data, res, newData) => {
+module.exports.editComponent = (model, id, _id, data, res, newData, deleteImage = null) => {
   model.updateOne({ "_id": id, "components._id": _id },
     data)
     .then(result => {
+      if (deleteImage) deleteImage(newData.imageUrl)
       res.status(200).json(newData);
     }).catch(error => {
       res.status(500).json({ type: 'internal_error!', error: error });
@@ -95,21 +97,10 @@ module.exports.deleteItem = (model, query, condition, res) => {
     });
 }
 
-module.exports.addNewImage = (model, id, component, res) => {
-  model.updateOne(
-    id,
-    component,
-    function (err, result) {
-      if (err) {
-        console.log("error= ", err)
-        return res.status(500).json({
-          type: "internal_error",
-          error: err,
-        });
-      }
-      res.status(200).json(result);
-    }
-  );
+module.exports.deleteImage = (image) => {
+  let img = image.split("/");
+  deleteImage(img[img.length-1]);
+  console.log(image);
 }
 
 const handleError = (error, res) => {
