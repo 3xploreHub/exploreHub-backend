@@ -1,3 +1,5 @@
+const { ComponentModel } = require("../../../models/commonSchemas/component");
+
 module.exports.retrieve = (
   model,
   res,
@@ -33,7 +35,7 @@ module.exports.retrieve = (
     });
 };
 
-module.exports.add = (model, touristSpotId, res, data, returnData=true) => {
+const add = (model, touristSpotId, res, data, returnData = true) => {
   model.findByIdAndUpdate(
     touristSpotId,
     data,
@@ -53,8 +55,64 @@ module.exports.add = (model, touristSpotId, res, data, returnData=true) => {
     }
   );
 };
+module.exports.add = add;
 
-module.exports.handleError = (error, res) => {
+module.exports.addNewComponent = async (model, component, id, res) => {
+  try {
+    delete component._id;
+    const validatedComponent = await ComponentModel.validate(component);
+    add(model, id, res, {
+      $addToSet: { components: validatedComponent }
+    });
+  } catch (error) {
+    handleError(error, res);
+  }
+}
+
+module.exports.editComponent = (model, id, _id, data, res, newData) => {
+  model.updateOne({ "_id": id, "components._id": _id },
+    data)
+    .then(result => {
+      res.status(200).json(newData);
+    }).catch(error => {
+      res.status(500).json({ type: 'internal_error!', error: error });
+    })
+}
+
+module.exports.deleteItem = (model, query, condition, res) => {
+  model.updateOne(
+    query,
+    {
+      $pull: condition
+    }, function (err, numberAffected) {
+      if (err) {
+        return res.status(500).json({ type: "internal_error", error: err });
+      }
+      res.status(200).json({
+        message: "Component successfully deleted",
+        result: numberAffected
+      })
+    });
+}
+
+module.exports.addNewImage = (model, id, component, res) => {
+  model.updateOne(
+    id,
+    component,
+    function (err, result) {
+      if (err) {
+        console.log("error= ", err)
+        return res.status(500).json({
+          type: "internal_error",
+          error: err,
+        });
+      }
+      res.status(200).json(result);
+    }
+  );
+}
+
+const handleError = (error, res) => {
   if (error.type == "validation_error") {
     return res.status(400).json(error);
   } else if (error.type == "unauthorized") {
@@ -75,3 +133,5 @@ module.exports.handleError = (error, res) => {
     error: error.error,
   });
 };
+
+module.exports.handleError = handleError;

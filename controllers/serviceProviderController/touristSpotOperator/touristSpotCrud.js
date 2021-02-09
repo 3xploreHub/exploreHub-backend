@@ -23,7 +23,7 @@ const TouristSpot = require("../../../models/touristSpot");
 const touristSpotCategory = require("../../../models/touristSpotCategory");
 const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
-const commonFunctions = require("./commonFunctions");
+const helper = require("./helper");
 
 //formdata
 //
@@ -72,7 +72,7 @@ module.exports.createTouristSpot = async (req, res) => {
     const result = await saveTouristSpot(validationResult, newTouristSpot);
     res.status(200).json(result.data);
   } catch (error) {
-    commonFunctions.handleError(
+    helper.handleError(
       error,
       res,
     );
@@ -184,7 +184,7 @@ function deleteCoverPhoto(object) {
 
 //{{url}}/touristSpotOperator/retrieveAllToristSpotCategories
 module.exports.retrieveAllToristSpot = (req, res) => {
-  commonFunctions.retrieve(
+  helper.retrieve(
     TouristSpot,
     res,
     {},
@@ -195,7 +195,7 @@ module.exports.retrieveAllToristSpot = (req, res) => {
 
 //{{url}}/touristSpotOperator/retrieveTouristSpotByCategory/5fe5a947bc241532f03a055c
 module.exports.retrieveTouristSpotByCategory = (req, res) => {
-  commonFunctions.retrieve(
+  helper.retrieve(
     TouristSpot,
     res,
     { category: req.params.id },
@@ -206,7 +206,7 @@ module.exports.retrieveTouristSpotByCategory = (req, res) => {
 
 //{{url}}/touristSpotOperator/retrieveTouristSpot/5fe5b1ecfbdb14361cddb356
 module.exports.retrieveTouristSpot = (req, res) => {
-  commonFunctions.retrieve(
+  helper.retrieve(
     TouristSpot,
     res,
     { _id: req.params.id },
@@ -226,14 +226,14 @@ module.exports.retrieveTouristSpot = (req, res) => {
 module.exports.addRegulation = async (req, res) => {
   try {
     const validatedRegulation = await regulationModel.validate(req.body);
-    commonFunctions.add(
+    helper.add(
       TouristSpot,
       req.params.id,
       res,
       { regulations: validatedRegulation },
     );
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -250,14 +250,14 @@ module.exports.addRoom = async (req, res) => {
     const images = req.files.map((file) => file.filename);
     req.body["images"] = images;
     const validatedRoom = await roomModel.validate(req.body);
-    commonFunctions.add(
+    helper.add(
       TouristSpot,
       req.params.id,
       res,
       { rooms: validatedRoom },
     );
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -271,14 +271,14 @@ module.exports.addFeature = async (req, res) => {
       req.body["photo"] = req.file.filename;
     }
     const validatedFeature = await FeatureModel.validate(req.body);
-    commonFunctions.add(
+    helper.add(
       TouristSpot,
       req.params.id,
       res,
       { features: validatedFeature },
     );
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -293,14 +293,14 @@ module.exports.addFeature = async (req, res) => {
 module.exports.addExtraService = async (req, res) => {
   try {
     const validatedExtraService = await extraServiceModel.validate(req.body);
-    commonFunctions.add(
+    helper.add(
       TouristSpot,
       req.params.id,
       res,
       { extraServices: validatedExtraService },
     );
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -318,14 +318,14 @@ module.exports.addOtherFacility = async (req, res) => {
     const images = req.files.map((file) => file.filename);
     req.body["images"] = images;
     const validatedFacility = await otherFacilityModel.validate(req.body);
-    commonFunctions.add(
+    helper.add(
       TouristSpot,
       req.params.id,
       res,
       { otherFacilities: validatedFacility },
     );
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -354,7 +354,7 @@ module.exports.updateTouristSpot = async (req, res) => {
     const updateResult = await updateTouristSpot(req);
     res.status(200).json(updateResult);
   } catch (error) {
-    commonFunctions.handleError(error, res);
+    helper.handleError(error, res);
   }
 };
 
@@ -421,76 +421,50 @@ const updateTouristSpot = async (req) => {
 //NEW CHANGES.....====================================================
 
 module.exports.addComponent = (req, res) => {
-  addNewComponent(req.body, req.params.id, res);
+  helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
 }
 
-async function addNewComponent(component, touristSpotId, res) {
-  try {
-    delete component._id;
-    const validatedComponent = await ComponentModel.validate(component);
-    commonFunctions.add(TouristSpotPage, touristSpotId, res, {
-      $addToSet: { components: validatedComponent }
-    });
-  } catch (error) {
-    commonFunctions.handleError(error, res);
-  }
-}
 
 module.exports.addComponenWithMedia = (req, res) => {
   const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
-
   let component = JSON.parse(req.body.values)
-  console.log("image component: ", component)
+  component.data = [newImage];
   if (component._id) {
-
+    helper.editComponent(TouristSpotPage, req.params.id, component._id,
+      { $push: { "components.$.data": newImage } }, res, component);
   } else {
-    component.data = [newImage];
-    addNewComponent(component, req.params.id, res);
+    helper.addNewComponent(TouristSpotPage, component, req.params.id, res);
   }
 }
 
 module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    TouristSpotPage.update({ "_id": req.params.id, "components._id": req.body._id },
-      { $set: { "components.$.data": validComponent.data, "components.$.styles": validComponent.styles } })
-      .then(result => {
-        res.status(200).json({ message: "Component successfully updated", result: result });
-      }).catch(error => {
-        return res.status(500).json({ type: 'internal_error!', error: error });
-      })
+    helper.editComponent(TouristSpotPage, req.params.id, req.body._id,
+      {
+        $set: {
+          "components.$.data": validComponent.data,
+          "components.$.styles": validComponent.styles
+        }
+      }, res, validComponent);
   } catch (error) {
-    commonFunctions.handleError(error, res)
+    helper.handleError(error, res)
   }
 }
 
 module.exports.deleteComponent = async (req, res) => {
-  deleteItem({ _id: req.params.id }, { 'components': { '_id': req.params.componentId } }, res)
+  helper.deleteItem(TouristSpotPage,
+    { _id: req.params.id },
+    { 'components': { '_id': req.params.componentId } }, res)
 }
-
-function deleteItem(query, condition, res) {
-  TouristSpotPage.updateOne(
-    query,
-    {
-      $pull: condition
-    }, { multi: true }, function (err, numberAffected) {
-      if (err) {
-        return res.status(500).json({ type: "internal_error", error: err });
-      }
-      res.status(200).json({
-        message: "Component successfully deleted",
-        result: numberAffected
-      })
-    });
-}
-
 
 module.exports.deleteImage = (req, res) => {
-  console.log("component id: ", req.body.component._id)
-  console.log("component ids: ", req.params.id)
-  console.log("component id: ", req.body.imageToDelete)
-  deleteItem({ _id: req.params.id, 'components._id': req.body.component._id },
-    { 'components.$.data': { '_id': req.body.imageToDelete } }, res)
+  helper.editComponent(TouristSpotPage, req.params.id, req.body.component._id,
+    {
+      $pull: {
+        "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageToDelete) },
+      }
+    }, res, { message: "Image successfully deleted" });
 }
 
 
