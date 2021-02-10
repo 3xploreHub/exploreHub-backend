@@ -226,7 +226,7 @@ module.exports.retrieveTouristSpot = (req, res) => {
 module.exports.addRegulation = async (req, res) => {
   try {
     const validatedRegulation = await regulationModel.validate(req.body);
-    helper.add(
+    helper.addComponent(
       TouristSpot,
       req.params.id,
       res,
@@ -250,7 +250,7 @@ module.exports.addRoom = async (req, res) => {
     const images = req.files.map((file) => file.filename);
     req.body["images"] = images;
     const validatedRoom = await roomModel.validate(req.body);
-    helper.add(
+    helper.addComponent(
       TouristSpot,
       req.params.id,
       res,
@@ -271,7 +271,7 @@ module.exports.addFeature = async (req, res) => {
       req.body["photo"] = req.file.filename;
     }
     const validatedFeature = await FeatureModel.validate(req.body);
-    helper.add(
+    helper.addComponent(
       TouristSpot,
       req.params.id,
       res,
@@ -293,7 +293,7 @@ module.exports.addFeature = async (req, res) => {
 module.exports.addExtraService = async (req, res) => {
   try {
     const validatedExtraService = await extraServiceModel.validate(req.body);
-    helper.add(
+    helper.addComponent(
       TouristSpot,
       req.params.id,
       res,
@@ -318,7 +318,7 @@ module.exports.addOtherFacility = async (req, res) => {
     const images = req.files.map((file) => file.filename);
     req.body["images"] = images;
     const validatedFacility = await otherFacilityModel.validate(req.body);
-    helper.add(
+    helper.addComponent(
       TouristSpot,
       req.params.id,
       res,
@@ -455,7 +455,7 @@ module.exports.editComponent = async (req, res) => {
 module.exports.deleteComponent = async (req, res) => {
   helper.deleteItem(TouristSpotPage,
     { _id: req.params.id },
-    { 'components': { '_id': req.params.componentId } }, res)
+    { 'components': { '_id': req.params.componentId } }, res, req.body.images)
 }
 
 module.exports.deleteImage = (req, res) => {
@@ -464,7 +464,7 @@ module.exports.deleteImage = (req, res) => {
       $pull: {
         "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
       }
-    }, res, { imageUrl: req.body.imageUrl, message: "Successfull deleted" }, helper.deleteImage);
+    }, res, { imageUrl: req.body.imageUrl, message: "Successfull deleted" }, helper.deletePhoto);
 }
 
 module.exports.createTouristSpotPage = (req, res) => {

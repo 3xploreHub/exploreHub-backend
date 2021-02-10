@@ -59,7 +59,7 @@ router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
 router.post("/addComponentWithMedia/:id", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
 router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
-router.delete("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
+router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
 
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);

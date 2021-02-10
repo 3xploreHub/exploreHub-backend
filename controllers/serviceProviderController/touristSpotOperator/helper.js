@@ -36,7 +36,7 @@ module.exports.retrieve = (
     });
 };
 
-const add = (model, touristSpotId, res, data, returnData = true) => {
+const addComponent = (model, touristSpotId, res, data, returnData = true) => {
   model.findByIdAndUpdate(
     touristSpotId,
     data,
@@ -56,13 +56,13 @@ const add = (model, touristSpotId, res, data, returnData = true) => {
     }
   );
 };
-module.exports.add = add;
+module.exports.addComponent = addComponent;
 
 module.exports.addNewComponent = async (model, component, id, res) => {
   try {
     delete component._id;
     const validatedComponent = await ComponentModel.validate(component);
-    add(model, id, res, {
+    addComponent(model, id, res, {
       $addToSet: { components: validatedComponent }
     });
   } catch (error) {
@@ -70,18 +70,18 @@ module.exports.addNewComponent = async (model, component, id, res) => {
   }
 }
 
-module.exports.editComponent = (model, id, _id, data, res, newData, deleteImage = null) => {
+module.exports.editComponent = (model, id, _id, data, res, newData, deleteImg = null) => {
   model.updateOne({ "_id": id, "components._id": _id },
     data)
     .then(result => {
-      if (deleteImage) deleteImage(newData.imageUrl)
+      if (deleteImg) deleteImg(newData.imageUrl)
       res.status(200).json(newData);
     }).catch(error => {
       res.status(500).json({ type: 'internal_error!', error: error });
     })
 }
 
-module.exports.deleteItem = (model, query, condition, res) => {
+module.exports.deleteItem = (model, query, condition, res, images) => {
   model.updateOne(
     query,
     {
@@ -90,6 +90,11 @@ module.exports.deleteItem = (model, query, condition, res) => {
       if (err) {
         return res.status(500).json({ type: "internal_error", error: err });
       }
+      if (images) {
+        images.forEach(image => {
+          deletePhoto(image);
+        });
+      }
       res.status(200).json({
         message: "Component successfully deleted",
         result: numberAffected
@@ -97,11 +102,11 @@ module.exports.deleteItem = (model, query, condition, res) => {
     });
 }
 
-module.exports.deleteImage = (image) => {
+const deletePhoto = (image) => {
   let img = image.split("/");
   deleteImage(img[img.length-1]);
-  console.log(image);
 }
+module.exports.deletePhoto = deletePhoto;
 
 const handleError = (error, res) => {
   if (error.type == "validation_error") {
@@ -124,5 +129,4 @@ const handleError = (error, res) => {
     error: error.error,
   });
 };
-
 module.exports.handleError = handleError;
