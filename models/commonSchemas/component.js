@@ -7,6 +7,7 @@ const Component = new Schema({
   type: { type: String, required: [true, "Component type is required"] },
   styles: { type: Array, required: false },
   data: { type: Object, required: [true, "Component data is required"] },
+  default: { type: Boolean, required: false, default: false }
 });
 
 Component.statics.validate = async function (Component) {
