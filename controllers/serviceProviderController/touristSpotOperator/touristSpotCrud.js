@@ -469,7 +469,7 @@ module.exports.deleteImage = (req, res) => {
 
 module.exports.createTouristSpotPage = (req, res) => {
   let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
-  let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["title", "text-left"], default: true }
+  let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["font-title", "text-left"], default: true }
   let labelledText2 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
   let labelledText3 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
   let photo = new ComponentModel(defaultPhoto)
