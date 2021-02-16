@@ -59,6 +59,7 @@ router.post("/addChildComponent/:parentId/:serviceId", touristSpotCrud.addChildC
 router.post("/addServiceComponent/:id", touristSpotCrud.addServiceComponent)
 router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
+router.put("/editChildComponent/:parentId/:serviceId", touristSpotCrud.editChildComponent)
 router.post("/addComponentWithMedia/:id", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
 router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
 router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)

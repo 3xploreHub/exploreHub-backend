@@ -1,40 +1,40 @@
 const { ComponentModel } = require("../../../models/commonSchemas/component");
 const deleteImage = require("../../../uploads/deleteImage");
 
-module.exports.retrieve = (
-  model,
-  res,
-  condition,
-  type,
-  fieldsToGet,
-  findOne = false
-) => {
-  model
-    .find(condition, fieldsToGet)
-    .populate({
-      path: "category",
-      model: "TouristSpotCategory",
-      select: "name",
-    })
-    .exec((error, touristSpots) => {
-      if (error) {
-        console.error("Error in retrieving: ", error);
-        return res.status(500).json({
-          type: "internal_error",
-          message: `has error in retrieving ${type}`,
-          error: error,
-        });
-      }
+// module.exports.retrieve = (
+//   model,
+//   res,
+//   condition,
+//   type,
+//   fieldsToGet,
+//   findOne = false
+// ) => {
+//   model
+//     .find(condition, fieldsToGet)
+//     .populate({
+//       path: "category",
+//       model: "TouristSpotCategory",
+//       select: "name",
+//     })
+//     .exec((error, touristSpots) => {
+//       if (error) {
+//         console.error("Error in retrieving: ", error);
+//         return res.status(500).json({
+//           type: "internal_error",
+//           message: `has error in retrieving ${type}`,
+//           error: error,
+//         });
+//       }
 
-      if (findOne && touristSpots.length == 0) {
-        return res.status(404).json({
-          type: "not_found",
-          message: "The tourist spot does not exist",
-        });
-      }
-      res.status(200).json(findOne ? touristSpots[0] : touristSpots);
-    });
-};
+//       if (findOne && touristSpots.length == 0) {
+//         return res.status(404).json({
+//           type: "not_found",
+//           message: "The tourist spot does not exist",
+//         });
+//       }
+//       res.status(200).json(findOne ? touristSpots[0] : touristSpots);
+//     });
+// };
 
 const addComponent = (model, touristSpotId, res, data, returnData = true) => {
   model.findByIdAndUpdate(
@@ -76,9 +76,11 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
   model.updateOne(query,
     data)
     .then(result => {
+      console.log(result)
       if (deleteImg) deleteImg(newData.imageUrl)
       res.status(200).json(newData);
     }).catch(error => {
+      console.log(error)
       res.status(500).json({ type: 'internal_error!', error: error });
     })
 }
@@ -111,24 +113,27 @@ const deletePhoto = (image) => {
 module.exports.deletePhoto = deletePhoto;
 
 const handleError = (error, res) => {
-  if (error.type == "validation_error") {
-    return res.status(400).json(error);
-  } else if (error.type == "unauthorized") {
-    return res.status(401).json({
-      type: "unauthorized",
-      message: "You are not allowed to do it",
-    });
-  } else if (error.type == "not_found") {
-    return res.status(404).json({
-      type: "not_found",
-      message: "Object was not found",
-    });
+  switch (error.type) {
+    case "validation_error":
+      return res.status(400).json(error);
+    case "unauthorized":
+      return res.status(401).json({
+        type: "unauthorized",
+        message: "You are not allowed to do it",
+      });
+    case "not_found":
+      return res.status(404).json({
+        type: "not_found",
+        message: "Object was not found",
+      });
+    default:
+      console.log(error)
+      res.status(500).json({
+        type: "internal_error",
+        message: "unexpected error occured",
+        error: error.error,
+      });
+      break;
   }
-  console.log(error)
-  res.status(500).json({
-    type: "internal_error",
-    message: "unexpected error occured",
-    error: error.error,
-  });
 };
 module.exports.handleError = handleError;

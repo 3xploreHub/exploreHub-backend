@@ -432,10 +432,9 @@ module.exports.addChildComponent = async (req, res) => {
   try {
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
-    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id":  req.params.serviceId },
+    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
   } catch (error) {
-    console.log(error);
     helper.handleError(error, res);
   }
 }
@@ -445,17 +444,41 @@ module.exports.addComponenWithMedia = (req, res) => {
   let component = JSON.parse(req.body.values)
   component.data = [newImage];
   if (component._id) {
-    helper.editComponent(TouristSpotPage,{ "_id":  req.params.id, "components._id": component._id },
+    helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": component._id },
       { $push: { "components.$.data": newImage } }, res, component);
   } else {
     helper.addNewComponent(TouristSpotPage, component, req.params.id, res);
   }
 }
 
+module.exports.editChildComponent = async (req, res) => {
+  try {
+    const validComponent = await ComponentModel.validate(req.body);
+    TouristSpotPage.updateOne({ "_id": req.params.parentId },
+      {
+        $set: {
+          "services.$[parent].data.$[child].data": validComponent.data,
+          "services.$[parent].data.$[child].styles": validComponent.styles,
+        }
+      },
+      {
+        "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }, { "child._id": mongoose.Types.ObjectId(req.body._id) }]
+      }, function (err, response) { 
+        if (err) {
+          return  res.status(500).json({type: "internal error", error: err})
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+}
+
 module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    helper.editComponent(TouristSpotPage, { "_id":  req.params.id, "components._id":req.body._id },
+    helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": req.body._id },
       {
         $set: {
           "components.$.data": validComponent.data,
@@ -474,7 +497,7 @@ module.exports.deleteComponent = async (req, res) => {
 }
 
 module.exports.deleteImage = (req, res) => {
-  helper.editComponent(TouristSpotPage, { "_id":  req.params.id, "components._id": req.body.componentId },
+  helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": req.body.componentId },
     {
       $pull: {
         "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
