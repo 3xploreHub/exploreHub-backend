@@ -58,20 +58,22 @@ const addComponent = (model, touristSpotId, res, data, returnData = true) => {
 };
 module.exports.addComponent = addComponent;
 
-module.exports.addNewComponent = async (model, component, id, res) => {
+module.exports.addNewComponent = async (model, component, id, res, type = "services") => {
   try {
     delete component._id;
-    const validatedComponent = await ComponentModel.validate(component);
+    const data = await ComponentModel.validate(component);
+    const newComponent = type == "services" ? { services: data } :
+      type == "bookingInfo" ? { bookingInfo: data } : { components: data };
     addComponent(model, id, res, {
-      $addToSet: { components: validatedComponent }
+      $addToSet: newComponent
     });
   } catch (error) {
     handleError(error, res);
   }
 }
 
-module.exports.editComponent = (model, id, _id, data, res, newData, deleteImg = null) => {
-  model.updateOne({ "_id": id, "components._id": _id },
+module.exports.editComponent = (model, query, data, res, newData, deleteImg = null) => {
+  model.updateOne(query,
     data)
     .then(result => {
       if (deleteImg) deleteImg(newData.imageUrl)
@@ -104,7 +106,7 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
 
 const deletePhoto = (image) => {
   let img = image.split("/");
-  deleteImage(img[img.length-1]);
+  deleteImage(img[img.length - 1]);
 }
 module.exports.deletePhoto = deletePhoto;
 

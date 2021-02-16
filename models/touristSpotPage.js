@@ -12,6 +12,8 @@ const touristSpotPageSchema = new Schema(
       required: [false, "Tourist spot's category is required"],
     },
     components: [Component],
+    services: [Component],
+    bookingInfo: [Component]
   },
   { timestamps: true }
 );

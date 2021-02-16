@@ -421,16 +421,31 @@ const helper = require("./helper");
 //NEW CHANGES.....====================================================
 
 module.exports.addComponent = (req, res) => {
+  helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res, 'components');
+}
+
+module.exports.addServiceComponent = (req, res) => {
   helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
 }
 
+module.exports.addChildComponent = async (req, res) => {
+  try {
+    delete req.body._id;
+    const validComponent = await ComponentModel.validate(req.body);
+    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id":  req.params.serviceId },
+      { $push: { "services.$.data": validComponent } }, res, validComponent);
+  } catch (error) {
+    console.log(error);
+    helper.handleError(error, res);
+  }
+}
 
 module.exports.addComponenWithMedia = (req, res) => {
   const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
   let component = JSON.parse(req.body.values)
   component.data = [newImage];
   if (component._id) {
-    helper.editComponent(TouristSpotPage, req.params.id, component._id,
+    helper.editComponent(TouristSpotPage,{ "_id":  req.params.id, "components._id": component._id },
       { $push: { "components.$.data": newImage } }, res, component);
   } else {
     helper.addNewComponent(TouristSpotPage, component, req.params.id, res);
@@ -440,7 +455,7 @@ module.exports.addComponenWithMedia = (req, res) => {
 module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    helper.editComponent(TouristSpotPage, req.params.id, req.body._id,
+    helper.editComponent(TouristSpotPage, { "_id":  req.params.id, "components._id":req.body._id },
       {
         $set: {
           "components.$.data": validComponent.data,
@@ -459,7 +474,7 @@ module.exports.deleteComponent = async (req, res) => {
 }
 
 module.exports.deleteImage = (req, res) => {
-  helper.editComponent(TouristSpotPage, req.params.id, req.body.componentId,
+  helper.editComponent(TouristSpotPage, { "_id":  req.params.id, "components._id": req.body.componentId },
     {
       $pull: {
         "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
@@ -469,14 +484,14 @@ module.exports.deleteImage = (req, res) => {
 
 module.exports.createTouristSpotPage = (req, res) => {
   let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
-  let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["font-title", "text-left"], default: true }
+  let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
   let labelledText2 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
   let labelledText3 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
   let photo = new ComponentModel(defaultPhoto)
   let name = new ComponentModel(labelledText1)
   let location = new ComponentModel(labelledText2)
   let description = new ComponentModel(labelledText3)
-  
+
   let defaultComponents = [photo, name, location, description];
   const page = new TouristSpotPage();
   page.creator = req.user._id;

@@ -55,6 +55,8 @@ const uploadImage = require("../../middlewares/uploadImage");
 
 router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
 router.post("/addComponent/:id", touristSpotCrud.addComponent)
+router.post("/addChildComponent/:parentId/:serviceId", touristSpotCrud.addChildComponent)
+router.post("/addServiceComponent/:id", touristSpotCrud.addServiceComponent)
 router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
 router.post("/addComponentWithMedia/:id", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
