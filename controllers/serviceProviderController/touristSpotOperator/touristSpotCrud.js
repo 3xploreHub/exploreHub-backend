@@ -439,33 +439,86 @@ module.exports.addChildComponent = async (req, res) => {
   }
 }
 
-module.exports.addComponenWithMedia = (req, res) => {
+
+module.exports.addServiceChildComponent = async (req, res) => {
+  try {
+    delete req.body._id;
+    const validComponent = await ComponentModel.validate(req.body);
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $push: {
+          "services.$[grandParent].data.$[parent].data": validComponent,
+        }
+      },
+      {
+        "arrayFilters": [{ "grandParent._id": mongoose.Types.ObjectId(req.params.grandParentId) }, { "parent._id": mongoose.Types.ObjectId(req.params.parentId) }]
+      }, function (err, response) {
+        if (err) {
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(validComponent);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+}
+
+module.exports.addComponentImage = (req, res) => {
   const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
-  let component = JSON.parse(req.body.values)
-  component.data = [newImage];
-  if (component._id) {
-    helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": component._id },
-      { $push: { "components.$.data": newImage } }, res, component);
-  } else {
-    helper.addNewComponent(TouristSpotPage, component, req.params.id, res);
+  helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "components._id": req.params.childId },
+    { $push: { "components.$.data": newImage } }, res, newImage);
+
+}
+
+module.exports.addItemChildComponentImage = (req, res) => {
+  try {
+    const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $push: {
+          "services.$[grandParent].data.$[parent].data.$[child].data": newImage,
+        }
+      },
+      {
+        "arrayFilters":
+          [
+            { "grandParent._id": mongoose.Types.ObjectId(req.params.grandParentId) },
+            { "parent._id": mongoose.Types.ObjectId(req.params.parentId) },
+            { "child._id": mongoose.Types.ObjectId(req.params.childId) }
+          ]
+      }, function (err, response) {
+        if (err) {
+          return res.status(500).json(err)
+        }
+        res.status(200).json(newImage);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
   }
 }
 
 module.exports.editChildComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    TouristSpotPage.updateOne({ "_id": req.params.parentId },
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
       {
         $set: {
-          "services.$[parent].data.$[child].data": validComponent.data,
-          "services.$[parent].data.$[child].styles": validComponent.styles,
+          "services.$[grandparent].data.$[parent].data.$[child].data": validComponent.data,
+          "services.$[grandparent].data.$[parent].data.$[child].styles": validComponent.styles,
         }
       },
       {
-        "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }, { "child._id": mongoose.Types.ObjectId(req.body._id) }]
-      }, function (err, response) { 
+        "arrayFilters":
+          [
+            { "grandparent._id": mongoose.Types.ObjectId(req.params.grandParentId) },
+            { "parent._id": mongoose.Types.ObjectId(req.params.parentId) },
+            { "child._id": mongoose.Types.ObjectId(req.body._id) }
+          ]
+      }, function (err, response) {
         if (err) {
-          return  res.status(500).json({type: "internal error", error: err})
+          return res.status(500).json({ type: "internal error", error: err })
         }
         res.status(200).json(response);
       })
@@ -474,6 +527,61 @@ module.exports.editChildComponent = async (req, res) => {
     helper.handleError(error, res);
   }
 }
+
+module.exports.deleteChildComponent = async (req, res) => {
+  try {
+    TouristSpotPage.updateOne({ "_id": req.params.parentId },
+      {
+        $pull: {
+          "services.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.componentId) },
+        }
+      },
+      {
+        "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }]
+      }, function (err, response) {
+        if (err) {
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+}
+
+module.exports.deleteItemChild = async (req, res) => {
+  try {
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $pull: {
+          "services.$[grandParent].data.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.childId) },
+        }
+      },
+      {
+        "arrayFilters": [
+          { "grandParent._id": mongoose.Types.ObjectId(req.params.grandParentId) },
+          { "parent._id": mongoose.Types.ObjectId(req.params.parentId) }
+
+        ]
+      }, function (err, response) {
+        if (err) {
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        if (req.body.images) {
+          req.body.images.forEach(image => {
+            helper.deletePhoto(image)
+          });
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+}
+
+
 
 module.exports.editComponent = async (req, res) => {
   try {
@@ -490,10 +598,23 @@ module.exports.editComponent = async (req, res) => {
   }
 }
 
-module.exports.deleteComponent = async (req, res) => {
+module.exports.deleteComponent = (req, res) => {
   helper.deleteItem(TouristSpotPage,
     { _id: req.params.id },
     { 'components': { '_id': req.params.componentId } }, res, req.body.images)
+}
+
+module.exports.deleteServiceComponent = async (req, res) => {
+  try {
+  const images = await helper.getImages(req.params.pageId);
+  console.log(images)
+  res.status(200).json(images);
+  // helper.deleteItem(TouristSpotPage,
+  //   { _id: req.params.pageId },
+  //   { 'services': { '_id': req.params.serviceId } }, res, null)
+  } catch(err) {
+    res.status(500).json(err);
+  }
 }
 
 module.exports.deleteImage = (req, res) => {
@@ -503,6 +624,33 @@ module.exports.deleteImage = (req, res) => {
         "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
       }
     }, res, { imageUrl: req.body.imageUrl, message: "Successfull deleted" }, helper.deletePhoto);
+}
+
+module.exports.deleteItemImage = (req, res) => {
+  try {
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $pull: {
+          "services.$[grandParent].data.$[parent].data.$[child].data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
+        }
+      },
+      {
+        "arrayFilters": [
+          { "grandParent._id": mongoose.Types.ObjectId(req.params.grandParentId) },
+          { "parent._id": mongoose.Types.ObjectId(req.params.parentId) },
+          { "child._id": mongoose.Types.ObjectId(req.body.componentId) }
+        ]
+      }, function (err, response) {
+        if (err) {
+          console.log(err)
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
 }
 
 module.exports.createTouristSpotPage = (req, res) => {

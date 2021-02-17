@@ -56,13 +56,19 @@ const uploadImage = require("../../middlewares/uploadImage");
 router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
 router.post("/addComponent/:id", touristSpotCrud.addComponent)
 router.post("/addChildComponent/:parentId/:serviceId", touristSpotCrud.addChildComponent)
+router.post("/addServiceChildComponent/:pageId/:grandParentId/:parentId", touristSpotCrud.addServiceChildComponent)
 router.post("/addServiceComponent/:id", touristSpotCrud.addServiceComponent)
 router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
-router.put("/editChildComponent/:parentId/:serviceId", touristSpotCrud.editChildComponent)
-router.post("/addComponentWithMedia/:id", uploadImage.uploadSingleImage, touristSpotCrud.addComponenWithMedia)
+router.put("/editChildComponent/:pageId/:grandParentId/:parentId", touristSpotCrud.editChildComponent)
+router.post("/deleteChildComponent/:pageId/:grandParentId/:childId", touristSpotCrud.deleteChildComponent)
+router.post("/deleteItemChild/:pageId/:grandParentId/:parentId/:childId", touristSpotCrud.deleteItemChild)
+router.post("/addComponentImage/:parentId/:childId", uploadImage.uploadSingleImage, touristSpotCrud.addComponentImage)
+router.post("/addItemChildComponentImage/:pageId/:grandParentId/:parentId/:childId", uploadImage.uploadSingleImage, touristSpotCrud.addItemChildComponentImage)
 router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
+router.post("/deleteItemImage/:pageId/:grandParentId/:parentId", touristSpotCrud.deleteItemImage)
 router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
+router.delete("/deleteServiceComponent/:pageId/:serviceId", touristSpotCrud.deleteServiceComponent)
 
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);

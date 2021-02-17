@@ -1,4 +1,7 @@
+const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
+const { model } = require("../../../models/touristSpot");
+const touristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 
 // module.exports.retrieve = (
@@ -95,9 +98,7 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
         return res.status(500).json({ type: "internal_error", error: err });
       }
       if (images) {
-        images.forEach(image => {
-          deletePhoto(image);
-        });
+        images.forEach(image => { deletePhoto(image) });
       }
       res.status(200).json({
         message: "Component successfully deleted",
@@ -110,6 +111,32 @@ const deletePhoto = (image) => {
   let img = image.split("/");
   deleteImage(img[img.length - 1]);
 }
+
+module.exports.getImages = (pageId) => {
+  return new Promise((resolve, reject) => {
+    touristSpotPage.aggregate([
+      {
+        $match: { _id: mongoose.Types.ObjectId(pageId) }
+      },
+      {
+        $project: {
+          withImages: {
+            $cond: [{ $eq: ["item-list", "$services.type"] }, "$services", "$services"]
+          }
+        }
+      }], function (err, result) {
+        if (err) {
+          console.log(err)
+          reject({
+            type: "internal_error",
+            error: err
+          })
+        }
+        resolve(result);
+      })
+  })
+}
+
 module.exports.deletePhoto = deletePhoto;
 
 const handleError = (error, res) => {
