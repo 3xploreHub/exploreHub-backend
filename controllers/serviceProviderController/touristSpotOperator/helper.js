@@ -111,30 +111,150 @@ const deletePhoto = (image) => {
   let img = image.split("/");
   deleteImage(img[img.length - 1]);
 }
+// {
+//   "carId": "345677"
+//   "car" : {
+//       "model" : [
+//           {
+//               "specs" : [ 
+//                   {
+//                       "specType": "SEDAN"
+//                       "specValue" : "1"
+//                   }, 
+//                   {
+//                       "specType": "BR_INC"
+//                       "specValue" : "yes"
+//                   }, 
+//                   {
+//                       "specType": "PLAN"
+//                       "specValue" : "gold"
+//                   }
+//               ]
+//           }
+//       ]
+//   }
+// }
 
-module.exports.getImages = (pageId) => {
+
+
+const d = {
+  services: [
+    {
+      type: "item-list",
+      data: [
+        {
+          type: "item",
+          data: [
+            {
+              type: "photo",
+
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+// db.collection.aggregate([
+//   {
+//     "$project": {
+//       "car": {
+//         "model": {
+//           "$filter": {
+//             "input": {
+//               "$map": {
+//                 "input": "$car.model",
+//                 "in": {
+//                   "specs": {
+//                     "$filter": {
+//                       "input": "$$this.specs",
+//                       "cond": { "$eq": ["$$this.specType", "SEDAN"] }
+//                     }
+//                   }
+//                 }
+//               }
+//             },
+//             "cond": { "$ne": ["$$this.specs", []] }
+//           }
+//         }
+//       }
+//     }
+//   }
+// ])
+
+module.exports.getImages = (pageId, serviceId) => {
   return new Promise((resolve, reject) => {
-    touristSpotPage.aggregate([
-      {
-        $match: { _id: mongoose.Types.ObjectId(pageId) }
-      },
-      {
-        $project: {
-          withImages: {
-            $cond: [{ $eq: ["item-list", "$services.type"] }, "$services", "$services"]
-          }
-        }
-      }], function (err, result) {
-        if (err) {
-          console.log(err)
-          reject({
-            type: "internal_error",
-            error: err
-          })
-        }
-        resolve(result);
-      })
+    // touristSpotPage.aggregate([
+    //   {
+    //     $match: { _id: mongoose.Types.ObjectId(pageId) }
+    //   },
+    //   {
+    //     "$project": {
+    //       "services": {
+    //         "$filter": {
+    //           "input": {
+    //             "$map": {
+    //               "input": "$services",
+    //               "cond": { $eq: ["$services._id", mongoose.Types.ObjectId(serviceId)] }
+    //             }
+    //           }
+
+    //         },
+    //         "cond": { "$ne": ["$services", []] }
+    //       }
+
+
+    //     }
+    //   }
+    // ]).then((result, err) => {
+    //   if (err) {
+    //     reject({ type: "internal_error", error, err })
+    //   }
+      resolve(result);
+    // }
+    // )
   })
+  // return new Promise((resolve, reject) => {
+  //   touristSpotPage.findOne({ _id: mongoose.Types.ObjectId(pageId) }, "components services", function (err, result) {
+  //     if (err) {
+  //       console.log(err)
+  //       reject({
+  //         type: "internal_error",
+  //         error: err
+  //       })
+  //     } else {
+  //       if (!result) {
+  //         reject({ type: "not_found" })
+  //       } else {
+  //         let images = []; 
+  //         result.components.forEach(field => {
+  //           if (typeof field == 'object') {
+  //             let sub = field? Object.values(field): [];
+  //             images = [...images, ...sub];
+  //           } else if (typeof field == "array") {
+  //             if (field) {
+  //               images = [...images, ...field];
+  //             }
+  //           }
+  //         })
+  //         result.services.forEach(field => {
+  //           if (typeof field == 'object') {
+  //             let sub = field? Object.values(field): [];
+  //             images = [...images, ...sub];
+  //           } else if (typeof field == "array") {
+  //             if (field) {
+  //               images = [...images, ...field];
+  //             }
+  //           }
+  //         })
+  //         images = images.filter(f => f);
+  //         images = images.filter(f => typeof f != 'boolean');
+
+  //         resolve(images);
+  //       }
+  //     }
+  //   })
+  // })
 }
 
 module.exports.deletePhoto = deletePhoto;

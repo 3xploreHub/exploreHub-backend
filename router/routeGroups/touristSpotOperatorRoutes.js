@@ -68,6 +68,7 @@ router.post("/addItemChildComponentImage/:pageId/:grandParentId/:parentId/:child
 router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
 router.post("/deleteItemImage/:pageId/:grandParentId/:parentId", touristSpotCrud.deleteItemImage)
 router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
+router.delete("/deleteItemComponent/:pageId/:itemListId/:itemId", touristSpotCrud.deleteItemComponent)
 router.delete("/deleteServiceComponent/:pageId/:serviceId", touristSpotCrud.deleteServiceComponent)
 
 

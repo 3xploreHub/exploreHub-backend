@@ -524,6 +524,7 @@ module.exports.editChildComponent = async (req, res) => {
       })
 
   } catch (error) {
+    console.log(error)
     helper.handleError(error, res);
   }
 }
@@ -581,6 +582,29 @@ module.exports.deleteItemChild = async (req, res) => {
   }
 }
 
+module.exports.deleteItemComponent = (req, res) => {
+  try {
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $pull: {
+          "services.$[itemListId].data": { "_id": mongoose.Types.ObjectId(req.params.itemId) },
+        }
+      },
+      {
+        "arrayFilters": [
+          { "itemListId._id": mongoose.Types.ObjectId(req.params.itemListId) },
+        ]
+      }, function (err, response) {
+        if (err) {
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+}
 
 
 module.exports.editComponent = async (req, res) => {
@@ -606,14 +630,14 @@ module.exports.deleteComponent = (req, res) => {
 
 module.exports.deleteServiceComponent = async (req, res) => {
   try {
-  const images = await helper.getImages(req.params.pageId);
-  console.log(images)
-  res.status(200).json(images);
-  // helper.deleteItem(TouristSpotPage,
-  //   { _id: req.params.pageId },
-  //   { 'services': { '_id': req.params.serviceId } }, res, null)
-  } catch(err) {
-    res.status(500).json(err);
+    // const images = await helper.getImages(req.params.pageId, req.params.serviceId);
+    // console.log(images)
+    // res.status(200).json(images);
+    helper.deleteItem(TouristSpotPage,
+      { _id: req.params.pageId },
+      { 'services': { '_id': req.params.serviceId } }, res, null)
+  } catch (err) {
+    helper.handleError(err, res)
   }
 }
 
