@@ -622,6 +622,39 @@ module.exports.editComponent = async (req, res) => {
   }
 }
 
+module.exports.getItemUpdatedData = async (req, res) => {
+  try {
+    const result = await helper.getItem(req.params.pageId, req.params.serviceId, req.params.itemId);
+    res.status(200).json(result);
+  } catch (err) {
+    helper.handleError(err, res);
+  }
+}
+
+module.exports.getUpdatedItemListData = (req, res) => {
+  TouristSpotPage.aggregate([
+    {
+      "$match": { _id: mongoose.Types.ObjectId(req.params.pageId) }
+    },
+    {
+      "$project": {
+        "services": {
+          "$filter": {
+            "input": "$services",
+            "as": "data",
+            "cond": { "$eq": ["$$data._id", mongoose.Types.ObjectId(req.params.serviceId)] }
+          }
+        }
+      }
+    }
+  ], function (err, data) {
+    if (err) {
+      return res.status(500).json({type:"internal_error", error: err})
+    } 
+    res.status(200).json(data);
+  })
+}
+
 module.exports.deleteComponent = (req, res) => {
   helper.deleteItem(TouristSpotPage,
     { _id: req.params.id },
@@ -669,6 +702,7 @@ module.exports.deleteItemImage = (req, res) => {
           console.log(err)
           return res.status(500).json({ type: "internal error", error: err })
         }
+        helper.deletePhoto(req.body.imageUrl)
         res.status(200).json(response);
       })
 

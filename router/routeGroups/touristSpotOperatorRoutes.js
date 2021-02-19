@@ -70,7 +70,8 @@ router.post("/deleteItemImage/:pageId/:grandParentId/:parentId", touristSpotCrud
 router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
 router.delete("/deleteItemComponent/:pageId/:itemListId/:itemId", touristSpotCrud.deleteItemComponent)
 router.delete("/deleteServiceComponent/:pageId/:serviceId", touristSpotCrud.deleteServiceComponent)
-
+router.get("/getItemUpdatedData/:pageId/:serviceId/:itemId", touristSpotCrud.getItemUpdatedData)
+router.get("/getUpdatedItemListData/:pageId/:serviceId", touristSpotCrud.getUpdatedItemListData)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

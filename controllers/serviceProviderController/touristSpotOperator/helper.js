@@ -182,6 +182,101 @@ const d = {
 //   }
 // ])
 
+module.exports.getItem = (pageId, serviceId, itemId) => {
+  return new Promise((resolve, reject) => {
+    touristSpotPage.aggregate([
+      {
+        "$match": { _id: mongoose.Types.ObjectId(pageId) }
+      },
+      {
+        "$project": {
+          "services": {
+            "$filter": {
+              "input": {
+                "$map": {
+                  "input": "$services",
+                  "in": {
+                    "data": {
+                      "$filter": {
+                        "input": "$$this.data",
+                        "as": "data",
+                        "cond": { "$eq": ["$$data._id", mongoose.Types.ObjectId(itemId)] }
+                      }
+                    }
+
+                  }
+                }
+              }, "cond": { "$ne": ["$$this.data", []] }
+            }
+          }
+
+        } 
+
+      }
+    ], function (err, data) {
+      if (err) {
+        reject({ type: "internal_error", error: err })
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
+module.exports.getItem = (pageId, serviceId, itemId) => {
+  return new Promise((resolve, reject) => {
+    touristSpotPage.aggregate([
+      {
+        "$match": { _id: mongoose.Types.ObjectId(pageId) }
+      },
+      {
+        "$project": {
+          "services": {
+            "$filter": {
+              "input": {
+                "$map": {
+                  "input": "$services",
+                  "in": {
+                    "data": {
+                      "$filter": {
+                        "input": "$$this.data",
+                        "as": "data",
+                        "cond": { "$eq": ["$$data._id", mongoose.Types.ObjectId(itemId)] }
+                      }
+                    }
+
+                  }
+                }
+              }, "cond": { "$ne": ["$$this.data", []] }
+            }
+          }
+
+        } 
+
+      }
+    ], function (err, data) {
+      if (err) {
+        reject({ type: "internal_error", error: err })
+      } else {
+        resolve(data)
+      }
+    })
+  })
+}
+
+// {
+//   "$project": {
+//     "services": {
+//      "$filter": {
+//         "input": "$services",
+//         "as": "service",
+//         "cond": { "$eq": ["$$service._id", mongoose.Types.ObjectId(serviceId)] }
+//       }
+
+
+//     }
+//   }
+
 module.exports.getImages = (pageId, serviceId) => {
   return new Promise((resolve, reject) => {
     // touristSpotPage.aggregate([
@@ -210,7 +305,7 @@ module.exports.getImages = (pageId, serviceId) => {
     //   if (err) {
     //     reject({ type: "internal_error", error, err })
     //   }
-      resolve(result);
+    resolve(result);
     // }
     // )
   })
