@@ -424,14 +424,35 @@ module.exports.addComponent = (req, res) => {
   helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res, 'components');
 }
 
-module.exports.addServiceComponent = (req, res) => {
-  helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
+module.exports.addServiceComponent = async (req, res) => {
+  try {
+    let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
+    let labelledText1 = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+
+    let photo = new ComponentModel(defaultPhoto)
+    let text = new ComponentModel(labelledText1)
+    let defaultItem = { type: "item", styles: [], data: [photo, text], default: false }
+    const validComponent = await ComponentModel.validate(defaultItem);
+    req.body.data = [validComponent];
+    helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
 }
 
 module.exports.addChildComponent = async (req, res) => {
   try {
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
+
+    let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
+    let labelledText1 = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+
+    let photo = new ComponentModel(defaultPhoto)
+    let text = new ComponentModel(labelledText1)
+    validComponent.data = [photo, text]
+
     helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
   } catch (error) {
@@ -649,8 +670,8 @@ module.exports.getUpdatedItemListData = (req, res) => {
     }
   ], function (err, data) {
     if (err) {
-      return res.status(500).json({type:"internal_error", error: err})
-    } 
+      return res.status(500).json({ type: "internal_error", error: err })
+    }
     res.status(200).json(data);
   })
 }
