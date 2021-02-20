@@ -427,10 +427,10 @@ module.exports.addComponent = (req, res) => {
 module.exports.addServiceComponent = async (req, res) => {
   try {
     let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
-    let labelledText1 = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+    let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
 
     let photo = new ComponentModel(defaultPhoto)
-    let text = new ComponentModel(labelledText1)
+    let text = new ComponentModel(defaultText)
     let defaultItem = { type: "item", styles: [], data: [photo, text], default: false }
     const validComponent = await ComponentModel.validate(defaultItem);
     req.body.data = [validComponent];
@@ -447,10 +447,10 @@ module.exports.addChildComponent = async (req, res) => {
     const validComponent = await ComponentModel.validate(req.body);
 
     let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
-    let labelledText1 = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+    let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
 
     let photo = new ComponentModel(defaultPhoto)
-    let text = new ComponentModel(labelledText1)
+    let text = new ComponentModel(defaultText)
     validComponent.data = [photo, text]
 
     helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id": req.params.serviceId },
@@ -733,21 +733,23 @@ module.exports.deleteItemImage = (req, res) => {
 }
 
 module.exports.createTouristSpotPage = async (req, res) => {
-
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   let serviceText = new ComponentModel( { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false })
   let defaultItem = { type: "item", styles: [], data: [servicePhoto, serviceText], default: false }
   const validComponent = await ComponentModel.validate(defaultItem);
-  const defaultService = await ComponentModel.validate({type: "item-list", styles: [], data: [validComponent], default: false})
+  let serviceInfoDefault = { type: "text", data: { placeholder: "Enter service name or other info here", text: 'Check out our rooms' }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+
 
   let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
-  let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
-  let labelledText2 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
-  let labelledText3 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
+  let text = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
+  let labelledText1 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
+  let labelledText2 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
+  const defaultService = await ComponentModel.validate({type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false})
+  
   let photo = new ComponentModel(defaultPhoto)
-  let name = new ComponentModel(labelledText1)
-  let location = new ComponentModel(labelledText2)
-  let description = new ComponentModel(labelledText3)
+  let name = new ComponentModel(text)
+  let location = new ComponentModel(labelledText1)
+  let description = new ComponentModel(labelledText2)
 
   let defaultComponents = [photo, name, location, description];
   const page = new TouristSpotPage();
