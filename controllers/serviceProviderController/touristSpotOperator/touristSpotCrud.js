@@ -732,7 +732,14 @@ module.exports.deleteItemImage = (req, res) => {
   }
 }
 
-module.exports.createTouristSpotPage = (req, res) => {
+module.exports.createTouristSpotPage = async (req, res) => {
+
+  let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+  let serviceText = new ComponentModel( { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false })
+  let defaultItem = { type: "item", styles: [], data: [servicePhoto, serviceText], default: false }
+  const validComponent = await ComponentModel.validate(defaultItem);
+  const defaultService = await ComponentModel.validate({type: "item-list", styles: [], data: [validComponent], default: false})
+
   let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
   let labelledText1 = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
   let labelledText2 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
@@ -746,6 +753,7 @@ module.exports.createTouristSpotPage = (req, res) => {
   const page = new TouristSpotPage();
   page.creator = req.user._id;
   page.components = defaultComponents;
+  page.services = defaultService
 
   page.save().then((createPage, error) => {
     if (error) {
