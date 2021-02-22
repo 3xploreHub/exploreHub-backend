@@ -55,7 +55,7 @@ const uploadImage = require("../../middlewares/uploadImage");
 
 router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
 router.post("/addComponent/:id", touristSpotCrud.addComponent)
-router.post("/addChildComponent/:parentId/:serviceId", touristSpotCrud.addChildComponent)
+router.post("/saveItem/:parentId/:serviceId", touristSpotCrud.saveItem)
 router.post("/addServiceChildComponent/:pageId/:grandParentId/:parentId", touristSpotCrud.addServiceChildComponent)
 router.post("/addServiceComponent/:id", touristSpotCrud.addServiceComponent)
 router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
@@ -68,10 +68,11 @@ router.post("/addItemChildComponentImage/:pageId/:grandParentId/:parentId/:child
 router.post("/deleteImage/:id", touristSpotCrud.deleteImage)
 router.post("/deleteItemImage/:pageId/:grandParentId/:parentId", touristSpotCrud.deleteItemImage)
 router.post("/deleteComponent/:id/:componentId", touristSpotCrud.deleteComponent)
-router.delete("/deleteItemComponent/:pageId/:itemListId/:itemId", touristSpotCrud.deleteItemComponent)
+router.delete("/deleteItem/:pageId/:itemListId/:itemId", touristSpotCrud.deleteItem)
 router.delete("/deleteServiceComponent/:pageId/:serviceId", touristSpotCrud.deleteServiceComponent)
 router.get("/getItemUpdatedData/:pageId/:serviceId/:itemId", touristSpotCrud.getItemUpdatedData)
 router.get("/getUpdatedItemListData/:pageId/:serviceId", touristSpotCrud.getUpdatedItemListData)
+router.put("/editServiceInfo/:pageId/:serviceId/:infoId", touristSpotCrud.editServiceInfo)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

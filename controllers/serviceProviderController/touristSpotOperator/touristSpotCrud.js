@@ -426,14 +426,11 @@ module.exports.addComponent = (req, res) => {
 
 module.exports.addServiceComponent = async (req, res) => {
   try {
-    let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
-    let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
-
-    let photo = new ComponentModel(defaultPhoto)
-    let text = new ComponentModel(defaultText)
-    let defaultItem = { type: "item", styles: [], data: [photo, text], default: false }
-    const validComponent = await ComponentModel.validate(defaultItem);
-    req.body.data = [validComponent];
+    let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: true })
+    let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+    let text = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
+    const defaultComponent = new ComponentModel({ type: "item", styles: [], data: [photo, text], default: false });
+    req.body.data = [serviceInfoDefault, defaultComponent];
     helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
 
   } catch (error) {
@@ -441,17 +438,19 @@ module.exports.addServiceComponent = async (req, res) => {
   }
 }
 
-module.exports.addChildComponent = async (req, res) => {
+module.exports.saveItem = async (req, res) => {
   try {
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
 
-    let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
-    let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+    if (validComponent.type == "item") {
+      let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
+      let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
 
-    let photo = new ComponentModel(defaultPhoto)
-    let text = new ComponentModel(defaultText)
-    validComponent.data = [photo, text]
+      let photo = new ComponentModel(defaultPhoto)
+      let text = new ComponentModel(defaultText)
+      validComponent.data = [photo, text]
+    }
 
     helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
@@ -603,7 +602,7 @@ module.exports.deleteItemChild = async (req, res) => {
   }
 }
 
-module.exports.deleteItemComponent = (req, res) => {
+module.exports.deleteItem = (req, res) => {
   try {
     TouristSpotPage.updateOne({ "_id": req.params.pageId },
       {
@@ -627,6 +626,34 @@ module.exports.deleteItemComponent = (req, res) => {
   }
 }
 
+module.exports.editServiceInfo = async (req, res) => {
+  try {
+    const validComponent = await ComponentModel.validate(req.body)
+    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+      {
+        $set: {
+          "services.$[parent].data.$[info].data": validComponent.data,
+          "services.$[parent].data.$[info].styles": validComponent.styles,
+        }
+      },
+      {
+        "arrayFilters": [
+          { "parent._id": mongoose.Types.ObjectId(req.params.serviceId) },
+          { "info._id": mongoose.Types.ObjectId(req.params.infoId) }
+        ]
+      }, function (err, response) {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(response);
+      })
+
+  } catch (error) {
+    helper.handleError(error, res);
+  }
+
+}
 
 module.exports.editComponent = async (req, res) => {
   try {
@@ -734,18 +761,16 @@ module.exports.deleteItemImage = (req, res) => {
 
 module.exports.createTouristSpotPage = async (req, res) => {
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-  let serviceText = new ComponentModel( { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false })
-  let defaultItem = { type: "item", styles: [], data: [servicePhoto, serviceText], default: false }
-  const validComponent = await ComponentModel.validate(defaultItem);
-  let serviceInfoDefault = { type: "text", data: { placeholder: "Enter service name or other info here", text: 'Check out our rooms' }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false }
-
+  let serviceText = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
+  let validComponent = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, serviceText], default: false })
+  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false })
 
   let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
   let text = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
   let labelledText1 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
   let labelledText2 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
-  const defaultService = await ComponentModel.validate({type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false})
-  
+  const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
+
   let photo = new ComponentModel(defaultPhoto)
   let name = new ComponentModel(text)
   let location = new ComponentModel(labelledText1)
