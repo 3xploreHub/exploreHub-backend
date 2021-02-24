@@ -652,7 +652,6 @@ module.exports.editServiceInfo = async (req, res) => {
   } catch (error) {
     helper.handleError(error, res);
   }
-
 }
 
 module.exports.editComponent = async (req, res) => {
@@ -669,6 +668,7 @@ module.exports.editComponent = async (req, res) => {
     helper.handleError(error, res)
   }
 }
+
 
 module.exports.getItemUpdatedData = async (req, res) => {
   try {
