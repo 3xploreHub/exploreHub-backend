@@ -438,6 +438,10 @@ module.exports.addServiceComponent = async (req, res) => {
   }
 }
 
+module.exports.saveInputField = async (req, res) => {
+  helper.addNewComponent(TouristSpotPage, req.body, req.params.parentId, res, 'bookingInfo');
+}
+
 module.exports.saveItem = async (req, res) => {
   try {
     delete req.body._id;
