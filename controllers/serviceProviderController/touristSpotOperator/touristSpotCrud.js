@@ -673,6 +673,21 @@ module.exports.editComponent = async (req, res) => {
   }
 }
 
+module.exports.editInputField = async (req, res) => {
+  try {
+    const validComponent = await ComponentModel.validate(req.body);
+    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "bookingInfo._id": req.body._id },
+      {
+        $set: {
+          "bookingInfo.$.data": validComponent.data,
+          "bookingInfo.$.styles": validComponent.styles
+        }
+      }, res, validComponent);
+  } catch (error) {
+    helper.handleError(error, res)
+  }
+}
+
 
 module.exports.getItemUpdatedData = async (req, res) => {
   try {
@@ -813,4 +828,3 @@ module.exports.retrieveToristSpotPage = (req, res) => {
     res.status(200).json(page);
   })
 }
-
