@@ -728,6 +728,12 @@ module.exports.deleteComponent = (req, res) => {
     { 'components': { '_id': req.params.componentId } }, res, req.body.images)
 }
 
+module.exports.deleteInputField = (req, res) => {
+  helper.deleteItem(TouristSpotPage,
+    { _id: req.params.parentId },
+    { 'bookingInfo': { '_id': req.params.childId } }, res, req.body.images)
+}
+
 module.exports.deleteServiceComponent = async (req, res) => {
   try {
     // const images = await helper.getImages(req.params.pageId, req.params.serviceId);
