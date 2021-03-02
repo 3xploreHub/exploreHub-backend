@@ -492,7 +492,6 @@ module.exports.addComponentImage = (req, res) => {
   const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
   helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "components._id": req.params.childId },
     { $push: { "components.$.data": newImage } }, res, newImage);
-
 }
 
 module.exports.addItemChildComponentImage = (req, res) => {
@@ -526,6 +525,18 @@ module.exports.addItemChildComponentImage = (req, res) => {
 module.exports.editChildComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
+    if (typeof validComponent.data == 'object') {
+      validComponent.data = validComponent.data.map(data => {
+        if (typeof data == 'object') {
+          if (data._id) {
+            data._id = mongoose.Types.ObjectId(data._id);
+          }
+        }
+        return data;
+      })
+    } else {
+      console.log("not array");
+    }
     TouristSpotPage.updateOne({ "_id": req.params.pageId },
       {
         $set: {
@@ -661,6 +672,19 @@ module.exports.editServiceInfo = async (req, res) => {
 module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
+    if (typeof validComponent.data == 'object') {
+      validComponent.data = validComponent.data.map(data => {
+        if (typeof data == 'object') {
+          if (data._id) {
+            data._id = mongoose.Types.ObjectId(data._id);
+          }
+        }
+        return data;
+      })
+    } else {
+      console.log("not array");
+    }
+    console.log(typeof validComponent.data);
     helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": req.body._id },
       {
         $set: {
@@ -799,10 +823,11 @@ module.exports.createTouristSpotPage = async (req, res) => {
 
   //default input fields for booking
   let currentYear = new Date().getFullYear()
-  let arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear+1, currentYear], customMonths: [], customDays: [], customDates: []}, styles: [], default: false })
-  let departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear+1, currentYear], customMonths: [], customDays: [], customDates: []}, styles: [], default: false })
-  let adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max:null }, styles: [], default: false })
-  let children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null,min: 0, max:null }, styles: [], default: false })
+  let arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+  let departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+  let adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+  let children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+
 
   let photo = new ComponentModel(defaultPhoto)
   let name = new ComponentModel(text)
