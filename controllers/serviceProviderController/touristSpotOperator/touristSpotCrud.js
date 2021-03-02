@@ -522,10 +522,12 @@ module.exports.addItemChildComponentImage = (req, res) => {
   }
 }
 
+
+
 module.exports.editChildComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    if (typeof validComponent.data == 'object') {
+    if (validComponent.type == "photo") {
       validComponent.data = validComponent.data.map(data => {
         if (typeof data == 'object') {
           if (data._id) {
@@ -617,8 +619,24 @@ module.exports.deleteItemChild = async (req, res) => {
   }
 }
 
-module.exports.deleteItem = (req, res) => {
+module.exports.deleteItem = async (req, res) => {
   try {
+    let images = [];
+    const result = await helper.getItem(req.params.pageId, req.params.itemId);
+    console.log("components: ", result[0].services[0].data[0].data)
+    result[0].services[0].data.forEach(data => {
+      console.log("item: ", data);
+      data.data.forEach(comp => {
+
+        if (comp.type == "photo") {
+          comp.data.forEach(img => {
+            images.push(img.url);
+          })
+        }
+      })
+    })
+    console.log(images);
+
     TouristSpotPage.updateOne({ "_id": req.params.pageId },
       {
         $pull: {
@@ -633,6 +651,10 @@ module.exports.deleteItem = (req, res) => {
         if (err) {
           return res.status(500).json({ type: "internal error", error: err })
         }
+        images.forEach(image => {
+          let img = image.split("/");
+          deleteImage(img[img.length - 1]);
+        })
         res.status(200).json(response);
       })
 
@@ -672,7 +694,7 @@ module.exports.editServiceInfo = async (req, res) => {
 module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
-    if (typeof validComponent.data == 'object') {
+    if (validComponent.type == "photo") {
       validComponent.data = validComponent.data.map(data => {
         if (typeof data == 'object') {
           if (data._id) {
@@ -714,7 +736,7 @@ module.exports.editInputField = async (req, res) => {
 
 module.exports.getItemUpdatedData = async (req, res) => {
   try {
-    const result = await helper.getItem(req.params.pageId, req.params.serviceId, req.params.itemId);
+    const result = await helper.getItem(req.params.pageId, req.params.itemId);
     res.status(200).json(result);
   } catch (err) {
     helper.handleError(err, res);
@@ -762,6 +784,7 @@ module.exports.deleteServiceComponent = async (req, res) => {
     // const images = await helper.getImages(req.params.pageId, req.params.serviceId);
     // console.log(images)
     // res.status(200).json(images);
+
     helper.deleteItem(TouristSpotPage,
       { _id: req.params.pageId },
       { 'services': { '_id': req.params.serviceId } }, res, null)
