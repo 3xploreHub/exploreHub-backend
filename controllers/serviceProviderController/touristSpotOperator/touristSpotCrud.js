@@ -619,22 +619,13 @@ module.exports.deleteItemChild = async (req, res) => {
   }
 }
 
+
+
 module.exports.deleteItem = async (req, res) => {
   try {
     let images = [];
     const result = await helper.getItem(req.params.pageId, req.params.itemId);
-    console.log("components: ", result[0].services[0].data[0].data)
-    result[0].services[0].data.forEach(data => {
-      console.log("item: ", data);
-      data.data.forEach(comp => {
-
-        if (comp.type == "photo") {
-          comp.data.forEach(img => {
-            images.push(img.url);
-          })
-        }
-      })
-    })
+    images = helper.getImages(result[0].services[0])
     console.log(images);
 
     TouristSpotPage.updateOne({ "_id": req.params.pageId },
@@ -781,13 +772,17 @@ module.exports.deleteInputField = (req, res) => {
 
 module.exports.deleteServiceComponent = async (req, res) => {
   try {
-    // const images = await helper.getImages(req.params.pageId, req.params.serviceId);
-    // console.log(images)
-    // res.status(200).json(images);
-
+    const result = await helper.getService(req.params.pageId, req.params.serviceId);
+    let images = [];
+    result[0].services.forEach(item => {
+        let imgs = helper.getImages(item);
+        if (imgs.length) {
+          images = imgs;
+        }
+    })
     helper.deleteItem(TouristSpotPage,
       { _id: req.params.pageId },
-      { 'services': { '_id': req.params.serviceId } }, res, null)
+      { 'services': { '_id': req.params.serviceId } }, res, images)
   } catch (err) {
     helper.handleError(err, res)
   }

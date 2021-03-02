@@ -98,6 +98,7 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
         return res.status(500).json({ type: "internal_error", error: err });
       }
       if (images) {
+        console.log(images);
         images.forEach(image => { deletePhoto(image) });
       }
       res.status(200).json({
@@ -183,15 +184,12 @@ module.exports.getItem = (pageId, itemId) => {
                         "cond": { "$eq": ["$$data._id", mongoose.Types.ObjectId(itemId)] }
                       }
                     }
-
                   }
                 }
               }, "cond": { "$ne": ["$$this.data", []] }
             }
           }
-
-        } 
-
+        }
       }
     ], function (err, data) {
       if (err) {
@@ -203,50 +201,48 @@ module.exports.getItem = (pageId, itemId) => {
   })
 }
 
-// {
-//   "$project": {
-//     "services": {
-//      "$filter": {
-//         "input": "$services",
-//         "as": "service",
-//         "cond": { "$eq": ["$$service._id", mongoose.Types.ObjectId(serviceId)] }
-//       }
 
-
-//     }
-//   }
-
-module.exports.getImages = (pageId, serviceId) => {
+module.exports.getService = (pageId, serviceId) => {
   return new Promise((resolve, reject) => {
-    // touristSpotPage.aggregate([
-    //   {
-    //     $match: { _id: mongoose.Types.ObjectId(pageId) }
-    //   },
-    //   {
-    //     "$project": {
-    //       "services": {
-    //         "$filter": {
-    //           "input": {
-    //             "$map": {
-    //               "input": "$services",
-    //               "cond": { $eq: ["$services._id", mongoose.Types.ObjectId(serviceId)] }
-    //             }
-    //           }
-
-    //         },
-    //         "cond": { "$ne": ["$services", []] }
-    //       }
-
-
-    //     }
-    //   }
-    // ]).then((result, err) => {
-    //   if (err) {
-    //     reject({ type: "internal_error", error, err })
-    //   }
-    resolve(result);
-
+    touristSpotPage.aggregate([
+      {
+        "$match": { _id: mongoose.Types.ObjectId(pageId) }
+      },
+      {
+        "$project": {
+          "services": {
+            "$filter": {
+              "input": "$services",
+              "as": "service",
+              "cond": { "$eq": ["$$service._id", mongoose.Types.ObjectId(serviceId)] }
+            }
+          }
+        }
+      }
+    ], function (err, data) {
+      if (err) {
+        reject({ type: "internal_error", error: err })
+      } else {
+        resolve(data)
+      }
+    })
   })
+}
+
+module.exports.getImages = (data) => {
+  let images = []
+  data.data.forEach(data => {
+    if (data.type == "item") {
+      data.data.forEach(comp => {
+        if (comp.type == "photo") {
+          comp.data.forEach(img => {
+            images.push(img.url);
+          })
+        }
+      })
+    }
+  })
+  return images;
 }
 
 module.exports.deletePhoto = deletePhoto;
