@@ -833,10 +833,13 @@ module.exports.createTouristSpotPage = async (req, res) => {
   let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: "Sample Service" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false })
 
   //default components for tourist spot's information
-  let defaultPhoto = { type: "photo", data: [], styles: [], default: true }
-  let text = { type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true }
-  let labelledText1 = { type: "labelled-text", data: { label: "Location", text: null }, styles: [], default: true }
-  let labelledText2 = { type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true }
+  let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
+  let name = new ComponentModel({ type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true })
+  let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
+  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality/City", text: 'Moalboal' , fixed: true}, styles: [], default: true })
+  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: null }, styles: [], default: true })
+  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: ["Island Hopping", "Beach Resort", "Mountains and Peak"]}, styles: [], default: true })
+  let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
 
   //default input fields for booking
@@ -847,12 +850,7 @@ module.exports.createTouristSpotPage = async (req, res) => {
   let children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
 
 
-  let photo = new ComponentModel(defaultPhoto)
-  let name = new ComponentModel(text)
-  let location = new ComponentModel(labelledText1)
-  let description = new ComponentModel(labelledText2)
-
-  let defaultComponents = [photo, name, location, description];
+  let defaultComponents = [photo, name, barangay, municipality, province, category, description];
   const page = new TouristSpotPage();
   page.creator = req.user._id;
   page.components = defaultComponents;
