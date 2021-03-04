@@ -7,11 +7,8 @@ const TouristSpotCategory = new Schema(
     name: {
       type: String,
       required: [true, "Tourist spot category is required"],
-      lowercase: true,
+      unique: true,
       trim: true,
-      get: function (value) {
-        return value.charAt(0).toUpperCase() + value.slice(1);
-      },
     },
     addedBy: {
       type: Schema.Types.ObjectId,

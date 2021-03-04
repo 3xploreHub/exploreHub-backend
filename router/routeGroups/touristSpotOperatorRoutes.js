@@ -53,6 +53,8 @@ const uploadImage = require("../../middlewares/uploadImage");
 //   touristSpotCrud.updateTouristSpot
 // );
 
+router.post("/addDefaultCategories", touristSpotCategoriesCrud.addDefaultCategories);
+
 router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
 router.post("/addComponent/:id", touristSpotCrud.addComponent)
 router.post("/saveItem/:parentId/:serviceId", touristSpotCrud.saveItem)

@@ -5,25 +5,15 @@
 //   message: ---> description //optional
 // }
 
-const { json } = require("body-parser");
 const mongoose = require("mongoose");
-const { restart } = require("nodemon");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
-const {
-  extraServiceModel,
-} = require("../../../models/commonSchemas/extraService");
-const { FeatureModel } = require("../../../models/commonSchemas/feature");
+
 const { ImageModel } = require("../../../models/commonSchemas/image");
-const {
-  otherFacilityModel,
-} = require("../../../models/commonSchemas/otherFacility");
-const { regulationModel } = require("../../../models/commonSchemas/regulation");
-const { roomModel } = require("../../../models/commonSchemas/room");
-const TouristSpot = require("../../../models/touristSpot");
 const touristSpotCategory = require("../../../models/touristSpotCategory");
 const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 const helper = require("./helper");
+const touristSpotCategoriesCrud = require("./touristSpotCategoriesCrud");
 
 //formdata
 //
@@ -826,6 +816,10 @@ module.exports.deleteItemImage = (req, res) => {
 }
 
 module.exports.createTouristSpotPage = async (req, res) => {
+  const categories = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
+  console.log("yeah: ",categories);
+  const categoriesName = categories.map(ctg => ctg.name);
+
   //default components for services and offers
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   let serviceText = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-white", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
@@ -834,11 +828,11 @@ module.exports.createTouristSpotPage = async (req, res) => {
 
   //default components for tourist spot's information
   let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
-  let name = new ComponentModel({ type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-normal", "color-dark"], default: true })
+  let name = new ComponentModel({ type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
-  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality/City", text: 'Moalboal' , fixed: true}, styles: [], default: true })
+  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: 'Moalboal' , fixed: true}, styles: [], default: true })
   let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: null }, styles: [], default: true })
-  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: ["Island Hopping", "Beach Resort", "Mountains and Peak"]}, styles: [], default: true })
+  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: categoriesName}, styles: [], default: true })
   let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
 

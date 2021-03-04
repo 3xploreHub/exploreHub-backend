@@ -5,23 +5,25 @@ const touristSpotCategory = require("../../../models/touristSpotCategory");
 // }
 
 //{{url}}/touristSpotOperator/addTouristSpotCategory
-module.exports.addTouristSpotCategory = async (req, res) => {
+async function addTouristSpotCategory(req, res) {
   try {
-    console.log(req.body);
     req.body["addedBy"] = req.user._id;
     const newCategory = await touristSpotCategory.addTouristSpotCategory(
       req.body
     );
-    console.log(newCategory);
-    res.status(200).json(newCategory.data);
+    if (!req.continue) {
+      res.status(200).json(newCategory.data);
+    } else {
+      return true;
+    }
   } catch (error) {
     console.error("Error in creating new tourist spot: ", error);
     if (error.type == "validation_error") {
       res.status(400).json({
         type: "validation_error",
-        message: "Some validations failed",
         error: error.errors,
       });
+
     } else {
       res.status(400).json({
         type: "internal_error",
@@ -31,6 +33,35 @@ module.exports.addTouristSpotCategory = async (req, res) => {
     }
   }
 };
+
+module.exports.addTouristSpotCategory = addTouristSpotCategory;
+
+module.exports.addDefaultCategories = async (req, res) => {
+  return touristSpotCategory.find({}).then(async (categories, error) => {
+    if (error) {
+      res.statu(500).json(error);
+    }
+    if (categories.length == 0) {
+      const defaults = [
+        { name: "Island Hopping" },
+        { name: "Beach Resort" },
+        { name: "Mountains and Peaks" }
+      ]
+
+      defaults.forEach(async (category) => {
+        req['body'] = category;
+        req['continue'] = true;
+        await addTouristSpotCategory(req, res)
+      })
+    console.log("empty: ", categories);
+
+      return defaults;
+    }
+    console.log("not empty: ", categories);
+    return categories;
+  })
+
+}
 
 //{{url}}/touristSpotOperator/retrieveAllToristSpotCategories
 module.exports.retrieveAllToristSpotCategories = async (req, res) => {
