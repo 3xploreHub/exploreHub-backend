@@ -9,7 +9,7 @@ const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
 
 const { ImageModel } = require("../../../models/commonSchemas/image");
-const touristSpot = require("../../../models/touristSpot");
+const touristSpot = require("../../../models/touristSpot-old.js");
 const touristSpotCategory = require("../../../models/touristSpotCategory");
 const touristSpotPage = require("../../../models/touristSpotPage");
 const TouristSpotPage = require("../../../models/touristSpotPage");
@@ -805,7 +805,6 @@ module.exports.deleteItemImage = (req, res) => {
 
 module.exports.createTouristSpotPage = async (req, res) => {
   const categories = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
-  console.log("yeah: ", categories);
   const categoriesName = categories.map(ctg => ctg.name);
 
   //default components for services and offers
@@ -833,11 +832,7 @@ module.exports.createTouristSpotPage = async (req, res) => {
 
 
   let defaultComponents = [photo, name, barangay, municipality, province, category, description];
-  const page = new TouristSpotPage();
-  page.creator = req.user._id;
-  page.components = defaultComponents;
-  page.services = defaultService
-  page.bookingInfo = [arrival, departure, adults, children]
+  const page = new TouristSpotPage({creator: req.user._id, components:  defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children]});
 
   page.save().then((createPage, error) => {
     if (error) {
@@ -881,7 +876,6 @@ module.exports.deleteTouristSpotPage = async (req, res) => {
           deleteImage(img[img.length - 1]);
         })
         return res.status(200).json({ message: "successfully deleted", result: result })
-
       }
     })
   } catch (error) {
