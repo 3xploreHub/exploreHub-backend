@@ -811,14 +811,14 @@ module.exports.createTouristSpotPage = async (req, res) => {
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   let serviceText = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-white", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
   let validComponent = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, serviceText], default: false })
-  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false })
+  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: false })
 
   //default components for tourist spot's information
   let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
   let name = new ComponentModel({ type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
-  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: 'Moalboal', fixed: true }, styles: [], default: true })
-  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: null }, styles: [], default: true })
+  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: 'Moalboal' }, styles: [], default: true })
+  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: "Cebu" }, styles: [], default: true })
   let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: categoriesName }, styles: [], default: true })
   let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
