@@ -9,7 +9,9 @@ const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
 
 const { ImageModel } = require("../../../models/commonSchemas/image");
+const touristSpot = require("../../../models/touristSpot");
 const touristSpotCategory = require("../../../models/touristSpotCategory");
+const touristSpotPage = require("../../../models/touristSpotPage");
 const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 const helper = require("./helper");
@@ -513,19 +515,11 @@ module.exports.addItemChildComponentImage = (req, res) => {
 }
 
 
-
 module.exports.editChildComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
     if (validComponent.type == "photo") {
-      validComponent.data = validComponent.data.map(data => {
-        if (typeof data == 'object') {
-          if (data._id) {
-            data._id = mongoose.Types.ObjectId(data._id);
-          }
-        }
-        return data;
-      })
+      validComponent.data = helper.convertIdToObjectId(validComponent);
     } else {
       console.log("not array");
     }
@@ -676,14 +670,7 @@ module.exports.editComponent = async (req, res) => {
   try {
     const validComponent = await ComponentModel.validate(req.body);
     if (validComponent.type == "photo") {
-      validComponent.data = validComponent.data.map(data => {
-        if (typeof data == 'object') {
-          if (data._id) {
-            data._id = mongoose.Types.ObjectId(data._id);
-          }
-        }
-        return data;
-      })
+      validComponent.data = helper.convertIdToObjectId(validComponent);
     } else {
       console.log("not array");
     }
@@ -748,6 +735,7 @@ module.exports.getUpdatedItemListData = (req, res) => {
   })
 }
 
+
 module.exports.deleteComponent = (req, res) => {
   helper.deleteItem(TouristSpotPage,
     { _id: req.params.id },
@@ -765,10 +753,10 @@ module.exports.deleteServiceComponent = async (req, res) => {
     const result = await helper.getService(req.params.pageId, req.params.serviceId);
     let images = [];
     result[0].services.forEach(item => {
-        let imgs = helper.getImages(item);
-        if (imgs.length) {
-          images = imgs;
-        }
+      let imgs = helper.getImages(item);
+      if (imgs.length) {
+        images = imgs;
+      }
     })
     helper.deleteItem(TouristSpotPage,
       { _id: req.params.pageId },
@@ -817,22 +805,22 @@ module.exports.deleteItemImage = (req, res) => {
 
 module.exports.createTouristSpotPage = async (req, res) => {
   const categories = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
-  console.log("yeah: ",categories);
+  console.log("yeah: ", categories);
   const categoriesName = categories.map(ctg => ctg.name);
 
   //default components for services and offers
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   let serviceText = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-white", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
   let validComponent = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, serviceText], default: false })
-  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: "Sample Service" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false })
+  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-normal", "color-dark"], default: false })
 
   //default components for tourist spot's information
   let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
   let name = new ComponentModel({ type: "text", data: { placeholder: "Enter tourist spot name here", text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
-  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: 'Moalboal' , fixed: true}, styles: [], default: true })
+  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: 'Moalboal', fixed: true }, styles: [], default: true })
   let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: null }, styles: [], default: true })
-  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: categoriesName}, styles: [], default: true })
+  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: categoriesName }, styles: [], default: true })
   let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
 
@@ -861,6 +849,44 @@ module.exports.createTouristSpotPage = async (req, res) => {
     }
     res.status(200).json(createPage)
   })
+}
+
+module.exports.deleteTouristSpotPage = async (req, res) => {
+  try {
+    const page = await TouristSpotPage.findById(req.params.id);
+    let images = [];
+    if (!page) {
+      res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
+    }
+    page.components.forEach(comp => {
+      if (comp.type == "photo") {
+        comp.data.forEach(img => {
+          images.push(img.url);
+        })
+      }
+    })
+    page.services.forEach(item => {
+      let imgs = helper.getImages(item);
+      if (imgs.length) {
+        images = [...images, ...imgs];
+      }
+    })
+    TouristSpotPage.findByIdAndRemove(req.params.id).then((result, error) => {
+      if (error) {
+        return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
+      }
+      if (result) {
+        images.forEach(image => {
+          let img = image.split("/");
+          deleteImage(img[img.length - 1]);
+        })
+        return res.status(200).json({ message: "successfully deleted", result: result })
+
+      }
+    })
+  } catch (error) {
+    res.status(500).json(error)
+  }
 }
 
 module.exports.retrieveToristSpotPage = (req, res) => {

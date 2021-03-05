@@ -92,7 +92,9 @@ const touristSpotSchema = new Schema(
         },
       },
     ],
+    approved: { type: Boolean, required: false, default: false }
   },
+  
   { timestamps: true }
 );
 

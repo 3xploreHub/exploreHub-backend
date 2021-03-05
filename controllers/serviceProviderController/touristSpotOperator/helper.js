@@ -112,6 +112,17 @@ const deletePhoto = (image) => {
   let img = image.split("/");
   deleteImage(img[img.length - 1]);
 }
+
+module.exports.convertIdToObjectId = (component)=> {
+  return component.data.map(data => {
+    if (typeof data == 'object') {
+      if (data._id) {
+        data._id = mongoose.Types.ObjectId(data._id);
+      }
+    }
+    return data;
+  })
+}
 // {
 //   "carId": "345677"
 //   "car" : {

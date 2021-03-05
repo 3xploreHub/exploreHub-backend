@@ -78,6 +78,7 @@ router.get("/getUpdatedItemListData/:pageId/:serviceId", touristSpotCrud.getUpda
 router.put("/editServiceInfo/:pageId/:serviceId/:infoId", touristSpotCrud.editServiceInfo)
 router.post("/saveInputField/:pageId/:grandParentId/:parentId", touristSpotCrud.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId", touristSpotCrud.editInputField)
+router.delete("/deleteTouristSpotPage/:id", touristSpotCrud.deleteTouristSpotPage)
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
