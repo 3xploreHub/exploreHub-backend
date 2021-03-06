@@ -10,7 +10,7 @@ const servicePage = new Schema(
     components: [Component],
     services: [Component],
     bookingInfo: [Component], 
-    approved: { type: Boolean, required: false, default: true }
+    status: { type: String, enum : ['unfinished','pending', 'approved'], required: false, default: 'unfinished' }
   },
   { timestamps: true }
 );

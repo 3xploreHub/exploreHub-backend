@@ -1,9 +1,14 @@
-const serviceCategory = require("../../../models/serviceCategory");
+const touristSpotCategory = require("../../models/touristSpotCategory");
 
-async function addServiceCategory(req, res) {
+// {
+//   "name": "Mountain adventure",
+// }
+
+//{{url}}/touristSpotOperator/addTouristSpotCategory
+async function addTouristSpotCategory(req, res) {
   try {
     req.body["addedBy"] = req.user._id;
-    const newCategory = await serviceCategory.addServiceCategory(
+    const newCategory = await touristSpotCategory.addTouristSpotCategory(
       req.body
     );
     if (!req.continue) {
@@ -28,37 +33,39 @@ async function addServiceCategory(req, res) {
   }
 };
 
-module.exports.addServiceCategory = addServiceCategory;
+module.exports.addTouristSpotCategory = addTouristSpotCategory;
 
 module.exports.addDefaultCategories = async (req, res) => {
-  return serviceCategory.find({}).then(async (categories, error) => {
+  return touristSpotCategory.find({}).then(async (categories, error) => {
     if (error) {
       res.statu(500).json(error);
     }
     if (categories.length == 0) {
       const defaults = [
-        { name: "Restaurant" },
-        { name: "Small Eatery" },
-        { name: "Store" },
-        { name: "Transportation" },
-        { name: "Lodging" },
-        { name: "Touring" }
+        { name: "Island Hopping" },
+        { name: "Beach" },
+        { name: "Resort" },
+        { name: "Mountains and Peaks" }
       ]
 
       defaults.forEach(async (category) => {
         req['body'] = category;
         req['continue'] = true;
-        await addServiceCategory(req, res)
+        await addTouristSpotCategory(req, res)
       })
+    console.log("empty: ", categories);
+
       return defaults;
     }
+    console.log("not empty: ", categories);
     return categories;
   })
 
 }
 
+//{{url}}/touristSpotOperator/retrieveAllToristSpotCategories
 module.exports.retrieveAllToristSpotCategories = async (req, res) => {
-  serviceCategory
+  touristSpotCategory
     .find({}, "name touristSpotTotalCount addedBy")
     .populate("addedBy", "fullName")
     .exec((error, categories) => {
