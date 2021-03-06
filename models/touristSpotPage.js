@@ -9,7 +9,7 @@ const touristSpotPageSchema = new Schema(
     components: [Component],
     services: [Component],
     bookingInfo: [Component], 
-    status: { type: String, enum : ['unfinished','pending', 'approved'], required: false, default: 'unfinished' }
+    status: { type: String, enum : ['unfinished','pending', 'approved', 'rejected', 'not_operating'], required: false, default: 'unfinished' }
 
   },
   { timestamps: true }
