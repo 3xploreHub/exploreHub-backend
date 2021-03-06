@@ -321,7 +321,8 @@ module.exports.getItemUpdatedData = async (req, res) => {
 }
 
 module.exports.getUpdatedItemListData = (req, res) => {
-  TouristSpotPage.aggregate([
+  const Pages = req.params.pageType == 'service'? ServicePage: TouristSpotPage;
+  Pages.aggregate([
     {
       "$match": { _id: mongoose.Types.ObjectId(req.params.pageId) }
     },
@@ -470,9 +471,10 @@ async function createPage(req, res, Page, pageNameInputLabel, service = false, h
   })
 }
 
-module.exports.deleteTouristSpotPage = async (req, res) => {
+module.exports.deletePage = async (req, res) => {
   try {
-    const page = await TouristSpotPage.findById(req.params.id);
+    let Pages = req.params.pageType == 'service'? ServicePage: TouristSpotPage;
+    const page = await Pages.findById(req.params.id);
     let images = [];
     if (!page) {
       res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
@@ -490,7 +492,7 @@ module.exports.deleteTouristSpotPage = async (req, res) => {
         images = [...images, ...imgs];
       }
     })
-    TouristSpotPage.findByIdAndRemove(req.params.id).then((result, error) => {
+    Pages.findByIdAndRemove(req.params.id).then((result, error) => {
       if (error) {
         return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
       }
@@ -509,7 +511,7 @@ module.exports.deleteTouristSpotPage = async (req, res) => {
 
 module.exports.retrievePage = (req, res) => {
   let type = TouristSpotPage
-  if (req.params.type == 'service') {
+  if (req.params.pageType == 'service') {
     type = ServicePage
   }
   type.findById(req.params.id).then((page, error) => {
@@ -536,6 +538,6 @@ module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   })
 }
 
-module.exports.createService = async (req, res) => {
+module.exports.createServicePage = async (req, res) => {
   createPage(req, res, ServicePage, "Enter Name of the Service here", true, req.body)
 }

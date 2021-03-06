@@ -11,7 +11,6 @@ const servicePage = new Schema(
     services: [Component],
     bookingInfo: [Component], 
     approved: { type: Boolean, required: false, default: true }
-
   },
   { timestamps: true }
 );
