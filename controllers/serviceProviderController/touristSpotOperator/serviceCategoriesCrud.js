@@ -12,7 +12,6 @@ async function addServiceCategory(req, res) {
       return true;
     }
   } catch (error) {
-      console.log("ERROR IN SAVING CATEGORIES: ", error);
     if (error.type == "validation_error") {
       return res.status(400).json({
         type: "validation_error",
@@ -42,7 +41,7 @@ module.exports.addDefaultCategories = async (req, res) => {
         { name: "Small Eatery" },
         { name: "Store" },
         { name: "Transportation" },
-        { name: "Ludging" },
+        { name: "Lodging" },
         { name: "Touring" }
       ]
 

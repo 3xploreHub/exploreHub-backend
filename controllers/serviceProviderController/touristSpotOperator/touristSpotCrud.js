@@ -22,17 +22,19 @@ const serviceCategoriesCrud = require("./serviceCategoriesCrud");
 //NEW CHANGES.....====================================================
 
 module.exports.addComponent = (req, res) => {
-  helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res, 'components');
+  const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
+  helper.addNewComponent(Pages, req.body, req.params.id, res, 'components');
 }
 
 module.exports.addServiceComponent = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
     let text = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
     const defaultComponent = new ComponentModel({ type: "item", styles: [], data: [photo, text], default: false });
     req.body.data = [serviceInfoDefault, defaultComponent];
-    helper.addNewComponent(TouristSpotPage, req.body, req.params.id, res);
+    helper.addNewComponent(Pages, req.body, req.params.id, res);
 
   } catch (error) {
     helper.handleError(error, res);
@@ -40,11 +42,13 @@ module.exports.addServiceComponent = async (req, res) => {
 }
 
 module.exports.saveInputField = async (req, res) => {
-  helper.addNewComponent(TouristSpotPage, req.body, req.params.parentId, res, 'bookingInfo');
+  const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
+  helper.addNewComponent(Pages, req.body, req.params.parentId, res, 'bookingInfo');
 }
 
 module.exports.saveItem = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
 
@@ -57,7 +61,7 @@ module.exports.saveItem = async (req, res) => {
       validComponent.data = [photo, text]
     }
 
-    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "services._id": req.params.serviceId },
+    helper.editComponent(Pages, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
   } catch (error) {
     helper.handleError(error, res);
@@ -67,9 +71,10 @@ module.exports.saveItem = async (req, res) => {
 
 module.exports.addServiceChildComponent = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $push: {
           "services.$[grandParent].data.$[parent].data": validComponent,
@@ -90,15 +95,17 @@ module.exports.addServiceChildComponent = async (req, res) => {
 }
 
 module.exports.addComponentImage = (req, res) => {
+  const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
   const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
-  helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "components._id": req.params.childId },
+  helper.editComponent(Pages, { "_id": req.params.parentId, "components._id": req.params.childId },
     { $push: { "components.$.data": newImage } }, res, newImage);
 }
 
 module.exports.addItemChildComponentImage = (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     const newImage = new ImageModel({ url: process.env.HOST + req.file.filename });
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $push: {
           "services.$[grandParent].data.$[parent].data.$[child].data": newImage,
@@ -126,13 +133,14 @@ module.exports.addItemChildComponentImage = (req, res) => {
 
 module.exports.editChildComponent = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     const validComponent = await ComponentModel.validate(req.body);
     if (validComponent.type == "photo") {
       validComponent.data = helper.convertIdToObjectId(validComponent);
     } else {
       console.log("not array");
     }
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $set: {
           "services.$[grandparent].data.$[parent].data.$[child].data": validComponent.data,
@@ -161,7 +169,8 @@ module.exports.editChildComponent = async (req, res) => {
 
 module.exports.deleteChildComponent = async (req, res) => {
   try {
-    TouristSpotPage.updateOne({ "_id": req.params.parentId },
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
+    Pages.updateOne({ "_id": req.params.parentId },
       {
         $pull: {
           "services.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.componentId) },
@@ -183,7 +192,8 @@ module.exports.deleteChildComponent = async (req, res) => {
 
 module.exports.deleteItemChild = async (req, res) => {
   try {
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $pull: {
           "services.$[grandParent].data.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.childId) },
@@ -216,12 +226,13 @@ module.exports.deleteItemChild = async (req, res) => {
 
 module.exports.deleteItem = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     let images = [];
     const result = await helper.getItem(req.params.pageId, req.params.itemId);
     images = helper.getImages(result[0].services[0])
     console.log(images);
 
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $pull: {
           "services.$[itemListId].data": { "_id": mongoose.Types.ObjectId(req.params.itemId) },
@@ -249,8 +260,9 @@ module.exports.deleteItem = async (req, res) => {
 
 module.exports.editServiceInfo = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     const validComponent = await ComponentModel.validate(req.body)
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $set: {
           "services.$[parent].data.$[info].data": validComponent.data,
@@ -277,6 +289,7 @@ module.exports.editServiceInfo = async (req, res) => {
 
 module.exports.editComponent = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     const validComponent = await ComponentModel.validate(req.body);
     if (validComponent.type == "photo") {
       validComponent.data = helper.convertIdToObjectId(validComponent);
@@ -284,7 +297,7 @@ module.exports.editComponent = async (req, res) => {
       console.log("not array");
     }
     console.log(typeof validComponent.data);
-    helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": req.body._id },
+    helper.editComponent(Pages, { "_id": req.params.id, "components._id": req.body._id },
       {
         $set: {
           "components.$.data": validComponent.data,
@@ -298,8 +311,9 @@ module.exports.editComponent = async (req, res) => {
 
 module.exports.editInputField = async (req, res) => {
   try {
+    const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
     const validComponent = await ComponentModel.validate(req.body);
-    helper.editComponent(TouristSpotPage, { "_id": req.params.parentId, "bookingInfo._id": req.body._id },
+    helper.editComponent(Pages, { "_id": req.params.parentId, "bookingInfo._id": req.body._id },
       {
         $set: {
           "bookingInfo.$.data": validComponent.data,
@@ -313,7 +327,7 @@ module.exports.editInputField = async (req, res) => {
 
 module.exports.getItemUpdatedData = async (req, res) => {
   try {
-    const result = await helper.getItem(req.params.pageId, req.params.itemId);
+    const result = await helper.getItem(req.params.pageId, req.params.itemId, req.params.pageType);
     res.status(200).json(result);
   } catch (err) {
     helper.handleError(err, res);
@@ -321,7 +335,7 @@ module.exports.getItemUpdatedData = async (req, res) => {
 }
 
 module.exports.getUpdatedItemListData = (req, res) => {
-  const Pages = req.params.pageType == 'service'? ServicePage: TouristSpotPage;
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
   Pages.aggregate([
     {
       "$match": { _id: mongoose.Types.ObjectId(req.params.pageId) }
@@ -347,19 +361,22 @@ module.exports.getUpdatedItemListData = (req, res) => {
 
 
 module.exports.deleteComponent = (req, res) => {
-  helper.deleteItem(TouristSpotPage,
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  helper.deleteItem(Pages,
     { _id: req.params.id },
     { 'components': { '_id': req.params.componentId } }, res, req.body.images)
 }
 
 module.exports.deleteInputField = (req, res) => {
-  helper.deleteItem(TouristSpotPage,
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  helper.deleteItem(Pages,
     { _id: req.params.parentId },
     { 'bookingInfo': { '_id': req.params.childId } }, res, req.body.images)
 }
 
 module.exports.deleteServiceComponent = async (req, res) => {
   try {
+    const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
     const result = await helper.getService(req.params.pageId, req.params.serviceId);
     let images = [];
     result[0].services.forEach(item => {
@@ -368,7 +385,7 @@ module.exports.deleteServiceComponent = async (req, res) => {
         images = imgs;
       }
     })
-    helper.deleteItem(TouristSpotPage,
+    helper.deleteItem(Pages,
       { _id: req.params.pageId },
       { 'services': { '_id': req.params.serviceId } }, res, images)
   } catch (err) {
@@ -377,7 +394,8 @@ module.exports.deleteServiceComponent = async (req, res) => {
 }
 
 module.exports.deleteImage = (req, res) => {
-  helper.editComponent(TouristSpotPage, { "_id": req.params.id, "components._id": req.body.componentId },
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  helper.editComponent(Pages, { "_id": req.params.id, "components._id": req.body.componentId },
     {
       $pull: {
         "components.$.data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
@@ -386,8 +404,9 @@ module.exports.deleteImage = (req, res) => {
 }
 
 module.exports.deleteItemImage = (req, res) => {
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
   try {
-    TouristSpotPage.updateOne({ "_id": req.params.pageId },
+    Pages.updateOne({ "_id": req.params.pageId },
       {
         $pull: {
           "services.$[grandParent].data.$[parent].data.$[child].data": { "_id": mongoose.Types.ObjectId(req.body.imageId) },
@@ -413,12 +432,16 @@ module.exports.deleteItemImage = (req, res) => {
   }
 }
 
-module.exports.createTouristSpotPage = async (req, res) => {
- createPage(req, res, TouristSpotPage, "Enter tourist spot name here")
+module.exports.createPage = async (req, res) => {
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  const hostTouristSpot = req.params.pageType == 'service' ? req.body : null;
+  const isService = req.params.pageType == 'service';
+  const inputNameLabel = req.params.pageType == 'service' ? "Enter service name here" : "Enter tourist spot name here";
+  makePage(req, res, Pages, inputNameLabel, isService, hostTouristSpot)
 }
 
 
-async function createPage(req, res, Page, pageNameInputLabel, service = false, hostTouristSpot = null) {
+async function makePage(req, res, Page, pageNameInputLabel, service, hostTouristSpot) {
   let serviceCategoriesName;
   let spotCategoriesName;
 
@@ -427,7 +450,6 @@ async function createPage(req, res, Page, pageNameInputLabel, service = false, h
   } else {
     spotCategoriesName = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
   }
-
 
   //default components for services and offers
   let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
@@ -439,9 +461,9 @@ async function createPage(req, res, Page, pageNameInputLabel, service = false, h
   let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
   let name = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
-  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service? hostTouristSpot.municipality : 'Moalboal' }, styles: [], default: true })
-  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
-  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service? serviceCategoriesName: spotCategoriesName }, styles: [], default: true })
+  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal' }, styles: [], default: true })
+  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
+  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName }, styles: [], default: true })
   let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
 
@@ -454,12 +476,12 @@ async function createPage(req, res, Page, pageNameInputLabel, service = false, h
 
 
   let defaultComponents = [photo, name, barangay, municipality, province, category, description];
-  const page = new Page({creator: req.user._id, components:  defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children]});
+  const page = new Page({ creator: req.user._id, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
 
   if (service) {
     page['hostTouristSpot'] = hostTouristSpot._id;
   }
-  page.save().then((createPage, error) => {
+  page.save().then((createdPage, error) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",
@@ -467,13 +489,13 @@ async function createPage(req, res, Page, pageNameInputLabel, service = false, h
         error: error
       })
     }
-    res.status(200).json(createPage)
+    res.status(200).json(createdPage)
   })
 }
 
 module.exports.deletePage = async (req, res) => {
   try {
-    let Pages = req.params.pageType == 'service'? ServicePage: TouristSpotPage;
+    let Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
     const page = await Pages.findById(req.params.id);
     let images = [];
     if (!page) {
@@ -510,11 +532,8 @@ module.exports.deletePage = async (req, res) => {
 }
 
 module.exports.retrievePage = (req, res) => {
-  let type = TouristSpotPage
-  if (req.params.pageType == 'service') {
-    type = ServicePage
-  }
-  type.findById(req.params.id).then((page, error) => {
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  Pages.findById(req.params.id).then((page, error) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",
@@ -530,7 +549,8 @@ module.exports.retrievePage = (req, res) => {
 }
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
-  TouristSpotPage.find({approved: true}).then((pages, error) => {
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  Pages.find({ approved: true }).then((pages, error) => {
     if (error) {
       return res.status(500).json(error);
     }
@@ -538,6 +558,3 @@ module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   })
 }
 
-module.exports.createServicePage = async (req, res) => {
-  createPage(req, res, ServicePage, "Enter Name of the Service here", true, req.body)
-}

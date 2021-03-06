@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
+const ServicePage = require("../../../models/servicePage");
 const touristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 
@@ -173,9 +174,10 @@ module.exports.convertIdToObjectId = (component)=> {
 //   }
 // ])
 
-module.exports.getItem = (pageId, itemId) => {
+module.exports.getItem = (pageId, itemId, pageType) => {
   return new Promise((resolve, reject) => {
-    touristSpotPage.aggregate([
+    const Pages = pageType == "service"? ServicePage: TouristSpotPage
+    Pages.aggregate([
       {
         "$match": { _id: mongoose.Types.ObjectId(pageId) }
       },

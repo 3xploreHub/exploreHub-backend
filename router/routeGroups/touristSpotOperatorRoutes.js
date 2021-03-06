@@ -79,8 +79,7 @@ router.put("/editInputField/:pageId/:grandParentId/:parentId/:pageType", tourist
 router.delete("/deletePage/:id/:pageType", touristSpotCrud.deletePage)
 router.get("/retrieveAllTouristSpotsPage", touristSpotCrud.retrieveAllTouristSpotsPage)
 
-router.post("/createTouristSpotPage", touristSpotCrud.createTouristSpotPage)
-router.post("/createServicePage", touristSpotCrud.createServicePage)
+router.post("/createPage/:pageType", touristSpotCrud.createPage)
 router.get("/retrievePage/:id/:pageType", touristSpotCrud.retrievePage)
 
 

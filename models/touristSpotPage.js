@@ -9,7 +9,7 @@ const touristSpotPageSchema = new Schema(
     components: [Component],
     services: [Component],
     bookingInfo: [Component], 
-    approved: { type: Boolean, required: false, default: true }
+    approved: { type: Boolean, required: false, default: false }
 
   },
   { timestamps: true }
