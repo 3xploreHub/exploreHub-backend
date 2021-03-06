@@ -1,25 +1,12 @@
-// error response format
-// {
-//   type:String  ---> underscore_separated_name
-//   error: error, ---> here we pass the error from the catch block,, we also pass here the validation errors for forms
-//   message: ---> description //optional
-// }
-
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
-
 const { ImageModel } = require("../../../models/commonSchemas/image");
 const ServicePage = require("../../../models/servicePage");
-const touristSpotCategory = require("../../../models/touristSpotCategory");
-const touristSpotPage = require("../../../models/touristSpotPage");
 const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 const helper = require("./helper");
 const touristSpotCategoriesCrud = require("./touristSpotCategoriesCrud");
 const serviceCategoriesCrud = require("./serviceCategoriesCrud");
-
-
-//NEW CHANGES.....====================================================
 
 module.exports.addComponent = (req, res) => {
   const Pages = req.params.pageType == "service" ? ServicePage : TouristSpotPage
@@ -377,7 +364,7 @@ module.exports.deleteInputField = (req, res) => {
 module.exports.deleteServiceComponent = async (req, res) => {
   try {
     const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
-    const result = await helper.getService(req.params.pageId, req.params.serviceId);
+    const result = await helper.getService(req.params.pageId, req.params.serviceId, req.params.pageType);
     let images = [];
     result[0].services.forEach(item => {
       let imgs = helper.getImages(item);
@@ -496,7 +483,7 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
 module.exports.deletePage = async (req, res) => {
   try {
     let Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
-    const page = await Pages.findById(req.params.id);
+    const page = await Pages.findById(req.params.pageId);
     let images = [];
     if (!page) {
       res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
@@ -514,7 +501,7 @@ module.exports.deletePage = async (req, res) => {
         images = [...images, ...imgs];
       }
     })
-    Pages.findByIdAndRemove(req.params.id).then((result, error) => {
+    Pages.findByIdAndRemove(req.params.pageId).then((result, error) => {
       if (error) {
         return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
       }
@@ -533,7 +520,7 @@ module.exports.deletePage = async (req, res) => {
 
 module.exports.retrievePage = (req, res) => {
   const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
-  Pages.findById(req.params.id).then((page, error) => {
+  Pages.findById(req.params.pageId).then((page, error) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",
@@ -550,7 +537,7 @@ module.exports.retrievePage = (req, res) => {
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
-  Pages.find({ approved: true }).then((pages, error) => {
+  Pages.find({ status: 'approved' }).then((pages, error) => {
     if (error) {
       return res.status(500).json(error);
     }
@@ -558,3 +545,17 @@ module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   })
 }
 
+module.exports.submitPage = async (req, res) => {
+  const Pages = req.params.pageType == 'service' ? ServicePage : TouristSpotPage;
+  Pages.updateOne({ _id: req.params.pageId },
+    {
+      $set: {
+        status: 'pending',
+      }
+    }, function (err, response) {
+      if (err) {
+        return res.status(500).json({ type: "internal error", error: err })
+      }
+      res.status(200).json({ message: "Page successfully submitted" });
+    })
+}

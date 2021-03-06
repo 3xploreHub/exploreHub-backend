@@ -76,11 +76,12 @@ router.get("/getUpdatedItemListData/:pageId/:serviceId/:pageType", touristSpotCr
 router.put("/editServiceInfo/:pageId/:serviceId/:infoId/:pageType", touristSpotCrud.editServiceInfo)
 router.post("/saveInputField/:pageId/:grandParentId/:parentId/:pageType", touristSpotCrud.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId/:pageType", touristSpotCrud.editInputField)
-router.delete("/deletePage/:id/:pageType", touristSpotCrud.deletePage)
+router.delete("/deletePage/:pageId/:pageType", touristSpotCrud.deletePage)
 router.get("/retrieveAllTouristSpotsPage", touristSpotCrud.retrieveAllTouristSpotsPage)
 
 router.post("/createPage/:pageType", touristSpotCrud.createPage)
-router.get("/retrievePage/:id/:pageType", touristSpotCrud.retrievePage)
+router.get("/retrievePage/:pageId/:pageType", touristSpotCrud.retrievePage)
+router.post("/submitPage/:pageId/:pageType", touristSpotCrud.submitPage)
 
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);

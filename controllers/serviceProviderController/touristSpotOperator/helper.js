@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
 const ServicePage = require("../../../models/servicePage");
-const touristSpotPage = require("../../../models/touristSpotPage");
+const TouristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 
 // module.exports.retrieve = (
@@ -214,9 +214,10 @@ module.exports.getItem = (pageId, itemId, pageType) => {
 }
 
 
-module.exports.getService = (pageId, serviceId) => {
+module.exports.getService = (pageId, serviceId, pageType) => {
   return new Promise((resolve, reject) => {
-    touristSpotPage.aggregate([
+    const Pages = pageType == "service"? ServicePage: TouristSpotPage
+    Pages.aggregate([
       {
         "$match": { _id: mongoose.Types.ObjectId(pageId) }
       },
