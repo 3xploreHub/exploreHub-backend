@@ -60,7 +60,6 @@ router.post("/addComponent/:id", touristSpotCrud.addComponent)
 router.post("/saveItem/:parentId/:serviceId", touristSpotCrud.saveItem)
 router.post("/addServiceChildComponent/:pageId/:grandParentId/:parentId", touristSpotCrud.addServiceChildComponent)
 router.post("/addServiceComponent/:id", touristSpotCrud.addServiceComponent)
-router.get("/retrieveToristSpotPage/:id", touristSpotCrud.retrieveToristSpotPage)
 router.put("/editComponent/:id", touristSpotCrud.editComponent)
 router.put("/editChildComponent/:pageId/:grandParentId/:parentId", touristSpotCrud.editChildComponent)
 router.post("/deleteChildComponent/:pageId/:grandParentId/:childId", touristSpotCrud.deleteChildComponent)
@@ -79,6 +78,12 @@ router.put("/editServiceInfo/:pageId/:serviceId/:infoId", touristSpotCrud.editSe
 router.post("/saveInputField/:pageId/:grandParentId/:parentId", touristSpotCrud.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId", touristSpotCrud.editInputField)
 router.delete("/deleteTouristSpotPage/:id", touristSpotCrud.deleteTouristSpotPage)
+router.get("/retrieveAllTouristSpotsPage", touristSpotCrud.retrieveAllTouristSpotsPage)
+
+
+router.post("/createService", touristSpotCrud.createService)
+router.get("/retrievePage/:id/:type", touristSpotCrud.retrievePage)
+
 
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

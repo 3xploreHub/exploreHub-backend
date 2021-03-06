@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../../models/commonSchemas/component");
-const { model } = require("../../../models/touristSpot-old.js");
 const touristSpotPage = require("../../../models/touristSpotPage");
 const deleteImage = require("../../../uploads/deleteImage");
 

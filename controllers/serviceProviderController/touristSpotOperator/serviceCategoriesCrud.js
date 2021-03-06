@@ -1,14 +1,9 @@
-const touristSpotCategory = require("../../../models/touristSpotCategory");
+const serviceCategory = require("../../../models/serviceCategory");
 
-// {
-//   "name": "Mountain adventure",
-// }
-
-//{{url}}/touristSpotOperator/addTouristSpotCategory
-async function addTouristSpotCategory(req, res) {
+async function addServiceCategory(req, res) {
   try {
     req.body["addedBy"] = req.user._id;
-    const newCategory = await touristSpotCategory.addTouristSpotCategory(
+    const newCategory = await serviceCategory.addServiceCategory(
       req.body
     );
     if (!req.continue) {
@@ -17,6 +12,7 @@ async function addTouristSpotCategory(req, res) {
       return true;
     }
   } catch (error) {
+      console.log("ERROR IN SAVING CATEGORIES: ", error);
     if (error.type == "validation_error") {
       return res.status(400).json({
         type: "validation_error",
@@ -33,39 +29,37 @@ async function addTouristSpotCategory(req, res) {
   }
 };
 
-module.exports.addTouristSpotCategory = addTouristSpotCategory;
+module.exports.addServiceCategory = addServiceCategory;
 
 module.exports.addDefaultCategories = async (req, res) => {
-  return touristSpotCategory.find({}).then(async (categories, error) => {
+  return serviceCategory.find({}).then(async (categories, error) => {
     if (error) {
       res.statu(500).json(error);
     }
     if (categories.length == 0) {
       const defaults = [
-        { name: "Island Hopping" },
-        { name: "Beach" },
-        { name: "Resort" },
-        { name: "Mountains and Peaks" }
+        { name: "Restaurant" },
+        { name: "Small Eatery" },
+        { name: "Store" },
+        { name: "Transportation" },
+        { name: "Ludging" },
+        { name: "Touring" }
       ]
 
       defaults.forEach(async (category) => {
         req['body'] = category;
         req['continue'] = true;
-        await addTouristSpotCategory(req, res)
+        await addServiceCategory(req, res)
       })
-    console.log("empty: ", categories);
-
       return defaults;
     }
-    console.log("not empty: ", categories);
     return categories;
   })
 
 }
 
-//{{url}}/touristSpotOperator/retrieveAllToristSpotCategories
 module.exports.retrieveAllToristSpotCategories = async (req, res) => {
-  touristSpotCategory
+  serviceCategory
     .find({}, "name touristSpotTotalCount addedBy")
     .populate("addedBy", "fullName")
     .exec((error, categories) => {
