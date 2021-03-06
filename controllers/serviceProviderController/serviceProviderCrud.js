@@ -5,7 +5,7 @@ const touristSpotPage = require("../../models/touristSpotPage");
 module.exports.getPages = async (req, res) => {
     try {
         const services = await servicePage.find({ creator: req.user._id });
-        const touristSpots = await touristSpotPage.find({ creator: req.user._id });
+        const touristSpots = await touristSpotPage.aggregate([{ $match: { status: { $ne: 'unfinished' } } }]);
         const pages = [...services, ...touristSpots];
         res.status(200).json(pages)
     } catch (error) {
