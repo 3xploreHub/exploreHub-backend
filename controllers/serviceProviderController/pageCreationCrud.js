@@ -13,16 +13,20 @@ module.exports.addComponent = (req, res) => {
   helper.addNewComponent(Pages, req.body, req.params.id, res, 'components');
 }
 
+function makeDefaultItem() {
+  const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-bold", "color-dark"], default: false })
+  const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: false})
+  const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: false})
+  return new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name, price, quantity], default: false })
+}
+
 module.exports.addServiceComponent = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
 
     const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
-    const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-    const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
-    const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
-    const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
-    const defaultComponent = new ComponentModel({ type: "item", styles: [], data: [photo, name, price, quantity], default: false });
+    const defaultComponent = makeDefaultItem();
     req.body.data = [serviceInfoDefault, defaultComponent];
     helper.addNewComponent(Pages, req.body, req.params.id, res);
 
@@ -43,12 +47,8 @@ module.exports.saveItem = async (req, res) => {
     const validComponent = await ComponentModel.validate(req.body);
 
     if (validComponent.type == "item") {
-      const defaultPhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-      const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
-      const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
-      const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
-
-      validComponent.data = [defaultPhoto, name, price, quantity]
+      const item = makeDefaultItem();
+      validComponent.data = item.data;
     }
 
     helper.editComponent(Pages, { "_id": req.params.parentId, "services._id": req.params.serviceId },
@@ -444,11 +444,7 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
 
   //default components for services and offers
   const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: false })
-  const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
-  const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
-  const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
-  const item = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name, price, quantity], default: false })
+  const item = makeDefaultItem();
 
   
   const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, item], default: false })
@@ -460,7 +456,7 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
   const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal' }, styles: [], default: true })
   const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
   const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName }, styles: [], default: true })
-  const description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
+  const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
 
   //default input fields for booking
   let currentYear = new Date().getFullYear()
