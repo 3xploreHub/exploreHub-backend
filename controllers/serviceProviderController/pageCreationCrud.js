@@ -16,10 +16,13 @@ module.exports.addComponent = (req, res) => {
 module.exports.addServiceComponent = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
-    let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
-    let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-    let text = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
-    const defaultComponent = new ComponentModel({ type: "item", styles: [], data: [photo, text], default: false });
+
+    const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+    const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
+    const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
+    const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
+    const defaultComponent = new ComponentModel({ type: "item", styles: [], data: [photo, name, price, quantity], default: false });
     req.body.data = [serviceInfoDefault, defaultComponent];
     helper.addNewComponent(Pages, req.body, req.params.id, res);
 
@@ -40,17 +43,18 @@ module.exports.saveItem = async (req, res) => {
     const validComponent = await ComponentModel.validate(req.body);
 
     if (validComponent.type == "item") {
-      let defaultPhoto = { type: "photo", data: [], styles: [], default: false }
-      let defaultText = { type: "text", data: { text: null }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-normal", "color-dark"], default: false }
+      const defaultPhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+      const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
+      const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
+      const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
 
-      let photo = new ComponentModel(defaultPhoto)
-      let text = new ComponentModel(defaultText)
-      validComponent.data = [photo, text]
+      validComponent.data = [defaultPhoto, name, price, quantity]
     }
 
     helper.editComponent(Pages, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
   } catch (error) {
+    console.log(error);
     helper.handleError(error, res);
   }
 }
@@ -215,7 +219,7 @@ module.exports.deleteItem = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
     let images = [];
-    const result = await helper.getItem(req.params.pageId, req.params.itemId);
+    const result = await helper.getItem(req.params.pageId, req.params.itemId, req.params.pageType);
     images = helper.getImages(result[0].services[0])
     console.log(images);
 
@@ -439,30 +443,34 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
   }
 
   //default components for services and offers
-  let servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-  let serviceText = new ComponentModel({ type: "text", data: { text: null }, styles: ["bg-white", "text-left", "font-small", "fontStyle-normal", "color-dark"], default: false })
-  let validComponent = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, serviceText], default: false })
-  let serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: false })
+  const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: false })
+  const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
+  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
+  const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: true})
+  const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: true})
+  const item = new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name, price, quantity], default: false })
+
+  
+  const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, item], default: false })
 
   //default components for tourist spot's information
-  let photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
-  let name = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
-  let barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
-  let municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal' }, styles: [], default: true })
-  let province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
-  let category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName }, styles: [], default: true })
-  let description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
-  const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, validComponent], default: false })
+  const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
+  const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
+  const barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null }, styles: [], default: true })
+  const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal' }, styles: [], default: true })
+  const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
+  const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName }, styles: [], default: true })
+  const description = new ComponentModel({ type: "labelled-text", data: { label: "Description", text: null }, styles: [], default: true })
 
   //default input fields for booking
   let currentYear = new Date().getFullYear()
-  let arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
-  let departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
-  let adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
-  let children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+  const arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+  const departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+  const adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+  const children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
 
 
-  let defaultComponents = [photo, name, barangay, municipality, province, category, description];
+  const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
   const page = new Page({ creator: req.user._id, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
 
   if (service) {
