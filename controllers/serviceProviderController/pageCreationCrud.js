@@ -15,7 +15,7 @@ module.exports.addComponent = (req, res) => {
 
 function makeDefaultItem() {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-bold", "color-dark"], default: false })
+  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-bold", "color-dark"], default: true })
   const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: false})
   const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: false})
   return new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name, price, quantity], default: false })
