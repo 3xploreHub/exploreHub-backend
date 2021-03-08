@@ -37,7 +37,7 @@ router.get("/retrievePage/:pageId/:pageType", pageCreationCrud.retrievePage)
 router.post("/submitPage/:pageId/:pageType", pageCreationCrud.submitPage)
 
 
-router.get("/getPages", serviceProviderCrud.getPages);
+router.get("/getPages/:status", serviceProviderCrud.getPages);
 router.get("/getPage/:pageId/:pageType", serviceProviderCrud.getPage)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

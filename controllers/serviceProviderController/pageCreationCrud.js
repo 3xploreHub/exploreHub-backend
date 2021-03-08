@@ -541,7 +541,7 @@ module.exports.retrievePage = (req, res) => {
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Pages.find({ status: 'approved' }).then((pages, error) => {
+  Pages.find({ status: 'Online' }).then((pages, error) => {
     if (error) {
       return res.status(500).json(error);
     }
@@ -554,7 +554,7 @@ module.exports.submitPage = async (req, res) => {
   Pages.updateOne({ _id: req.params.pageId },
     {
       $set: {
-        status: 'pending',
+        status: 'Pending',
       }
     }, function (err, response) {
       if (err) {
