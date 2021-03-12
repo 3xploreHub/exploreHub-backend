@@ -5,8 +5,8 @@ const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
 const deleteImage = require("../../uploads/deleteImage");
 const helper = require("./helper");
-const touristSpotCategoriesCrud = require("./touristSpotCategoriesCrud");
-const serviceCategoriesCrud = require("./serviceCategoriesCrud");
+const touristSpotCategoriesCrud = require("./touristSpotCategories");
+const serviceCategoriesCrud = require("./serviceCategories");
 
 module.exports.addComponent = (req, res) => {
   const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
@@ -443,7 +443,7 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
   }
 
   //default components for services and offers
-  const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: false })
+  const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
   const item = makeDefaultItem();
 
   

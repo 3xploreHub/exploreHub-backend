@@ -1,4 +1,4 @@
-const mongoose  = require("mongoose");
+const mongoose = require("mongoose");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
 
@@ -26,5 +26,15 @@ module.exports.getPage = async (req, res) => {
             res.status(404).json({ message: "Page not found!" })
         }
         return res.status(200).json(page);
+    })
+}
+
+module.exports.getServices = (req, res) => {
+    const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+    Pages.findOne({ _id: req.params.pageId }, { services: 1 }).then((services, error) => {
+        if (error) {
+            return res.status(500).json(error)
+        }
+        return res.status(200).json(services);
     })
 }
