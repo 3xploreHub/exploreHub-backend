@@ -16,8 +16,6 @@ module.exports.addComponent = (req, res) => {
 function makeDefaultItem() {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-bold", "color-dark"], default: true })
-  // const quantity = new ComponentModel({type: "labelled-text", data: { label: "Quantity", text: null, defaultName: "quantity"},styles: [], default: false})
-  // const price = new ComponentModel({type: "labelled-text", data: {label: "Price", text: null, defaultName: "price"},styles: [], default: false})
   return new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name], default: false })
 }
 
@@ -451,12 +449,12 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
 
   //default components for tourist spot's information
   const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
-  const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
+  const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null, defaultName: 'pageName' }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   const barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null, defaultName: 'barangay' }, styles: [], default: true })
   const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal', defaultName: 'municipality' }, styles: [], default: true })
   const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
   const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName, defaultName: 'province' }, styles: [], default: true })
-  const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
+  const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null, defaultName: 'description' }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
 
   //default input fields for booking
   let currentYear = new Date().getFullYear()
