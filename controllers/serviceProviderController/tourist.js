@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
-
+const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
     try {
@@ -21,5 +21,16 @@ module.exports.viewPage = async (req, res) => {
         res.status(200).json(page);
     } catch (error) {
         res.status(500).json(error);
+    }
+}
+
+module.exports.viewItems = async (req, res) => {
+    try {
+        console.log(req.params.pageId, req.params.serviceId, req.params.pageType);
+        const service = await helper.getService(req.params.pageId, req.params.serviceId, req.params.pageType);
+        res.status(200).json(service);
+    }  
+    catch(err) {
+        helper.handleError(error);
     }
 }
