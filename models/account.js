@@ -23,10 +23,12 @@ const Accountchema = new Schema(
     password: { type: String, required: true, trim: true },
     firstName: { type: String, required: false, lowercase: true, trim: true },
     lastName: { type: String, required: false, lowercase: true, trim: true },
+    middleName: { type: String, required: false, lowercase: true, trim: true },
     address: { type: String, required: false, lowercase: true, trim: true },
     fullName: { type: String, required: false, lowercase: true, trim: true },
     gender: { type: String, required: false },
     age: { type: Number, required: false },
+    birthday: { type: Date, required: false },
   },
   { timestamps: true }
 );
@@ -51,7 +53,7 @@ Accountchema.statics.getUserInfo = async function (id) {
   console.log("at model ", id);
   return this.findOne(
     { _id: id },
-    "accountType fullName email contactNumber age gender address",
+    "accountType fullName firstName lastName middleName email contactNumber age gender address birthday password profile",
     function (err, accountInfo) {
       if (err) {
         return err;
@@ -82,6 +84,7 @@ Accountchema.statics.generateJwt = function (user, type) {
       _id: user._id,
       email: user.email,
       type: type,
+      accountType: user.accountType,
     },
     MY_SECRET
   );
