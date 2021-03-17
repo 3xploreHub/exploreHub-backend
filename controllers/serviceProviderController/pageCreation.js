@@ -15,7 +15,7 @@ module.exports.addComponent = (req, res) => {
 
 function makeDefaultItem() {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
-  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+  const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
   return new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name], default: false })
 }
 
@@ -127,7 +127,6 @@ module.exports.editChildComponent = async (req, res) => {
     if (validComponent.type == "photo") {
       validComponent.data = helper.convertIdToObjectId(validComponent);
     } else {
-      console.log("not array");
     }
     Pages.updateOne({ "_id": req.params.pageId },
       {
@@ -219,7 +218,6 @@ module.exports.deleteItem = async (req, res) => {
     let images = [];
     const result = await helper.getItem(req.params.pageId, req.params.itemId, req.params.pageType);
     images = helper.getImages(result[0].services[0])
-    console.log(images);
 
     Pages.updateOne({ "_id": req.params.pageId },
       {
@@ -283,9 +281,7 @@ module.exports.editComponent = async (req, res) => {
     if (validComponent.type == "photo") {
       validComponent.data = helper.convertIdToObjectId(validComponent);
     } else {
-      console.log("not array");
     }
-    console.log(typeof validComponent.data);
     helper.editComponent(Pages, { "_id": req.params.id, "components._id": req.body._id },
       {
         $set: {
@@ -429,17 +425,19 @@ module.exports.createPage = async (req, res) => {
   makePage(req, res, Pages, inputNameLabel, isService, hostTouristSpot)
 }
 
+module.exports.getDefaultCategories = async (req, res) => {
+  const service = req.params.pageType == "service"
+  let defaultCategories = []
+  if (service) {
+    defaultCategories = await serviceCategoriesCrud.addDefaultCategories(req, res);
+  } else {
+    defaultCategories = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
+  }
+  res.status(200).json(defaultCategories)
+}
+
 
 async function makePage(req, res, Page, pageNameInputLabel, service, hostTouristSpot) {
-  let serviceCategoriesName;
-  let spotCategoriesName;
-
-  if (service) {
-    serviceCategoriesName = await serviceCategoriesCrud.addDefaultCategories(req, res);
-  } else {
-    spotCategoriesName = await touristSpotCategoriesCrud.addDefaultCategories(req, res);
-  }
-
   //default components for services and offers
   const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
   const item = makeDefaultItem();
@@ -452,8 +450,8 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
   const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null, defaultName: 'pageName' }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
   const barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null, defaultName: 'barangay' }, styles: [], default: true })
   const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal', defaultName: 'municipality' }, styles: [], default: true })
-  const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu" }, styles: [], default: true })
-  const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaults: service ? serviceCategoriesName : spotCategoriesName, defaultName: 'province' }, styles: [], default: true })
+  const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu", defaultName: "province" }, styles: [], default: true })
+  const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaultName: 'category' }, styles: [], default: true })
   const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null, defaultName: 'description' }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
 
   //default input fields for booking

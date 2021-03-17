@@ -53,11 +53,9 @@ module.exports.addDefaultCategories = async (req, res) => {
         req['continue'] = true;
         await addTouristSpotCategory(req, res)
       })
-    console.log("empty: ", categories);
 
       return defaults;
     }
-    console.log("not empty: ", categories);
     return categories;
   })
 

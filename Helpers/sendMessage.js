@@ -1,7 +1,6 @@
 const Nexmo = require("nexmo");
 
 module.exports = (sender, number, message) => {
-  console.log(number);
   return new Promise((resolve, reject) => {
     try {
       const nexmo = new Nexmo({

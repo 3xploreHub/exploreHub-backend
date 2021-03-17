@@ -20,7 +20,6 @@ module.exports.findAccount = async function (req, res) {
 //host/api/account/findAccountById
 module.exports.findAccountById = async function (req, res) {
   try {
-    console.log(req.body);
     const userAccount = await Account.getUserInfo(req.body._id);
     if (!userAccount) {
       return res

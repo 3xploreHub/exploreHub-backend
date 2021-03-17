@@ -14,23 +14,48 @@ module.exports.getOnlinePages = async (req, res) => {
 
 module.exports.viewPage = async (req, res) => {
     try {
-        const page = await touristSpotPage.findById(req.params.pageId);
-        if (!page) {
-            res.status(404).json({message: "Page not found!"})
+        const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+        const page = await Pages.findById(req.params.pageId);
+        let otherServices = []
+        if (req.params.pageType == "tourist_spot") {
+            otherServices = await servicePage.find({hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId)})
         }
-        res.status(200).json(page);
+        
+        if (!page) {
+            return res.status(404).json({message: "Page not found!"})
+        }
+        res.status(200).json({page: page, otherServices: otherServices});
     } catch (error) {
+        console.log(error);
         res.status(500).json(error);
+    }
+}
+
+module.exports.viewAllServices = async (req, res) => {
+    try {
+        const otherServices = await servicePage.find({hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId)})
+        res.status(200).json(otherServices);
+    }
+    catch(error) {
+        res.status(500).json(500);
     }
 }
 
 module.exports.viewItems = async (req, res) => {
     try {
-        console.log(req.params.pageId, req.params.serviceId, req.params.pageType);
         const service = await helper.getService(req.params.pageId, req.params.serviceId, req.params.pageType);
         res.status(200).json(service);
     }  
     catch(err) {
         helper.handleError(error);
+    }
+}
+
+module.exports.createBookingSession = (req, res) => {
+    try {
+
+    }
+    catch(error) {
+
     }
 }

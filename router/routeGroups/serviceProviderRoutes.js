@@ -36,13 +36,14 @@ router.get("/retrieveAllTouristSpotsPage", pageCreation.retrieveAllTouristSpotsP
 router.post("/createPage/:pageType", pageCreation.createPage)
 router.get("/retrievePage/:pageId/:pageType", pageCreation.retrievePage)
 router.post("/submitPage/:pageId/:pageType", pageCreation.submitPage)
-
-
+//tourist routes
 router.get("/getPages/:status", serviceProvider.getPages);
 router.get("/getPage/:pageId/:pageType", serviceProvider.getPage)
 router.get("/getServices/:pageId/:pageType", serviceProvider.getServices)
 router.get("/getOnlinePages/", tourist.getOnlinePages)
-router.get("/viewPage/:pageId", tourist.viewPage)
+router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
 router.get("/viewItems/:pageId/:serviceId/:pageType", tourist.viewItems)
+router.get("/viewAllServices/:pageId", tourist.viewAllServices)
+router.get("/getDefaultCategories/:pageType", pageCreation.getDefaultCategories)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

@@ -33,7 +33,6 @@ module.exports.initialRegistration = async (req, res) => {
         .json({ type: "field_uniqueness", errorFields: check });
     }
 
-    console.log(req.body);
     const newAccount = new Account(req.body);
     await newAccount.save();
 
@@ -97,7 +96,6 @@ module.exports.addAccountInformation = async (req, res) => {
     if (!updatedAccount) {
       return res.status(404).json({ message: "User account not found!" });
     }
-    console.log("updated account=", updatedAccount);
     const token = await Account.generateJwt(
       updatedAccount,
       userTokenType.accountAccess

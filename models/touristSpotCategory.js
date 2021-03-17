@@ -31,7 +31,6 @@ TouristSpotCategory.statics.addTouristSpotCategory = async function (
     result = Object.values(error.errors).map((err) => err.message);
   }
 
-  console.log(result);
 
   return new Promise(async (resolve, reject) => {
     if (!result) {

@@ -48,7 +48,6 @@ Accountchema.statics.checkEmail = async function (value) {
 };
 
 Accountchema.statics.getUserInfo = async function (id) {
-  console.log("at model ", id);
   return this.findOne(
     { _id: id },
     "accountType fullName email contactNumber age gender address",

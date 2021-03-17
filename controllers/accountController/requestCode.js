@@ -7,7 +7,6 @@ const accountFinder = require("./accountFinderFunctions");
 //when the user pressed sendcode , for password reset
 module.exports = async (req, res, next) => {
   try {
-    console.log(req.body);
     var userAccount = await accountFinder.searchAccount(req.body);
     if (!userAccount) {
       return res
@@ -21,7 +20,6 @@ module.exports = async (req, res, next) => {
       req.body.purpose,
       req.body.mediumInSending
     );
-    console.log(result);
 
     if (result.type == "limit_reached") {
       return res.status(400).json({

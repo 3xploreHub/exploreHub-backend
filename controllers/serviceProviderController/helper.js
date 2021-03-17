@@ -46,7 +46,6 @@ const addComponent = (model, touristSpotId, res, data, returnData = true) => {
     { upsert: true },
     function (err, result) {
       if (err) {
-        console.log("error= ", err)
         return res.status(500).json({
           type: "internal_error",
           error: err,
@@ -79,11 +78,9 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
   model.updateOne(query,
     data)
     .then(result => {
-      console.log(result)
       if (deleteImg) deleteImg(newData.imageUrl)
       res.status(200).json(newData);
     }).catch(error => {
-      console.log(error)
       res.status(500).json({ type: 'internal_error!', error: error });
     })
 }
@@ -98,7 +95,6 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
         return res.status(500).json({ type: "internal_error", error: err });
       }
       if (images) {
-        console.log(images);
         images.forEach(image => { deletePhoto(image) });
       }
       res.status(200).json({

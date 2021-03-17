@@ -28,7 +28,6 @@ module.exports = async (req, res) => {
           message: "Password update failed!",
         });
     }
-    console.log(updated);
     let unfinishedRegistration = false;
     let tokenType = userTokenType.accountAccess;
     if (fUser.fullName == undefined) {

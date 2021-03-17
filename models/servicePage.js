@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const servicePage = new Schema(
   {
     creator: { type: Schema.Types.ObjectId, required: true, ref: "Account" },
-    hostTouristSpot: { type: String, required: true, ref: 'TouristSpotPage'},
+    hostTouristSpot: { type:  Schema.Types.ObjectId, required: true, ref: 'TouristSpotPage'},
     components: [Component],
     services: [Component],
     bookingInfo: [Component], 
