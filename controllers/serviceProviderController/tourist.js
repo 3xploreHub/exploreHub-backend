@@ -55,17 +55,40 @@ module.exports.viewItems = async (req, res) => {
 
 module.exports.createBooking = async (req, res) => {
     try {
-        console.log(req.params.firstService);
-        const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
-        if (req.body.firstService) {
+        if (req.params.bookingId == "create_new") {
+            const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
+            if (req.body.firstService) {
+                const selectedService = new selectedServiceModel(req.body.firstService);
+                newBooking.selectedServices.push(selectedService)
+            }
+            const savedBooking = await newBooking.save();
+            res.status(200).json(savedBooking);
+        } else {
             const selectedService = new selectedServiceModel(req.body.firstService);
-            newBooking.selectedServices.push(selectedService)
+             booking.updateOne({ _id: req.params.bookingId },
+                {
+                    $push: {
+                        selectedServices: selectedService
+                    }
+                }).then(async (result) => {
+                    const bookingData = await booking.findById(req.params.bookingId);
+                    res.status(200).json(bookingData);
+                })
         }
-        console.log(newBooking);
-        await newBooking.save();
-        res.status(200).json(newBooking);
     }
 
+    catch (error) {
+        console.log(error);
+        res.status(500).json(error);
+    }
+}
+
+module.exports.getBooking = async (req, res) => {
+    try {
+        const bookingData = await booking.findById(req.params.bookingId);
+        const services = await touristSpotPage.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
+        res.status(200).json({ bookingData: bookingData, services: services.services });
+    }
     catch (error) {
         console.log(error);
         res.status(500).json(error);

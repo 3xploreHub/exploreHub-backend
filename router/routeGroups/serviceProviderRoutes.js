@@ -45,6 +45,7 @@ router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
 router.get("/viewItems/:pageId/:serviceId/:pageType", tourist.viewItems)
 router.get("/viewAllServices/:pageId", tourist.viewAllServices)
 router.get("/getDefaultCategories/:pageType", pageCreation.getDefaultCategories)
-router.post("/createBooking/:pageId/:pageType", tourist.createBooking)
+router.post("/createBooking/:pageId/:pageType/:bookingId", tourist.createBooking)
+router.get("/getBooking/:bookingId", tourist.getBooking)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

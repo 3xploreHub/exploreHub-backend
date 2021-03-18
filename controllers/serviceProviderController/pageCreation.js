@@ -23,7 +23,7 @@ module.exports.addServiceComponent = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
 
-    const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const defaultComponent = makeDefaultItem();
     req.body.data = [serviceInfoDefault, defaultComponent];
     helper.addNewComponent(Pages, req.body, req.params.id, res);
