@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const booking = require("../../models/booking");
+const { inputValueModel } = require("../../models/commonSchemas/inputValue");
 const { selectedServiceModel } = require("../../models/commonSchemas/selectedService");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
@@ -65,7 +66,7 @@ module.exports.createBooking = async (req, res) => {
             res.status(200).json(savedBooking);
         } else {
             const selectedService = new selectedServiceModel(req.body.firstService);
-             booking.updateOne({ _id: req.params.bookingId },
+            booking.updateOne({ _id: req.params.bookingId },
                 {
                     $push: {
                         selectedServices: selectedService
@@ -86,10 +87,46 @@ module.exports.createBooking = async (req, res) => {
 module.exports.getBooking = async (req, res) => {
     try {
         const bookingData = await booking.findById(req.params.bookingId);
-        const services = await touristSpotPage.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
-        res.status(200).json({ bookingData: bookingData, services: services.services });
+        const result = { bookingData: bookingData };
+        if (req.params.purpose == "add_services") {
+            const services = await touristSpotPage.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
+            result["services"] = services.services
+        }
+        res.status(200).json(result);
     }
     catch (error) {
+        console.log(error);
+        res.status(500).json(error);
+    }
+}
+
+module.exports.addBookingInfo = (req, res) => {
+    const bookingInfo = [];
+    req.body.forEach(inputValue => {
+        const inputVal = new inputValueModel(inputValue);
+        bookingInfo.push(inputVal);
+    });
+
+    booking.updateOne({ _id: req.params.bookingId },
+        {
+            $set: {
+                bookingInfo: bookingInfo
+            }
+        }).then(async (result) => {
+            const bookingData = await booking.findById(req.params.bookingId);
+            res.status(200).json(bookingData);
+        })
+
+}
+
+module.exports.getPageBookingInfo = async (req, res) => {
+    try {
+        const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+        const page = await Pages.findOne({_id: req.params.pageId}, {bookingInfo: 1});
+        const bookingData = await booking.findOne({_id: req.params.bookingId});
+        res.status(200).json({bookingInfo: page.bookingInfo, booking: bookingData})
+    }
+    catch(error) {
         console.log(error);
         res.status(500).json(error);
     }
