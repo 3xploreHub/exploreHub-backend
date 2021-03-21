@@ -242,17 +242,35 @@ module.exports.getImages = (data) => {
   let images = []
   data.data.forEach(data => {
     if (data.type == "item") {
-      data.data.forEach(comp => {
-        if (comp.type == "photo") {
-          comp.data.forEach(img => {
-            images.push(img.url);
-          })
-        }
+      const img = getItemImages(data);
+      if (img.length > 0) {
+        images = [...images, ...img];
+      }
+      // data.data.forEach(comp => {
+      //   if (comp.type == "photo") {
+      //     comp.data.forEach(img => {
+      //       images.push(img.url);
+      //     })
+      //   }
+      // })
+    }
+  })
+  return images;
+}
+
+function getItemImages(data) {
+  let images = []
+  data.data.forEach(comp => {
+    if (comp.type == "photo") {
+      comp.data.forEach(img => {
+        images.push(img.url);
       })
     }
   })
   return images;
 }
+
+module.exports.getItemImages = getItemImages
 
 module.exports.deletePhoto = deletePhoto;
 
