@@ -109,7 +109,7 @@ const deletePhoto = (image) => {
   deleteImage(img[img.length - 1]);
 }
 
-module.exports.convertIdToObjectId = (component)=> {
+module.exports.convertIdToObjectId = (component) => {
   return component.data.map(data => {
     if (typeof data == 'object') {
       if (data._id) {
@@ -172,7 +172,7 @@ module.exports.convertIdToObjectId = (component)=> {
 
 module.exports.getItem = (pageId, itemId, pageType) => {
   return new Promise((resolve, reject) => {
-    const Pages = pageType == "service"? servicePage: touristSpotPage
+    const Pages = pageType == "service" ? servicePage : touristSpotPage
     Pages.aggregate([
       {
         "$match": { _id: mongoose.Types.ObjectId(pageId) }
@@ -212,7 +212,7 @@ module.exports.getItem = (pageId, itemId, pageType) => {
 
 module.exports.getService = (pageId, serviceId, pageType) => {
   return new Promise((resolve, reject) => {
-    const Pages = pageType == "service"? servicePage: touristSpotPage
+    const Pages = pageType == "service" ? servicePage : touristSpotPage
     Pages.aggregate([
       {
         "$match": { _id: mongoose.Types.ObjectId(pageId) }

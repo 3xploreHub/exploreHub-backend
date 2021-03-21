@@ -7,6 +7,8 @@ const deleteImage = require("../../uploads/deleteImage");
 const helper = require("./helper");
 const touristSpotCategoriesCrud = require("./touristSpotCategories");
 const serviceCategoriesCrud = require("./serviceCategories");
+const { serviceModel } = require("../../models/service");
+const { Item } = require("../../models/item");
 
 module.exports.addComponent = (req, res) => {
   const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
@@ -16,17 +18,38 @@ module.exports.addComponent = (req, res) => {
 function makeDefaultItem() {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
-  return new ComponentModel({ type: "item", styles: [], data: [servicePhoto, name], default: false })
+  return new Item({ type: "item", styles: [], data: [servicePhoto, name], default: false })
 }
 
 module.exports.addServiceComponent = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
 
-    const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const serviceInfoDefault = new Item({ type: "text", data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const defaultComponent = makeDefaultItem();
-    req.body.data = [serviceInfoDefault, defaultComponent];
-    helper.addNewComponent(Pages, req.body, req.params.id, res);
+    await serviceInfoDefault.save();
+    await defaultComponent.save();
+    req.body.data = [serviceInfoDefault._id, defaultComponent._id];
+    delete req.body._id;
+    const data = new serviceModel(req.body);
+    Pages.findByIdAndUpdate(
+      req.params.id,
+      { services: data },
+      { upsert: true },
+      function (err, result) {
+        if (err) {
+          return res.status(500).json({
+            type: "internal_error",
+            error: err,
+          });
+        }
+        const itemList = new ComponentModel(req.body);
+        itemList.data = [serviceInfoDefault, defaultComponent]
+        itemList._id = data._id;
+        console.log("data: ",itemList);
+        res.status(200).json(itemList );
+      }
+    );
 
   } catch (error) {
     helper.handleError(error, res);
@@ -42,12 +65,13 @@ module.exports.saveItem = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
     delete req.body._id;
-    const validComponent = await ComponentModel.validate(req.body);
+    const validComponent = new Item(req.body)
 
     if (validComponent.type == "item") {
       const item = makeDefaultItem();
       validComponent.data = item.data;
     }
+    await validComponent.save()
 
     helper.editComponent(Pages, { "_id": req.params.parentId, "services._id": req.params.serviceId },
       { $push: { "services.$.data": validComponent } }, res, validComponent);
@@ -60,18 +84,15 @@ module.exports.saveItem = async (req, res) => {
 
 module.exports.addServiceChildComponent = async (req, res) => {
   try {
-    const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
     delete req.body._id;
     const validComponent = await ComponentModel.validate(req.body);
-    Pages.updateOne({ "_id": req.params.pageId },
+    Item.updateOne({ "_id": mongoose.Types.ObjectId(req.params.parentId) },
       {
         $push: {
-          "services.$[grandParent].data.$[parent].data": validComponent,
+          data: validComponent,
         }
       },
-      {
-        "arrayFilters": [{ "grandParent._id": mongoose.Types.ObjectId(req.params.grandParentId) }, { "parent._id": mongoose.Types.ObjectId(req.params.parentId) }]
-      }, function (err, response) {
+       function (err, response) {
         if (err) {
           return res.status(500).json({ type: "internal error", error: err })
         }
@@ -216,13 +237,18 @@ module.exports.deleteItem = async (req, res) => {
   try {
     const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
     let images = [];
-    const result = await helper.getItem(req.params.pageId, req.params.itemId, req.params.pageType);
-    images = helper.getImages(result[0].services[0])
+    // const result = await helper.getItem(req.params.pageId, req.params.itemId, req.params.pageType);
+    
+    const item = await Item.findOneAndRemove(req.params.itemId)
+    console.log('item to be deleted: ', item);
+    if (item.data && item.type == "item" && item.data.length > 0) {
+      images = helper.getImages(item)
+    }
 
     Pages.updateOne({ "_id": req.params.pageId },
       {
         $pull: {
-          "services.$[itemListId].data": { "_id": mongoose.Types.ObjectId(req.params.itemId) },
+          "services.$[itemListId].data": mongoose.Types.ObjectId(req.params.itemId),
         }
       },
       {
@@ -438,46 +464,54 @@ module.exports.getDefaultCategories = async (req, res) => {
 
 
 async function makePage(req, res, Page, pageNameInputLabel, service, hostTouristSpot) {
-  //default components for services and offers
-  const serviceInfoDefault = new ComponentModel({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
-  const item = makeDefaultItem();
-
-  
-  const defaultService = await ComponentModel.validate({ type: "item-list", styles: [], data: [serviceInfoDefault, item], default: false })
-
-  //default components for tourist spot's information
-  const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
-  const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null, defaultName: 'pageName' }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
-  const barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null, defaultName: 'barangay' }, styles: [], default: true })
-  const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal', defaultName: 'municipality' }, styles: [], default: true })
-  const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu", defaultName: "province" }, styles: [], default: true })
-  const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaultName: 'category' }, styles: [], default: true })
-  const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null, defaultName: 'description' }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
-
-  //default input fields for booking
-  let currentYear = new Date().getFullYear()
-  const arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
-  const departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
-  const adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
-  const children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+  try {
 
 
-  const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
-  const page = new Page({ creator: req.user._id, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+    //default components for services and offers
+    const serviceInfoDefault = new Item({ type: "text", data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const item = makeDefaultItem();
+    await item.save()
+    await serviceInfoDefault.save();
 
-  if (service) {
-    page['hostTouristSpot'] = hostTouristSpot._id;
-  }
-  page.save().then((createdPage, error) => {
-    if (error) {
-      return res.status(500).json({
-        type: "internal_error",
-        message: "Unexpected error occured!",
-        error: error
-      })
+
+    const defaultService = new serviceModel({ type: "item-list", styles: [], data: [serviceInfoDefault._id, item._id], default: false })
+
+    //default components for tourist spot's information
+    const photo = new ComponentModel({ type: "photo", data: [], styles: [], default: true })
+    const pageName = new ComponentModel({ type: "text", data: { placeholder: pageNameInputLabel, text: null, defaultName: 'pageName' }, styles: ["bg-light", "text-left", "font-large", "fontStyle-bold", "color-dark"], default: true })
+    const barangay = new ComponentModel({ type: "labelled-text", data: { label: "Barangay", text: null, defaultName: 'barangay' }, styles: [], default: true })
+    const municipality = new ComponentModel({ type: "labelled-text", data: { label: "Municipality", text: service ? hostTouristSpot.municipality : 'Moalboal', defaultName: 'municipality' }, styles: [], default: true })
+    const province = new ComponentModel({ type: "labelled-text", data: { label: "Province", text: service ? hostTouristSpot.city : "Cebu", defaultName: "province" }, styles: [], default: true })
+    const category = new ComponentModel({ type: "labelled-text", data: { label: "Category", text: null, defaultName: 'category' }, styles: [], default: true })
+    const description = new ComponentModel({ type: "text", data: { placeholder: "Enter description here", text: null, defaultName: 'description' }, styles: ["bg-white", "text-left", "font-normal", "fontStyle-normal", "color-light"], default: true })
+
+    //default input fields for booking
+    let currentYear = new Date().getFullYear()
+    const arrival = new ComponentModel({ type: "date-input", data: { label: "Arrival date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+    const departure = new ComponentModel({ type: "date-input", data: { label: "Departure date", instructions: null, required: true, defaultValue: null, value: null, customYears: [currentYear + 1, currentYear], customMonths: [], customDays: [], customDates: [] }, styles: [], default: false })
+    const adults = new ComponentModel({ type: "number-input", data: { label: "Number of adults", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+    const children = new ComponentModel({ type: "number-input", data: { label: "Number of children", instructions: null, required: true, defaultValue: null, min: 0, max: null }, styles: [], default: false })
+
+
+    const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
+    const page = new Page({ creator: req.user._id, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+
+    if (service) {
+      page['hostTouristSpot'] = hostTouristSpot._id;
     }
-    res.status(200).json(createdPage)
-  })
+    page.save().then((createdPage, error) => {
+      if (error) {
+        return res.status(500).json({
+          type: "internal_error",
+          message: "Unexpected error occured!",
+          error: error
+        })
+      }
+      res.status(200).json(createdPage)
+    })
+  } catch (error) {
+    res.status(500).json(error);
+  }
 }
 
 module.exports.deletePage = async (req, res) => {
@@ -520,7 +554,7 @@ module.exports.deletePage = async (req, res) => {
 
 module.exports.retrievePage = (req, res) => {
   const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Pages.findById(req.params.pageId).then((page, error) => {
+  Pages.findOne({_id: req.params.pageId}).populate({path: "services.data", model: "Item"}).exec((error, page) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",
@@ -559,5 +593,3 @@ module.exports.submitPage = async (req, res) => {
       res.status(200).json({ message: "Page successfully submitted" });
     })
 }
-
-
