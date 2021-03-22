@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
 
@@ -6,19 +7,20 @@ const touristSpotPage = require("../../models/touristSpotPage");
 module.exports.getPages = async (req, res) => {
     try {
         let cond = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: { $eq: 'Unfinished' } }
+        // let cond2 = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: { $eq: 'Unfinished' } }
         if (req.params.status == "submitted") cond.status = { $ne: 'Unfinished' }
-        const services = await servicePage.aggregate([{ $match: cond }]);
-        const touristSpots = await touristSpotPage.aggregate([{ $match: cond }]);
-        const pages = [...services, ...touristSpots];
-        res.status(200).json(pages)
+        const services = await Page.aggregate([{ $match: cond }]);
+        // const touristSpots = await Page.aggregate([{ $match: cond }]);
+        // const pages = [...services, ...touristSpots];
+        res.status(200).json(services)
     } catch (error) {
         res.status(500).json(error)
     }
 }
 
 module.exports.getPage = async (req, res) => {
-    const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-    Pages.findById(req.params.pageId).then((page, error) => {
+    // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+    Page.findById(req.params.pageId).then((page, error) => {
         if (error) {
             return res.status(500).json(error)
         }
@@ -30,8 +32,8 @@ module.exports.getPage = async (req, res) => {
 }
 
 module.exports.getServices = (req, res) => {
-    const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-    Pages.findOne({ _id: req.params.pageId }, { services: 1 }).then((services, error) => {
+    // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+    Page.findOne({ _id: req.params.pageId }, { services: 1 }).then((services, error) => {
         if (error) {
             return res.status(500).json(error)
         }

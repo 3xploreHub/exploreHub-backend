@@ -3,13 +3,14 @@ const booking = require("../../models/booking");
 const { inputValueModel } = require("../../models/commonSchemas/inputValue");
 const { selectedServiceModel } = require("../../models/commonSchemas/selectedService");
 const { Item } = require("../../models/item");
+const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
 const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
     try {
-        const pages = await touristSpotPage.aggregate([{ $match: { status: { $eq: 'Online' } } }]);
+        const pages = await Page.aggregate([{ $match: { status: { $eq: 'Online' } } }]);
         res.status(200).json(pages)
     } catch (error) {
         res.status(500).json(error)
@@ -18,12 +19,13 @@ module.exports.getOnlinePages = async (req, res) => {
 
 module.exports.viewPage = async (req, res) => {
     try {
-        const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-        let otherServices = []
-        if (req.params.pageType == "tourist_spot") {
-            otherServices = await servicePage.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
-        }
-        Pages.findOne({ _id: req.params.pageId }).populate({ path: "services.data", model: "Item" }).exec((error, page) => {
+        // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+        // let otherServices = []
+        // if (req.params.pageType == "tourist_spot") {
+        //     otherServices = await servicePage.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
+        // }
+        Page.findOne({ _id: req.params.pageId }).populate({ path: "services.data", model: "Item" })
+        .populate({path:"otherServices", model:"Page"}).exec((error, page) => {
             if (error) {
                 return res.status(500).json({
                     type: "internal_error",
@@ -34,7 +36,7 @@ module.exports.viewPage = async (req, res) => {
             if (!page) {
                 return res.status(404).json({ type: "not_found" })
             }
-            res.status(200).json({ page: page, otherServices: otherServices });
+            res.status(200).json(page);
         })
     } catch (error) {
         console.log(error);
@@ -44,7 +46,7 @@ module.exports.viewPage = async (req, res) => {
 
 module.exports.viewAllServices = async (req, res) => {
     try {
-        const otherServices = await servicePage.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
+        const otherServices = await Page.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
         res.status(200).json(otherServices);
     }
     catch (error) {
@@ -105,10 +107,10 @@ module.exports.getBooking = async (req, res) => {
                     return res.status(500).json(error);
                 }
 
-                const Pages = bookingData.bookingType == "service" ? servicePage : touristSpotPage;
+                // const Pages = bookingData.bookingType == "service" ? servicePage : touristSpotPage;
                 const result = { bookingData: bookingData };
                 if (req.params.purpose == "add_services") {
-                    Pages.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
+                    Page.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
                         .populate({ path: "services.data", model: "Item" }).exec((error, page) => {
                             if (error) {
                                 return res.status(500).json(error)
@@ -149,8 +151,8 @@ module.exports.addBookingInfo = (req, res) => {
 
 module.exports.getPageBookingInfo = async (req, res) => {
     try {
-        const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-        const page = await Pages.findOne({ _id: req.params.pageId }, { bookingInfo: 1 });
+        // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
+        const page = await Page.findOne({ _id: req.params.pageId }, { bookingInfo: 1 });
         const bookingData = await booking.findOne({ _id: req.params.bookingId });
         res.status(200).json({ bookingInfo: page.bookingInfo, booking: bookingData })
     }
@@ -158,4 +160,30 @@ module.exports.getPageBookingInfo = async (req, res) => {
         console.log(error);
         res.status(500).json(error);
     }
+}
+
+module.exports.submitBooking = (req, res) => {
+    booking.updateOne({ _id: req.params.bookingId },
+        {
+            $set: {
+                status: "Pending"
+            }
+        }).then((result, error) => {
+            if (error) {
+                return res.status(500).json(error);
+            }
+            res.status(200).json(result);
+        })
+}
+
+module.exports.getBookings = (req, res) => {
+    booking.find({ tourist: req.user._id , status: req.params.bookingStatus})
+    .populate({path: "pageId", model: "TouristSpotPage"})
+    .exec((error, bookings) => {
+        if (error) {
+           return res.status(500).json(error);
+        }
+        res.status(200).json(bookings);
+    })
+
 }
