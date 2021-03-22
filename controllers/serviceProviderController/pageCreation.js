@@ -453,7 +453,7 @@ async function makePage(req, res, Page, pageNameInputLabel, service, hostTourist
     //default components for services and offers
     let defaultService = new serviceModel({ type: "item-list",data: [], styles: [], default: false })
 
-    const serviceInfoDefault = new Item({ type: "text", serviceId: defaultService._id, data: { placeholder: "Enter service name or other info here", text: null }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const serviceInfoDefault = new Item({ type: "text", serviceId: defaultService._id, data: { placeholder: "Enter service name or other info here", text: null,defaultName: "name" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const item = makeDefaultItem();
     item.serviceId = defaultService._id;
     
