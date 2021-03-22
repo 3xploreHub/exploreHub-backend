@@ -178,7 +178,7 @@ module.exports.submitBooking = (req, res) => {
 
 module.exports.getBookings = (req, res) => {
     booking.find({ tourist: req.user._id , status: req.params.bookingStatus})
-    .populate({path: "pageId", model: "TouristSpotPage"})
+    .populate({path: "pageId", model: "Page"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);
