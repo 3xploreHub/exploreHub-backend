@@ -335,23 +335,7 @@ module.exports.getItemUpdatedData = async (req, res) => {
 }
 
 module.exports.getUpdatedItemListData = (req, res) => {
-  const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Pages.aggregate([
-    {
-      "$match": { _id: mongoose.Types.ObjectId(req.params.pageId) }
-    },
-    {
-      "$project": {
-        "services": {
-          "$filter": {
-            "input": "$services",
-            "as": "data",
-            "cond": { "$eq": ["$$data._id", mongoose.Types.ObjectId(req.params.serviceId)] }
-          }
-        }
-      }
-    }
-  ], function (err, data) {
+  Item.find({serviceId: req.params.serviceId}).then((data, err) => {
     if (err) {
       return res.status(500).json({ type: "internal_error", error: err })
     }
