@@ -176,9 +176,9 @@ module.exports.submitBooking = (req, res) => {
         })
 }
 
-module.exports.getBookings = (req, res) => {
+module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
     booking.find({ tourist: req.user._id , status: req.params.bookingStatus})
-    .populate({path: "pageId", model: "Page"})
+    .populate({path: "pageId", model: "Page", select: "components"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);
@@ -186,4 +186,16 @@ module.exports.getBookings = (req, res) => {
         res.status(200).json(bookings);
     })
 
+}
+
+module.exports.viewBooking = (req, res) => {
+    booking.findOne({_id: req.params.bookingId})
+    .populate({path: "pageId", model: "Page", select: "components"})
+    .populate({path:"selectedServices.service", path: "Item"})
+    .exec((error, bookings) => {
+        if (error) {
+           return res.status(500).json(error);
+        }
+        res.status(200).json(bookings);
+    })
 }

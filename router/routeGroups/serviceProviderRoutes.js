@@ -50,6 +50,7 @@ router.get("/getBooking/:bookingId/:purpose", tourist.getBooking)
 router.post("/addBookingInfo/:bookingId", tourist.addBookingInfo)
 router.get("/getPageBookingInfo/:pageId/:pageType/:bookingId", tourist.getPageBookingInfo)
 router.post("/submitBooking/:bookingId", tourist.submitBooking)
-router.get("/getBookings/:bookingStatus", tourist.getBookings);
+router.get("/getBookings/:bookingStatus", tourist.getBookings)
+router.get("/viewBooking/:bookingId", tourist.viewBooking)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
