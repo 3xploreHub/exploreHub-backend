@@ -28,7 +28,7 @@ module.exports.addServiceComponent = async (req, res) => {
     delete req.body._id;
     let data = new serviceModel(req.body);
 
-    const serviceInfoDefault = new Item({ type: "text", serviceId: data._id, pageId: req.params.id, data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-white", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const serviceInfoDefault = new Item({ type: "text", serviceId: data._id, pageId: req.params.id, data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const defaultComponent = makeDefaultItem(data._id, req.params.id);
     
     data.data = [serviceInfoDefault._id, defaultComponent._id];
@@ -78,7 +78,7 @@ module.exports.saveItem = async (req, res) => {
     await newItem.save()
 
     helper.editComponent(Page, { "_id": req.params.parentId, "services._id": req.params.serviceId },
-      { $push: { "services.$.data": newItem } }, res, newItem);
+      { $push: { "services.$.data": newItem._id } }, res, newItem);
   } catch (error) {
     console.log(error);
     helper.handleError(error, res);
@@ -549,7 +549,9 @@ module.exports.deletePage = async (req, res) => {
 
 module.exports.retrievePage = (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Page.findOne({ _id: req.params.pageId }).populate({ path: "services.data", model: "Item" }).exec((error, page) => {
+  Page.findOne({ _id: req.params.pageId })
+  .populate({ path: "services.data", model: "Item" })
+  .exec((error, page) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",

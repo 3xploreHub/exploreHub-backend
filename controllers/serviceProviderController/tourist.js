@@ -17,32 +17,26 @@ module.exports.getOnlinePages = async (req, res) => {
     }
 }
 
-module.exports.viewPage = async (req, res) => {
-    try {
-        // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-        // let otherServices = []
-        // if (req.params.pageType == "tourist_spot") {
-        //     otherServices = await servicePage.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
-        // }
-        Page.findOne({ _id: req.params.pageId }).populate({ path: "services.data", model: "Item" })
-        .populate({path:"otherServices", model:"Page"}).exec((error, page) => {
-            if (error) {
-                return res.status(500).json({
-                    type: "internal_error",
-                    message: "unexpected error occured!",
-                    error: error
-                });
-            }
-            if (!page) {
-                return res.status(404).json({ type: "not_found" })
-            }
-            res.status(200).json(page);
-        })
-    } catch (error) {
-        console.log(error);
-        res.status(500).json(error);
-    }
-}
+
+
+module.exports.viewPage = (req, res) => {
+    Page.findOne({ _id: req.params.pageId })
+    .populate({ path: "services.data", model: "Item" })
+    .populate({path: "otherServices", model: "Page"})
+    .exec((error, page) => {
+      if (error) {
+        return res.status(500).json({
+          type: "internal_error",
+          message: "unexpected error occured!",
+          error: error
+        });
+      }
+      if (!page) {
+        return res.status(404).json({ type: "not_found" })
+      }
+      res.status(200).json(page);
+    })
+  }
 
 module.exports.viewAllServices = async (req, res) => {
     try {
@@ -177,7 +171,7 @@ module.exports.submitBooking = (req, res) => {
 }
 
 module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
-    booking.find({ tourist: req.user._id , status: req.params.bookingStatus})
+    booking.find({ tourist: req.user._id , status: req.params.bookingStatus}) 
     .populate({path: "pageId", model: "Page", select: "components"})
     .exec((error, bookings) => {
         if (error) {
@@ -191,7 +185,7 @@ module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.***********
 module.exports.viewBooking = (req, res) => {
     booking.findOne({_id: req.params.bookingId})
     .populate({path: "pageId", model: "Page", select: "components"})
-    .populate({path:"selectedServices.service", path: "Item"})
+    .populate({path:"selectedServices.service", model: "Item"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);

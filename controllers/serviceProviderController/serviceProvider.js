@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const booking = require("../../models/booking");
 const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
@@ -33,10 +34,24 @@ module.exports.getPage = async (req, res) => {
 
 module.exports.getServices = (req, res) => {
     // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-    Page.findOne({ _id: req.params.pageId }, { services: 1 }).then((services, error) => {
+    Page.findOne({ _id: req.params.pageId }, { services: 1 })
+    .populate({path: "services.data", model: "Item"})
+    .exec((error, services) => {
         if (error) {
             return res.status(500).json(error)
         }
         return res.status(200).json(services);
+    })
+}
+
+module.exports.getPageBooking = (req, res) => {
+    booking.find({ pageId: req.params.pageId, status: req.params.bookingStatus}) 
+    .populate({path: "tourist", model: "Account", select: "firstName lastName"})
+    .populate({path:"pageId", model:"Page", select: "components"})
+    .exec((error, bookings) => {
+        if (error) {
+           return res.status(500).json(error);
+        }
+        res.status(200).json(bookings);
     })
 }

@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const Service = new Schema({
   type: { type: String, required: [true, "Service type is required"] },
   styles: { type: Array, required: false },
-  data: [{ type: Schema.Types.ObjectId, required: true }],
+  data: [{ type: Schema.Types.ObjectId, required: true, ref: "Item" }],
   default: { type: Boolean, required: false, default: false }
 });
 

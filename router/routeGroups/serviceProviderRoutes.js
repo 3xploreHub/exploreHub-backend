@@ -31,15 +31,16 @@ router.put("/editServiceInfo/:pageId/:serviceId/:infoId/:pageType", pageCreation
 router.post("/saveInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.editInputField)
 router.delete("/deletePage/:pageId/:pageType", pageCreation.deletePage)
-router.get("/retrieveAllTouristSpotsPage", pageCreation.retrieveAllTouristSpotsPage)
 
+router.get("/retrieveAllTouristSpotsPage", pageCreation.retrieveAllTouristSpotsPage)
 router.post("/createPage/:pageType", pageCreation.createPage)
 router.get("/retrievePage/:pageId/:pageType", pageCreation.retrievePage)
 router.post("/submitPage/:pageId/:pageType", pageCreation.submitPage)
-//tourist routes
 router.get("/getPages/:status", serviceProvider.getPages);
 router.get("/getPage/:pageId/:pageType", serviceProvider.getPage)
 router.get("/getServices/:pageId/:pageType", serviceProvider.getServices)
+router.get("/getPageBooking/:bookingStatus/:pageId", serviceProvider.getPageBooking)
+
 router.get("/getOnlinePages/", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
 router.get("/viewItems/:pageId/:serviceId/:pageType", tourist.viewItems)
