@@ -47,7 +47,7 @@ module.exports.getServices = (req, res) => {
 module.exports.getPageBooking = (req, res) => {
     booking.find({ pageId: req.params.pageId, status: req.params.bookingStatus}) 
     .populate({path: "tourist", model: "Account", select: "firstName lastName"})
-    .populate({path:"pageId", model:"Page", select: "components"})
+    .populate({path:"selectedServices.service", model: "Item"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);

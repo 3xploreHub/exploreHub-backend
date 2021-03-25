@@ -173,6 +173,7 @@ module.exports.submitBooking = (req, res) => {
 module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
     booking.find({ tourist: req.user._id , status: req.params.bookingStatus}) 
     .populate({path: "pageId", model: "Page", select: "components"})
+    .populate({path:"selectedServices.service", model: "Item"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);
