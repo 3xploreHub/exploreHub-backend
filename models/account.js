@@ -80,6 +80,7 @@ Accountchema.statics.generateJwt = function (user, type) {
     {
       _id: user._id,
       email: user.email,
+      accountType: user.accountType,
       type: type,
     },
     MY_SECRET
