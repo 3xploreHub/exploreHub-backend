@@ -187,6 +187,7 @@ module.exports.viewBooking = (req, res) => {
     booking.findOne({_id: req.params.bookingId})
     .populate({path: "pageId", model: "Page", select: "components"})
     .populate({path:"selectedServices.service", model: "Item"})
+    .populate({path:"tourist", model: "Account"})
     .exec((error, bookings) => {
         if (error) {
            return res.status(500).json(error);
