@@ -9,34 +9,36 @@ const touristSpotPage = require("../../models/touristSpotPage");
 const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
-    try {
-        const pages = await Page.aggregate([{ $match: { status: { $eq: 'Online' } } }]);
+    Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
+    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
+    ]).exec(function (err, pages) {
+        if (err) {
+            res.status(500).json(err);
+        }
         res.status(200).json(pages)
-    } catch (error) {
-        res.status(500).json(error)
-    }
+    })
 }
 
 
 
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
-    .populate({ path: "services.data", model: "Item" })
-    .populate({path: "otherServices", model: "Page"})
-    .exec((error, page) => {
-      if (error) {
-        return res.status(500).json({
-          type: "internal_error",
-          message: "unexpected error occured!",
-          error: error
-        });
-      }
-      if (!page) {
-        return res.status(404).json({ type: "not_found" })
-      }
-      res.status(200).json(page);
-    })
-  }
+        .populate({ path: "services.data", model: "Item" })
+        .populate({ path: "otherServices", model: "Page" })
+        .exec((error, page) => {
+            if (error) {
+                return res.status(500).json({
+                    type: "internal_error",
+                    message: "unexpected error occured!",
+                    error: error
+                });
+            }
+            if (!page) {
+                return res.status(404).json({ type: "not_found" })
+            }
+            res.status(200).json(page);
+        })
+}
 
 module.exports.viewAllServices = async (req, res) => {
     try {
@@ -171,27 +173,28 @@ module.exports.submitBooking = (req, res) => {
 }
 
 module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
-    booking.find({ tourist: req.user._id , status: req.params.bookingStatus}) 
-    .populate({path: "pageId", model: "Page", select: "components"})
-    .populate({path:"selectedServices.service", model: "Item"})
-    .exec((error, bookings) => {
-        if (error) {
-           return res.status(500).json(error);
-        }
-        res.status(200).json(bookings);
-    })
+    booking.find({ tourist: req.user._id, status: req.params.bookingStatus })
+        .populate({ path: "pageId", model: "Page", select: "components" })
+        .populate({ path: "selectedServices.service", model: "Item" })
+        .exec((error, bookings) => {
+            if (error) {
+                return res.status(500).json(error);
+            }
+            res.status(200).json(bookings);
+        })
 
 }
 
 module.exports.viewBooking = (req, res) => {
-    booking.findOne({_id: req.params.bookingId})
-    .populate({path: "pageId", model: "Page", select: "components"})
-    .populate({path:"selectedServices.service", model: "Item"})
-    .populate({path:"tourist", model: "Account"})
-    .exec((error, bookings) => {
-        if (error) {
-           return res.status(500).json(error);
-        }
-        res.status(200).json(bookings);
-    })
+    booking.findOne({ _id: req.params.bookingId })
+        .populate({ path: "pageId", model: "Page" })
+        // .populate({path:"pageId", populate: { path: "creator", model: "Account", select: "fullName"}})
+        .populate({ path: "selectedServices.service", model: "Item" })
+        .populate({ path: "tourist", model: "Account" })
+        .exec((error, bookings) => {
+            if (error) {
+                return res.status(500).json(error);
+            }
+            res.status(200).json(bookings);
+        })
 }
