@@ -4,8 +4,6 @@ const { inputValueModel } = require("../../models/commonSchemas/inputValue");
 const { selectedServiceModel } = require("../../models/commonSchemas/selectedService");
 const { Item } = require("../../models/item");
 const Page = require("../../models/page");
-const servicePage = require("../../models/servicePage");
-const touristSpotPage = require("../../models/touristSpotPage");
 const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
@@ -18,8 +16,6 @@ module.exports.getOnlinePages = async (req, res) => {
         res.status(200).json(pages)
     })
 }
-
-
 
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })

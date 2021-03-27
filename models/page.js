@@ -7,12 +7,12 @@ const Page = new Schema(
   {
     creator: { type: Schema.Types.ObjectId, required: true, ref: "Account" },
     hostTouristSpot: { type:  Schema.Types.ObjectId, ref: "Page"},
-    pageType: {type:String, required: true},
+    pageType: {type:String, enum : ['tourist_spot','service'], required: true},
     components: [Component],
     services: [Component],
     otherServices: [{type:Schema.Types.ObjectId}],
     bookingInfo: [Component],
-    status: { type: String, enum : ['Unfinished','Pending', 'Online', 'Rejected', 'Not Operating'], required: false, default: 'Unfinished' }
+    status: { type: String, enum : ['Unfinished','Pending', 'Processing', 'Online', 'Rejected', 'Not Operating'], required: false, default: 'Unfinished' }
   },
   { timestamps: true }
 );
