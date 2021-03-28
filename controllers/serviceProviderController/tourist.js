@@ -194,3 +194,14 @@ module.exports.viewBooking = (req, res) => {
             res.status(200).json(bookings);
         })
 }
+
+module.exports.deleteBooking = (req, res) => {
+    console.log(req.params.bookingId)
+    booking.deleteOne({_id: req.params.bookingId}).then((result, error) => {
+        if (error) {
+            console.log(error);
+            return res.status(500).json(error);
+        }
+        res.status(200).json(result);
+    })
+}
