@@ -169,15 +169,22 @@ module.exports.submitBooking = (req, res) => {
 }
 
 module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
-    booking.find({ tourist: req.user._id, status: req.params.bookingStatus })
-        .populate({ path: "pageId", model: "Page", select: "components" })
-        .populate({ path: "selectedServices.service", model: "Item" })
-        .exec((error, bookings) => {
-            if (error) {
-                return res.status(500).json(error);
-            }
-            res.status(200).json(bookings);
-        })
+    // Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
+    // { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
+    // ]).exec(function (err, pages) {
+    const status = req.params.bookingStatus != "Unfinished"? { $ne: "Unfinished" }: { $eq: "Unfinished" }
+    booking.aggregate([
+        { $match: { tourist: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: status } },
+        { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id' , as: 'page'} },
+        { $lookup: { from: 'items', localField: 'selectedServices.service', foreignField: '_id', as: 'selectedServices.service' } }
+    ]).exec((error, bookings) => {
+        if (error) {
+            console.log(error)
+            return res.status(500).json(error);
+        }
+        bookings.pageId = bookings.page? bookings.page[0]: bookings.page
+        res.status(200).json(bookings);
+    })
 
 }
 
@@ -197,7 +204,7 @@ module.exports.viewBooking = (req, res) => {
 
 module.exports.deleteBooking = (req, res) => {
     console.log(req.params.bookingId)
-    booking.deleteOne({_id: req.params.bookingId}).then((result, error) => {
+    booking.deleteOne({ _id: req.params.bookingId }).then((result, error) => {
         if (error) {
             console.log(error);
             return res.status(500).json(error);

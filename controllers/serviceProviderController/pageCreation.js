@@ -231,8 +231,6 @@ module.exports.deleteItem = async (req, res) => {
     let images = [];
 
     const item = await Item.findOneAndRemove({_id: req.params.itemId})
-    console.log("item id: ", req.params.itemId);
-    console.log('item to be deleted: ', item);
     if (item.data && item.type == "item" && item.data.length > 0) {
       images = helper.getItemImages(item)
     }
