@@ -176,13 +176,12 @@ module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.***********
     booking.aggregate([
         { $match: { tourist: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: status } },
         { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id' , as: 'page'} },
-        { $lookup: { from: 'items', localField: 'selectedServices.service', foreignField: '_id', as: 'selectedServices.service' } }
+        { $lookup: { from: 'items', localField: 'selectedServices.service', foreignField: '_id', as: 'services' } }
     ]).exec((error, bookings) => {
         if (error) {
             console.log(error)
             return res.status(500).json(error);
         }
-        bookings.pageId = bookings.page? bookings.page[0]: bookings.page
         res.status(200).json(bookings);
     })
 
