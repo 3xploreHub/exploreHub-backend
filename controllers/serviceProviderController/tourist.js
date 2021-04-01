@@ -215,7 +215,10 @@ module.exports.deleteBooking = (req, res) => {
 
 module.exports.getNotifications = (req, res) => {
     notification.find({ receiver: req.user._id })
-        .populate({ path: 'page', model: 'Page' }).exec((error, result) => {
+        .populate({ path: 'page', model: 'Page' })
+        .populate({ path: 'booking', model: 'Booking' })
+        .exec((error, result) => {
+            console.log(error);
             if (error) return res.status(500).json(error)
             res.status(200).json(result);
         })
