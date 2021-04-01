@@ -53,6 +53,8 @@ router.get("/getPageBookingInfo/:pageId/:pageType/:bookingId", tourist.getPageBo
 router.post("/submitBooking/:bookingId", tourist.submitBooking)
 router.get("/getBookings/:bookingStatus", tourist.getBookings)
 router.get("/viewBooking/:bookingId", tourist.viewBooking)
-router.delete("/deleteBooking/:bookingId", tourist.deleteBooking);
+router.delete("/deleteBooking/:bookingId", tourist.deleteBooking)
+router.get("/getNotifications", tourist.getNotifications)
+router.put("/viewNotification/:notificationId", tourist.viewNotification)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

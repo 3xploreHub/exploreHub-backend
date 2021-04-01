@@ -3,6 +3,7 @@ const booking = require("../../models/booking");
 const { inputValueModel } = require("../../models/commonSchemas/inputValue");
 const { selectedServiceModel } = require("../../models/commonSchemas/selectedService");
 const { Item } = require("../../models/item");
+const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const helper = require("./helper");
 
@@ -172,10 +173,10 @@ module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.***********
     // Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
     // { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
     // ]).exec(function (err, pages) {
-    const status = req.params.bookingStatus != "Unfinished"? { $ne: "Unfinished" }: { $eq: "Unfinished" }
+    const status = req.params.bookingStatus != "Unfinished" ? { $ne: "Unfinished" } : { $eq: "Unfinished" }
     booking.aggregate([
         { $match: { tourist: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: status } },
-        { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id' , as: 'page'} },
+        { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id', as: 'page' } },
         { $lookup: { from: 'items', localField: 'selectedServices.service', foreignField: '_id', as: 'services' } }
     ]).exec((error, bookings) => {
         if (error) {
@@ -203,11 +204,33 @@ module.exports.viewBooking = (req, res) => {
 
 module.exports.deleteBooking = (req, res) => {
     console.log(req.params.bookingId)
-    booking.deleteOne({ _id: req.params.bookingId }).then((result, error) => {
-        if (error) {
-            console.log(error);
-            return res.status(500).json(error);
-        }
+    booking.deleteOne({ _id: req.params.bookingId }).then(result => {
         res.status(200).json(result);
+    }).catch(error => {
+        console.log(error);
+        return res.status(500).json(error);
+    })
+}
+
+
+module.exports.getNotifications = (req, res) => {
+    notification.find({ receiver: req.user._id })
+        .populate({ path: 'page', model: 'Page' }).exec((error, result) => {
+            if (error) return res.status(500).json(error)
+            res.status(200).json(result);
+        })
+
+}
+
+module.exports.viewNotification = (req, res) => {
+    notification.updateOne({
+        _id: req.params.notificationId
+    }, {
+        $set: {
+            opened: true
+        }
+    }, function (err, result) {
+        if (err) return res.status(500).json(err)
+        res.status(200).json(result)
     })
 }
