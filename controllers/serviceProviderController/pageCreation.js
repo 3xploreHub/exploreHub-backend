@@ -175,9 +175,7 @@ module.exports.editChildComponent = async (req, res) => {
   }
 }
 
-module.exports.deleteChildComponent = async (req, res) => {
-  try {
-    // const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
+module.exports.deleteChildComponent = (req, res) => { 
     Page.updateOne({ "_id": req.params.parentId },
       {
         $pull: {
@@ -192,15 +190,9 @@ module.exports.deleteChildComponent = async (req, res) => {
         }
         res.status(200).json(response);
       })
-
-  } catch (error) {
-    helper.handleError(error, res);
-  }
 }
 
-module.exports.deleteItemChild = async (req, res) => {
-  try {
-    // const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
+module.exports.deleteItemChild = (req, res) => {
     Item.updateOne({ "_id": req.params.parentId },
       {
         $pull: {
@@ -217,10 +209,6 @@ module.exports.deleteItemChild = async (req, res) => {
         }
         res.status(200).json(response);
       })
-
-  } catch (error) {
-    helper.handleError(error, res);
-  }
 }
 
 

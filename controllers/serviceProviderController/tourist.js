@@ -237,3 +237,20 @@ module.exports.viewNotification = (req, res) => {
         res.status(200).json(result)
     })
 }
+
+module.exports.removeSelectedItem = (req, res) => {
+    booking.updateOne(
+        {
+            _id: req.params.bookingId
+        },
+        {
+            $pull: {
+                "selectedServices": { "_id": mongoose.Types.ObjectId(req.params.selectedId) },
+            }
+        }, function (err, response) {
+            if (err) {
+                return res.status(500).json({ type: "internal error", error: err })
+            }
+            res.status(200).json(response);
+        })
+}

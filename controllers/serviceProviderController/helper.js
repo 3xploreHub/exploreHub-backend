@@ -87,6 +87,10 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
 }
 
 module.exports.deleteItem = (model, query, condition, res, images) => {
+
+
+
+  
   model.updateOne(
     query,
     {
