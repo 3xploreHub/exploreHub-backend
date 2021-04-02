@@ -90,7 +90,6 @@ module.exports.createBooking = async (req, res) => {
 
 module.exports.getBooking = async (req, res) => {
     try {
-        // const bookingData = await booking.findById(req.params.bookingId);
         console.log("booking:Id: ", req.params.bookingId);
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
@@ -100,7 +99,6 @@ module.exports.getBooking = async (req, res) => {
                     return res.status(500).json(error);
                 }
 
-                // const Pages = bookingData.bookingType == "service" ? servicePage : touristSpotPage;
                 const result = { bookingData: bookingData };
                 if (req.params.purpose == "add_services") {
                     Page.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
@@ -169,7 +167,7 @@ module.exports.submitBooking = (req, res) => {
         })
 }
 
-module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
+module.exports.getBookings = (req, res) => { 
     // Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
     // { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
     // ]).exec(function (err, pages) {
