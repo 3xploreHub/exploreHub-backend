@@ -50,3 +50,8 @@ module.exports.getPageBooking = (req, res) => {
         res.status(200).json(bookings);
     })
 }
+
+module.exports.approveBooking = (req, res) => {
+    
+}
+
