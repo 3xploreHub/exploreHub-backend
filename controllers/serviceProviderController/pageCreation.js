@@ -20,7 +20,7 @@ function makeDefaultItem(serviceId="", pageId="") {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
   const quantity = new ComponentModel({ type: "labelled-text", data: { label: "Quantity", text: "1", defaultName: 'quantity' }, styles: [], default: true })
-  return new Item({ type: "item", serviceId: serviceId, pageId: pageId, styles: [], data: [servicePhoto, name, quantity], default: false })
+  return new Item({ type: "item", serviceId: serviceId, pageId: pageId, styles: [], booked: 0, data: [servicePhoto, name, quantity], default: false })
 }
 
 module.exports.addServiceComponent = async (req, res) => {
