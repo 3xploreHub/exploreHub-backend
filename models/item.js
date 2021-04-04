@@ -8,9 +8,10 @@ const Item = new Schema({
   styles: { type: Array, required: false },
   serviceId: {type: String, required: [true, "ServiceId is required"]},
   pageId: {type: String, required: [true, "pageId is required"]},
-  booked: {type: Number, required: false, default: 0},
   data: { type: Object, required: [true, "Item data is required"] },
-  default: { type: Boolean, required: false, default: false }
+  default: { type: Boolean, required: false, default: false },
+  booked: {type: Number, required: false, default: 0},
+  manuallyBooked: {type: Number, required: false, default: 0},
 });
 
 Item.statics.validate = async function (Item) {

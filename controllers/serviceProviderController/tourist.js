@@ -9,7 +9,7 @@ const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
     Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
-    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
+    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
     ]).exec(function (err, pages) {
         if (err) {
             res.status(500).json(err);
