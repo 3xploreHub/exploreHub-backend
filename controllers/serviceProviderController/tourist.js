@@ -60,8 +60,10 @@ module.exports.viewItems = async (req, res) => {
 
 module.exports.createBooking = async (req, res) => {
     try {
+        console.log("req.body: ", req.body)
         if (req.params.bookingId == "create_new") {
-            const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
+            const isManual = req.body.isManual
+            const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, isManual: isManual == true, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
             if (req.body.firstService) {
                 const selectedService = new selectedServiceModel(req.body.firstService);
                 newBooking.selectedServices.push(selectedService)
@@ -154,10 +156,26 @@ module.exports.getPageBookingInfo = async (req, res) => {
 }
 
 module.exports.submitBooking = (req, res) => {
+    if (req.body.isManual) {
+        req.body.selectedServices.forEach(service => {
+            Item.updateOne({
+                _id: mongoose.Types.ObjectId(service._id)
+            }, {
+                $set: {
+                    manuallyBooked: service.manuallyBooked
+                }
+            }).then(result => {
+                console.log("updated item ", service)
+            }).catch(error => {
+                return res.status(500).json(error)
+            })
+        })
+    }
+    const status = req.body.isManual? "Booked": "Pending"
     booking.updateOne({ _id: req.params.bookingId },
         {
             $set: {
-                status: "Pending"
+                status: status
             }
         }).then((result, error) => {
             if (error) {
@@ -167,7 +185,7 @@ module.exports.submitBooking = (req, res) => {
         })
 }
 
-module.exports.getBookings = (req, res) => { 
+module.exports.getBookings = (req, res) => {
     // Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
     // { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
     // ]).exec(function (err, pages) {

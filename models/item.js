@@ -12,6 +12,7 @@ const Item = new Schema({
   default: { type: Boolean, required: false, default: false },
   booked: {type: Number, required: false, default: 0},
   manuallyBooked: {type: Number, required: false, default: 0},
+  manualBooking: {type: Object, requried: false}
 });
 
 Item.statics.validate = async function (Item) {
