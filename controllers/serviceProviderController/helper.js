@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../models/commonSchemas/component");
+const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
@@ -90,7 +91,7 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
 
 
 
-  
+
   model.updateOne(
     query,
     {
@@ -124,56 +125,6 @@ module.exports.convertIdToObjectId = (component) => {
     return data;
   })
 }
-// {
-//   "carId": "345677"
-//   "car" : {
-//       "model" : [
-//           {
-//               "specs" : [ 
-//                   {
-//                       "specType": "SEDAN"
-//                       "specValue" : "1"
-//                   }, 
-//                   {
-//                       "specType": "BR_INC"
-//                       "specValue" : "yes"
-//                   }, 
-//                   {
-//                       "specType": "PLAN"
-//                       "specValue" : "gold"
-//                   }
-//               ]
-//           }
-//       ]
-//   }
-// }
-
-// db.collection.aggregate([
-//   {
-//     "$project": {
-//       "car": {
-//         "model": {
-//           "$filter": {
-//             "input": {
-//               "$map": {
-//                 "input": "$car.model",
-//                 "in": {
-//                   "specs": {
-//                     "$filter": {
-//                       "input": "$$this.specs",
-//                       "cond": { "$eq": ["$$this.specType", "SEDAN"] }
-//                     }
-//                   }
-//                 }
-//               }
-//             },
-//             "cond": { "$ne": ["$$this.specs", []] }
-//           }
-//         }
-//       }
-//     }
-//   }
-// ])
 
 module.exports.getItem = (pageId, itemId, pageType) => {
   return new Promise((resolve, reject) => {
@@ -274,6 +225,32 @@ function getItemImages(data) {
   })
   return images;
 }
+
+
+function createNotification(data) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      let { receiver, initiator, page, booking, type, message } = data;
+
+      let notif = new notification({
+        receiver: receiver,
+        initiator: initiator,
+        page: page,
+        booking: booking,
+        type: type,
+        message: message,
+        opened: false
+      })
+
+      await notif.save();
+      resolve(notif)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+module.exports.createNotification = createNotification;
 
 module.exports.getItemImages = getItemImages
 

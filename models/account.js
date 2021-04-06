@@ -85,12 +85,13 @@ Accountchema.statics.changePassword = async function (id, password) {
 Accountchema.statics.generateJwt = function (user, type) {
   const expiry = new Date();
   expiry.setDate(expiry.getDate() + 7);
-
   return jwt.sign(
     {
       _id: user._id,
       email: user.email,
+      fullName: user.fullName,
       accountType: user.accountType,
+      gender: user.gender,
       type: type,
     },
     MY_SECRET

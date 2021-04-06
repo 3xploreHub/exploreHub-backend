@@ -8,7 +8,7 @@ const morgan = require("morgan");
 require("dotenv").config();
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(dbConfig.local_db, {
+mongoose.connect(dbConfig.online_db, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
@@ -16,7 +16,7 @@ mongoose.connect(dbConfig.local_db, {
 
 var db = mongoose.connection;
 db.on("connected", () => {
-  console.log("connected to database" + dbConfig.local_db);
+  console.log("connected to database" + dbConfig.online_db);
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 

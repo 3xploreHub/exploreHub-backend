@@ -95,6 +95,7 @@ module.exports.getBooking = async (req, res) => {
         console.log("booking:Id: ", req.params.bookingId);
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
+            .populate({ path: "pageId", model: "Page" })
             .exec((error, bookingData) => {
                 if (error) {
                     console.log(error);
@@ -155,34 +156,50 @@ module.exports.getPageBookingInfo = async (req, res) => {
     }
 }
 
-module.exports.submitBooking = (req, res) => {
-    if (req.body.isManual) {
-        req.body.selectedServices.forEach(service => {
-            Item.updateOne({
-                _id: mongoose.Types.ObjectId(service._id)
-            }, {
-                $set: {
-                    manuallyBooked: service.manuallyBooked
-                }
-            }).then(result => {
-                console.log("updated item ", service)
-            }).catch(error => {
-                return res.status(500).json(error)
+module.exports.submitBooking = async (req, res) => {
+    try {
+        console.log(req.body);
+
+        if (req.body.isManual) {
+            req.body.selectedServices.forEach(service => {
+                Item.updateOne({
+                    _id: mongoose.Types.ObjectId(service._id)
+                }, {
+                    $set: {
+                        manuallyBooked: service.manuallyBooked
+                    }
+                }).then(result => {
+                    console.log("updated item ", service)
+                }).catch(error => {
+                    return res.status(500).json(error)
+                })
             })
-        })
+        } else {
+            const notification = await helper.createNotification({
+                receiver: req.body.receiver,
+                initiator: req.user._id,
+                page: req.body.page,
+                booking: req.body.booking,
+                type: req.body.type,
+                message: `${req.user.fullName} submitted a booking to your service`
+            })
+        }
+        const status = req.body.isManual ? "Booked" : "Pending"
+        booking.updateOne({ _id: req.params.bookingId },
+            {
+                $set: {
+                    status: status
+                }
+            }).then((result, error) => {
+                if (error) {
+                    return res.status(500).json(error);
+                }
+                res.status(200).json(result);
+            })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
     }
-    const status = req.body.isManual? "Booked": "Pending"
-    booking.updateOne({ _id: req.params.bookingId },
-        {
-            $set: {
-                status: status
-            }
-        }).then((result, error) => {
-            if (error) {
-                return res.status(500).json(error);
-            }
-            res.status(200).json(result);
-        })
 }
 
 module.exports.getBookings = (req, res) => {
@@ -269,4 +286,33 @@ module.exports.removeSelectedItem = (req, res) => {
             }
             res.status(200).json(response);
         })
+}
+
+module.exports.cancelBooking = async (req, res) => {
+    try {
+        const notification = await helper.createNotification({
+            receiver: req.body.receiver,
+            initiator: req.user._id,
+            page: req.body.page,
+            booking: req.body.booking,
+            type: req.body.type,
+            message: `${req.user.fullName} cancelled ${req.user.gender == 'Male'? 'his': 'her'} booking to your service`
+        })
+        booking.updateOne(
+            {
+                _id: req.body.booking
+            },
+            {
+                $set: {
+                    "status": "Cancelled",
+                }
+            }, function (err, response) {
+                if (err) {
+                    return res.status(500).json({ type: "internal error", error: err })
+                }
+                res.status(200).json(response);
+            })
+    } catch (error) {
+        res.status(500).json(error)
+    }
 }
