@@ -288,7 +288,7 @@ module.exports.removeSelectedItem = (req, res) => {
         })
 }
 
-module.exports.cancelBooking = async (req, res) => {
+module.exports.changeBookingStatus = async (req, res) => {
     try {
         let notif = {
             receiver: req.body.receiver,
@@ -310,7 +310,7 @@ module.exports.cancelBooking = async (req, res) => {
             },
             {
                 $set: {
-                    "status": "Cancelled",
+                    "status": req.params.status
                 }
             }, function (err, response) {
                 if (err) {

@@ -57,6 +57,6 @@ router.delete("/deleteBooking/:bookingId", tourist.deleteBooking)
 router.get("/getNotifications", tourist.getNotifications)
 router.put("/viewNotification/:notificationId", tourist.viewNotification)
 router.put("/removeSelectedItem/:bookingId/:selectedId", tourist.removeSelectedItem)
-router.post("/cancelBooking", tourist.cancelBooking)
+router.post("/changeBookingStatus/:status", tourist.changeBookingStatus)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;
