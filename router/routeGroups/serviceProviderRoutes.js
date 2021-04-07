@@ -40,6 +40,7 @@ router.get("/getPages/:status", serviceProvider.getPages);
 router.get("/getPage/:pageId/:pageType", serviceProvider.getPage)
 router.get("/getServices/:pageId/:pageType", serviceProvider.getServices)
 router.get("/getPageBooking/:bookingStatus/:pageId", serviceProvider.getPageBooking)
+router.get("/getNotificationsCount", serviceProvider.getNotificationsCount)
 
 router.get("/getOnlinePages/", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)

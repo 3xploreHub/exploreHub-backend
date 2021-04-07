@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const booking = require("../../models/booking");
+const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
@@ -55,3 +56,13 @@ module.exports.approveBooking = (req, res) => {
     
 }
 
+module.exports.getNotificationsCount = (req, res) => {
+    notification.countDocuments({
+        'receiver': mongoose.Types.ObjectId(req.user._id),
+        'opened': false
+    }, function (err, docs) {
+        if (err) return res.status(500).json(err)
+        res.status(200).json(docs)
+    });
+}
+    
