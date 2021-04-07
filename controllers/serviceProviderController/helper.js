@@ -1,45 +1,11 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../models/commonSchemas/component");
+const { Item } = require("../../models/item");
 const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const servicePage = require("../../models/servicePage");
 const touristSpotPage = require("../../models/touristSpotPage");
 const deleteImage = require("../../uploads/deleteImage");
-
-// module.exports.retrieve = (
-//   model,
-//   res,
-//   condition,
-//   type,
-//   fieldsToGet,
-//   findOne = false
-// ) => {
-//   model
-//     .find(condition, fieldsToGet)
-//     .populate({
-//       path: "category",
-//       model: "TouristSpotCategory",
-//       select: "name",
-//     })
-//     .exec((error, touristSpots) => {
-//       if (error) {
-//         console.error("Error in retrieving: ", error);
-//         return res.status(500).json({
-//           type: "internal_error",
-//           message: `has error in retrieving ${type}`,
-//           error: error,
-//         });
-//       }
-
-//       if (findOne && touristSpots.length == 0) {
-//         return res.status(404).json({
-//           type: "not_found",
-//           message: "The tourist spot does not exist",
-//         });
-//       }
-//       res.status(200).json(findOne ? touristSpots[0] : touristSpots);
-//     });
-// };
 
 const addComponent = (model, touristSpotId, res, data, returnData = true) => {
   model.findByIdAndUpdate(
@@ -224,6 +190,19 @@ function getItemImages(data) {
     }
   })
   return images;
+}
+
+module.exports.updateItemBookingCount = (service, res, booked = true) => {
+  const data = booked? {booked : service.booked} : {manuallyBooked: service.manuallyBooked}
+  Item.updateOne({
+    _id: mongoose.Types.ObjectId(service._id)
+  }, {
+    $set: data
+  }).then(result => {
+    console.log("updated item ", service)
+  }).catch(error => {
+    return res.status(500).json(error)
+  })
 }
 
 

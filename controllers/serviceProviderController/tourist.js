@@ -5,6 +5,7 @@ const { selectedServiceModel } = require("../../models/commonSchemas/selectedSer
 const { Item } = require("../../models/item");
 const notification = require("../../models/notification");
 const Page = require("../../models/page");
+const { service } = require("../../models/service");
 const helper = require("./helper");
 
 module.exports.getOnlinePages = async (req, res) => {
@@ -296,12 +297,26 @@ module.exports.changeBookingStatus = async (req, res) => {
             page: req.body.page,
             booking: req.body.booking,
             type: req.body.type,
-            
+
         }
         if (req.body.type == "page-booking") {
-            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male'? 'his': 'her'} booking to your service`
+            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking to your service`
         } else if (req.body.type == "booking") {
             notif["message"] = req.body.message
+        }
+        if (req.params.status == "Closed") {
+            const selectedServices = req.body.selectedServices
+            selectedServices.forEach(service => {
+                Item.updateOne({
+                    _id: mongoose.Types.ObjectId(service._id)
+                }, {
+                    $set: service.bookingCount
+                }).then(result => {
+                    console.log("updated item ", service)
+                }).catch(error => {
+                    return res.status(500).json(error)
+                })
+            })
         }
         const notification = await helper.createNotification(notif)
         booking.updateOne(
@@ -319,6 +334,7 @@ module.exports.changeBookingStatus = async (req, res) => {
                 res.status(200).json(response);
             })
     } catch (error) {
+        console.log(error);
         res.status(500).json(error)
     }
 }
