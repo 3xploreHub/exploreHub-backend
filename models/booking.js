@@ -11,7 +11,8 @@ const booking = new Schema({
     bookingInfo: [inputValue],
     selectedServices: [selectedService],
     bookingType: { type: String, required: true },
-    status: { type: String, enum: ['Pending', 'Processing', 'Booked', "Closed", 'Rejected', 'Unfinished'], required: false, default: 'Unfinished' }
+    isManual: { type: Boolean, require: false, default: false },
+    status: { type: String, enum: ['Pending', 'Booked', "Closed", 'Rejected', 'Unfinished'], required: false, default: 'Unfinished' }
 }, { timestamps: true });
 
-module.exports = mongoose.model("booking", booking);
+module.exports = mongoose.model("Booking", booking);

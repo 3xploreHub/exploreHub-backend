@@ -86,6 +86,10 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
 }
 
 module.exports.deleteItem = (model, query, condition, res, images) => {
+
+
+
+
     model.updateOne(
         query, {
             $pull: condition
@@ -270,8 +274,6 @@ function getItemImages(data) {
 }
 
 module.exports.getItemImages = getItemImages
-
-
 
 module.exports.deletePhoto = deletePhoto;
 

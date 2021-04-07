@@ -58,144 +58,53 @@ module.exports.pusher = (req, res) => {
 }
 
 module.exports.getAllBookings = (req, res) => {
-        booking.find({ status: req.params.bookingStatus })
-            .populate({ path: "tourist", model: "Account", select: "fullName address" })
-            .populate({ path: "pageId", populate: { path: "creator", model: "Account", select: "fullName" } })
-            .populate({ path: "selectedServices.service", model: "Item" })
-            .exec((error, bookings) => {
-                if (error) {
-                    console.log(error);
-                    return res.status(500).json(error);
-                } else {
-                    // start get booking Info
-                    let result = []; // initialize result
-                    if (bookings.length) {
-                        // format object algorithm
-                        bookings.forEach(bookingDetail => {
-                            let formattedObject = {...bookingDetail._doc }; //deep copy
-                            let { bookingInfo } = formattedObject; //object destructuring
-                            if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
-                                //loop through booking info array
-                                let simplifiedDetail = bookingInfo.map((info) => {
-                                    //loop every object
-                                    let { inputLabel, value } = info._doc;
-                                    if (value && typeof value == 'object') {
-                                        let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
-                                        if (objectKeys.includes('month')) {
-                                            let { month, day, year } = value;
-                                            let date = `${month.text} ${day.text},${year.text}`
-                                            value = date;
-                                        }
+    booking.find({ status: req.params.bookingStatus })
+        .populate({ path: "tourist", model: "Account", select: "fullName address" })
+        .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
+        .populate({ path: "selectedServices.service", model: "Item" })
+        .exec((error, bookings) => {
+            if (error) {
+                console.log(error);
+                return res.status(500).json(error);
+            } else {
+                // start get booking Info
+                let result = []; // initialize result
+                if (bookings.length) {
+                    // format object algorithm
+                    bookings.forEach(bookingDetail => {
+                        let formattedObject = {...bookingDetail._doc }; //deep copy
+                        let { bookingInfo } = formattedObject; //object destructuring
+                        if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
+                            //loop through booking info array
+                            let simplifiedDetail = bookingInfo.map((info) => {
+                                //loop every object
+                                let { inputLabel, value } = info._doc;
+                                if (value && typeof value == 'object') {
+                                    let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
+                                    if (objectKeys.includes('month')) {
+                                        let { month, day, year } = value;
+                                        let date = `${month.text} ${day.text},${year.text}`
+                                        value = date;
                                     }
-                                    return { label: inputLabel, value }
-                                });
-                                formattedObject.bookingInfo = simplifiedDetail;
-                            }
-                            console.log('line 94');
+                                }
+                                return { label: inputLabel, value }
+                            });
+                            formattedObject.bookingInfo = simplifiedDetail;
+                        }
+                        console.log('line 94');
 
-                            let components = formatComponentArray(formattedObject.pageId._doc.components);
-                            // console.log(components);
+                        let components = formatComponentArray(formattedObject.pageId._doc.components);
 
-                            formattedObject.pageId._doc.components = components; //get page Default vale
-                            formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
-                            result.push(formattedObject)
-                        });
-                    }
-
-
-                    //end get booking Info
-
-                    //start get details in Page
-                    // if (bookings.pageId.length) {
-                    //     console.log(booking.pageId.length);
-                    //     bookings.forEach(page => {
-                    //         page._doc.pageId.components = formatComponentArray(page._doc.pageId.components) //only components property is passed
-                    //     });
-                    // }
-                    //end get details in Page
-
-                    res.status(200).json(result);
+                        if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
+                        formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
+                        result.push(formattedObject)
+                    });
                 }
-            })
-    }
-    // module.exports.getOnProcessBooking = (req, res) => {
-    //     console.log(req.params);
-    //     booking.findByIdAndUpdate({ _id: req.params.bookingId }, { $set: { status: "Processing" } }, { new: true })
-    //         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-    //         .exec((err, data) => {
-    //             if (err) {
-    //                 res.status(500).json({ error: err })
-    //             }
-    //             console.log(data);
-    //             res.status(200).json(data)
-    //         })
 
-// }
-
-// module.exports.getBookedDetails = (req, res) => {
-//     console.log(req.params);
-//     booking.findByIdAndUpdate({ _id: req.params.bookingId }, { $set: { status: "Booked" } }, { new: true })
-//         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-//         .exec((err, data) => {
-//             if (err) {
-//                 res.status(500).json({ error: err })
-//             }
-//             console.log(data);
-//             res.status(200).json(data)
-//         })
-
-// }
-// module.exports.getDeclinedBookings = (req, res) => {
-//     console.log(req.params);
-//     booking.findByIdAndUpdate({ _id: req.params.bookingId }, { $set: { status: "Rejected" } }, { new: true })
-//         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-//         .exec((err, data) => {
-//             if (err) {
-//                 res.status(500).json({ error: err })
-//             }
-//             console.log(data);
-//             res.status(200).json(data)
-//         })
-
-// }
-// module.exports.getPendingBookings = (req, res) => {
-//     console.log(req.params);
-//     booking.findByIdAndUpdate({ _id: req.params.bookingId }, { $set: { status: "Pending" } }, { new: true })
-//         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-//         .exec((err, data) => {
-//             if (err) {
-//                 res.status(500).json({ error: err })
-//             }
-//             console.log(data);
-//             res.status(200).json(data)
-//         })
-
-// }
-module.exports.setBookingStatus = async(req, res) => {
-    console.log(req.body)
-    const notif = new notification({
-        receiver: req.body.pageCreator,
-        booking: req.body.bookingId,
-        type: "booking",
-        message: req.body.message
-    })
-    console.log(req.body);
-    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
-        .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-        .exec((err, data) => {
-            if (err) {
-                res.status(500).json({ error: err })
+                res.status(200).json(result);
             }
-            notif.save().then((result) => {
-                return res.status(200).json({ data: data, result: result })
-            }).catch(error => {
-                console.log(error)
-                res.status(500).json(error)
-            })
         })
 }
-
-
 
 
 module.exports.getAllPendingNotifications = (req, res) => {
@@ -218,13 +127,52 @@ module.exports.getAllPendingNotifications = (req, res) => {
         })
 }
 
+module.exports.setBookingStatus = async(req, res) => {
+    console.log("Body: ", req.body)
+
+    const notifForProvider = new notification({
+        receiver: req.body.serviceProviderReceiver,
+        booking: req.body.bookingId,
+        type: "booking",
+        message: req.body.messageForServiceProvider
+    })
+
+    const notifForTourist = new notification({
+        receiver: req.body.touristReceiver,
+        booking: req.body.bookingId,
+        type: "booking",
+        message: req.body.messageForTourist
+    })
+    console.log(req.body);
+    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
+        .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
+        .exec(async(err, data) => {
+            if (err) {
+                res.status(500).json({ error: err })
+            }
+            try {
+
+                const result = await notifForProvider.save()
+                const result2 = await notifForTourist.save()
+                return res.status(200).json({ data: data, result: result, result2: result2 })
+            } catch (error) {
+                console.log(error)
+                res.status(500).json(error)
+            }
+        })
+}
+
+
+
+
 module.exports.setPageStatus = async(req, res) => {
         console.log(req.body)
         const notif = new notification({
             receiver: req.body.pageCreator,
             page: req.body.pageId,
             type: "page",
-            message: req.body.message
+            message: req.body.message,
+
         })
         console.log(req.body);
         Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {

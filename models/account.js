@@ -20,8 +20,28 @@ const Accountchema = new Schema({
     },
     contactNumber: { type: Number, required: true, unique: true },
     password: { type: String, required: true, trim: true },
-    firstName: { type: String, required: false, trim: true, set: name => name[0].toUpperCase() + name.substring(1).toLowerCase() },
-    lastName: { type: String, required: false, trim: true, set: name => name[0].toUpperCase() + name.substring(1).toLowerCase() },
+    firstName: {
+        type: String,
+        required: false,
+        trim: true,
+        set: name => {
+            if (name.length > 1) {
+                return name[0].toUpperCase() + name.substring(1)
+            }
+            return name.toUpperCase()
+        }
+    },
+    lastName: {
+        type: String,
+        required: false,
+        trim: true,
+        set: name => {
+            if (name.length > 1) {
+                return name[0].toUpperCase() + name.substring(1)
+            }
+            return name.toUpperCase()
+        }
+    },
     address: { type: String, required: false, trim: true },
     fullName: { type: String, required: false, trim: true },
     gender: { type: String, required: false },

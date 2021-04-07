@@ -10,7 +10,7 @@ const Notification = new Schema({
     booking: { type: Schema.Types.ObjectId, required: false, ref: "Booking" },
     type: { type: String, enum: ["page", "page-message", "page-booking", "booking", "booking-message"], required: true },
     message: { type: String, required: [true, "Message is required"] },
-    openned: { type: Boolean, required: false, default: false }
+    opened: { type: Boolean, required: false, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Notification", Notification);

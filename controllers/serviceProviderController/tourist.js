@@ -3,13 +3,14 @@ const booking = require("../../models/booking");
 const { inputValueModel } = require("../../models/commonSchemas/inputValue");
 const { selectedServiceModel } = require("../../models/commonSchemas/selectedService");
 const { Item } = require("../../models/item");
+const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const helper = require("./helper");
 
-module.exports.getOnlinePages = async (req, res) => {
+module.exports.getOnlinePages = async(req, res) => {
     Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
-    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
-    ]).exec(function (err, pages) {
+        { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
+    ]).exec(function(err, pages) {
         if (err) {
             res.status(500).json(err);
         }
@@ -36,31 +37,31 @@ module.exports.viewPage = (req, res) => {
         })
 }
 
-module.exports.viewAllServices = async (req, res) => {
+module.exports.viewAllServices = async(req, res) => {
     try {
         const otherServices = await Page.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
         res.status(200).json(otherServices);
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).json(500);
     }
 }
 
-module.exports.viewItems = async (req, res) => {
+module.exports.viewItems = async(req, res) => {
     try {
         // const service = await helper.getService(req.params.pageId, req.params.serviceId, req.params.pageType);
         const service = await Item.find({ serviceId: req.params.serviceId })
         res.status(200).json(service);
-    }
-    catch (err) {
+    } catch (err) {
         helper.handleError(error);
     }
 }
 
-module.exports.createBooking = async (req, res) => {
+module.exports.createBooking = async(req, res) => {
     try {
+        console.log("req.body: ", req.body)
         if (req.params.bookingId == "create_new") {
-            const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
+            const isManual = req.body.isManual
+            const newBooking = new booking({ tourist: req.user._id, pageId: req.params.pageId, isManual: isManual == true, bookingInfo: [], selectedServices: [], bookingType: req.params.pageType });
             if (req.body.firstService) {
                 const selectedService = new selectedServiceModel(req.body.firstService);
                 newBooking.selectedServices.push(selectedService)
@@ -69,27 +70,23 @@ module.exports.createBooking = async (req, res) => {
             res.status(200).json(savedBooking);
         } else {
             const selectedService = new selectedServiceModel(req.body.firstService);
-            booking.updateOne({ _id: req.params.bookingId },
-                {
-                    $push: {
-                        selectedServices: selectedService
-                    }
-                }).then(async (result) => {
-                    const bookingData = await booking.findById(req.params.bookingId);
-                    res.status(200).json(bookingData);
-                })
+            booking.updateOne({ _id: req.params.bookingId }, {
+                $push: {
+                    selectedServices: selectedService
+                }
+            }).then(async(result) => {
+                const bookingData = await booking.findById(req.params.bookingId);
+                res.status(200).json(bookingData);
+            })
         }
-    }
-
-    catch (error) {
+    } catch (error) {
         console.log(error);
         res.status(500).json(error);
     }
 }
 
-module.exports.getBooking = async (req, res) => {
+module.exports.getBooking = async(req, res) => {
     try {
-        // const bookingData = await booking.findById(req.params.bookingId);
         console.log("booking:Id: ", req.params.bookingId);
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
@@ -99,7 +96,6 @@ module.exports.getBooking = async (req, res) => {
                     return res.status(500).json(error);
                 }
 
-                // const Pages = bookingData.bookingType == "service" ? servicePage : touristSpotPage;
                 const result = { bookingData: bookingData };
                 if (req.params.purpose == "add_services") {
                     Page.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
@@ -115,8 +111,7 @@ module.exports.getBooking = async (req, res) => {
                     res.status(200).json(result);
                 }
             })
-    }
-    catch (error) {
+    } catch (error) {
         console.log(error);
         res.status(500).json(error);
     }
@@ -129,53 +124,66 @@ module.exports.addBookingInfo = (req, res) => {
         bookingInfo.push(inputVal);
     });
 
-    booking.updateOne({ _id: req.params.bookingId },
-        {
-            $set: {
-                bookingInfo: bookingInfo
-            }
-        }).then(async (result) => {
-            const bookingData = await booking.findById(req.params.bookingId);
-            res.status(200).json(bookingData);
-        })
+    booking.updateOne({ _id: req.params.bookingId }, {
+        $set: {
+            bookingInfo: bookingInfo
+        }
+    }).then(async(result) => {
+        const bookingData = await booking.findById(req.params.bookingId);
+        res.status(200).json(bookingData);
+    })
 
 }
 
-module.exports.getPageBookingInfo = async (req, res) => {
+module.exports.getPageBookingInfo = async(req, res) => {
     try {
         // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
         const page = await Page.findOne({ _id: req.params.pageId }, { bookingInfo: 1 });
         const bookingData = await booking.findOne({ _id: req.params.bookingId });
         res.status(200).json({ bookingInfo: page.bookingInfo, booking: bookingData })
-    }
-    catch (error) {
+    } catch (error) {
         console.log(error);
         res.status(500).json(error);
     }
 }
 
 module.exports.submitBooking = (req, res) => {
-    booking.updateOne({ _id: req.params.bookingId },
-        {
-            $set: {
-                status: "Pending"
-            }
-        }).then((result, error) => {
-            if (error) {
-                return res.status(500).json(error);
-            }
-            res.status(200).json(result);
+    if (req.body.isManual) {
+        req.body.selectedServices.forEach(service => {
+            Item.updateOne({
+                _id: mongoose.Types.ObjectId(service._id)
+            }, {
+                $set: {
+                    manuallyBooked: service.manuallyBooked
+                }
+            }).then(result => {
+                console.log("updated item ", service)
+            }).catch(error => {
+                return res.status(500).json(error)
+            })
         })
+    }
+    const status = req.body.isManual ? "Booked" : "Pending"
+    booking.updateOne({ _id: req.params.bookingId }, {
+        $set: {
+            status: status
+        }
+    }).then((result, error) => {
+        if (error) {
+            return res.status(500).json(error);
+        }
+        res.status(200).json(result);
+    })
 }
 
-module.exports.getBookings = (req, res) => { //KIHANGLAN I AGGREGATE.******************************************
+module.exports.getBookings = (req, res) => {
     // Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
     // { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'user' } }
     // ]).exec(function (err, pages) {
-    const status = req.params.bookingStatus != "Unfinished"? { $ne: "Unfinished" }: { $eq: "Unfinished" }
+    const status = req.params.bookingStatus != "Unfinished" ? { $ne: "Unfinished" } : { $eq: "Unfinished" }
     booking.aggregate([
         { $match: { tourist: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: status } },
-        { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id' , as: 'page'} },
+        { $lookup: { from: 'pages', localField: 'pageId', foreignField: '_id', as: 'page' } },
         { $lookup: { from: 'items', localField: 'selectedServices.service', foreignField: '_id', as: 'services' } }
     ]).exec((error, bookings) => {
         if (error) {
@@ -203,11 +211,51 @@ module.exports.viewBooking = (req, res) => {
 
 module.exports.deleteBooking = (req, res) => {
     console.log(req.params.bookingId)
-    booking.deleteOne({ _id: req.params.bookingId }).then((result, error) => {
-        if (error) {
-            console.log(error);
-            return res.status(500).json(error);
-        }
+    booking.deleteOne({ _id: req.params.bookingId }).then(result => {
         res.status(200).json(result);
+    }).catch(error => {
+        console.log(error);
+        return res.status(500).json(error);
+    })
+}
+
+
+module.exports.getNotifications = (req, res) => {
+    notification.find({ receiver: req.user._id })
+        .populate({ path: 'page', model: 'Page' })
+        .populate({ path: 'booking', model: 'Booking' })
+        .exec((error, result) => {
+            console.log(error);
+            if (error) return res.status(500).json(error)
+            res.status(200).json(result);
+        })
+
+}
+
+module.exports.viewNotification = (req, res) => {
+    notification.updateOne({
+        _id: req.params.notificationId
+    }, {
+        $set: {
+            opened: true
+        }
+    }, function(err, result) {
+        if (err) return res.status(500).json(err)
+        res.status(200).json(result)
+    })
+}
+
+module.exports.removeSelectedItem = (req, res) => {
+    booking.updateOne({
+        _id: req.params.bookingId
+    }, {
+        $pull: {
+            "selectedServices": { "_id": mongoose.Types.ObjectId(req.params.selectedId) },
+        }
+    }, function(err, response) {
+        if (err) {
+            return res.status(500).json({ type: "internal error", error: err })
+        }
+        res.status(200).json(response);
     })
 }

@@ -4,19 +4,22 @@ const schemaValidator = require("../Helpers/schemaValidator");
 const Schema = mongoose.Schema;
 
 const Item = new Schema({
-  type: { type: String, required: [true, "Item type is required"] },
-  styles: { type: Array, required: false },
-  serviceId: {type: String, required: [true, "ServiceId is required"]},
-  pageId: {type: String, required: [true, "pageId is required"]},
-  data: { type: Object, required: [true, "Item data is required"] },
-  default: { type: Boolean, required: false, default: false }
+    type: { type: String, required: [true, "Item type is required"] },
+    styles: { type: Array, required: false },
+    serviceId: { type: String, required: [true, "ServiceId is required"] },
+    pageId: { type: String, required: [true, "pageId is required"] },
+    data: { type: Object, required: [true, "Item data is required"] },
+    default: { type: Boolean, required: false, default: false },
+    booked: { type: Number, required: false, default: 0 },
+    manuallyBooked: { type: Number, required: false, default: 0 },
+    manualBooking: { type: Object, requried: false }
 });
 
-Item.statics.validate = async function (Item) {
-  return await schemaValidator(this, Item);
+Item.statics.validate = async function(Item) {
+    return await schemaValidator(this, Item);
 };
 
 module.exports.Item = mongoose.model(
-  "Item",
-  Item
+    "Item",
+    Item
 );

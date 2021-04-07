@@ -74,20 +74,24 @@ module.exports.initialRegistration = async(req, res) => {
 
 //adding personal information to the account
 function formatName(name) {
-    if (!name || name == "") return "----"
-    return name[0].toUpperCase() + (name.length > 0 ? name.substring(1).toLowerCase() : "")
+    if (name && name != "") {
+        if (name.length > 1) {
+            return name[0].toUpperCase() + name.substring(1).toLowerCase()
+        }
+        return name.toUpperCase()
+    }
 }
 
 module.exports.addAccountInformation = async(req, res) => {
     try {
-        const data = req.body
-        const fullName = formatName(data.firstName) + " " + formatName(data.lastName)
+        const data = req.body;
+        const fullname = formatName(data.firstName) + " " + formatName(data.lastName)
         const updatedAccount = await Account.findByIdAndUpdate(
             req.user._id, {
                 $set: {
                     firstName: data.firstName,
                     lastName: data.lastName,
-                    fullName: fullName,
+                    fullName: fullname,
                     age: data.age,
                     address: data.address,
                     gender: data.gender,
