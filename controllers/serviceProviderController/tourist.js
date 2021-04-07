@@ -290,14 +290,20 @@ module.exports.removeSelectedItem = (req, res) => {
 
 module.exports.cancelBooking = async (req, res) => {
     try {
-        const notification = await helper.createNotification({
+        let notif = {
             receiver: req.body.receiver,
             initiator: req.user._id,
             page: req.body.page,
             booking: req.body.booking,
             type: req.body.type,
-            message: `${req.user.fullName} cancelled ${req.user.gender == 'Male'? 'his': 'her'} booking to your service`
-        })
+            
+        }
+        if (req.body.type == "page-booking") {
+            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male'? 'his': 'her'} booking to your service`
+        } else if (req.body.type == "booking") {
+            notif["message"] = req.body.message
+        }
+        const notification = await helper.createNotification(notif)
         booking.updateOne(
             {
                 _id: req.body.booking
