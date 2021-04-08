@@ -159,22 +159,22 @@ module.exports.getPageBookingInfo = async (req, res) => {
 
 module.exports.submitBooking = async (req, res) => {
     try {
-        console.log(req.body);
-
         if (req.body.isManual) {
-            req.body.selectedServices.forEach(service => {
-                Item.updateOne({
-                    _id: mongoose.Types.ObjectId(service._id)
-                }, {
-                    $set: {
-                        manuallyBooked: service.manuallyBooked
-                    }
-                }).then(result => {
-                    console.log("updated item ", service)
-                }).catch(error => {
-                    return res.status(500).json(error)
+            if (req.body.selectedServices) {
+                req.body.selectedServices.forEach(service => {
+                    Item.updateOne({
+                        _id: mongoose.Types.ObjectId(service._id)
+                    }, {
+                        $set: {
+                            manuallyBooked: service.manuallyBooked
+                        }
+                    }).then(result => {
+                        console.log("updated item ", service)
+                    }).catch(error => {
+                        return res.status(500).json(error)
+                    })
                 })
-            })
+            }
         } else {
             const notification = await helper.createNotification({
                 receiver: req.body.receiver,
@@ -199,7 +199,7 @@ module.exports.submitBooking = async (req, res) => {
             })
     } catch (error) {
         console.log(error)
-        res.status(500).json(error)
+        res.status(500).send(error)
     }
 }
 
@@ -297,14 +297,13 @@ module.exports.changeBookingStatus = async (req, res) => {
             page: req.body.page,
             booking: req.body.booking,
             type: req.body.type,
-
         }
         if (req.body.type == "page-booking") {
             notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking to your service`
         } else if (req.body.type == "booking") {
             notif["message"] = req.body.message
         }
-        if (req.params.status == "Closed") {
+        if (req.body.selectedServices) {
             const selectedServices = req.body.selectedServices
             selectedServices.forEach(service => {
                 Item.updateOne({
