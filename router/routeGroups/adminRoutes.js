@@ -13,6 +13,7 @@ router.get('/getAllPendingNotifications/:pageStatus', admin.getAllPendingNotific
 router.post("/setPageStatus", admin.setPageStatus)
 router.post("/setBookingStatus", admin.setBookingStatus)
 
+
 // router.get("/getOnlinePage/:pageId", admin.getOnlinePage)
 
 module.exports = router;

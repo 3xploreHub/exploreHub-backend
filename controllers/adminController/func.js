@@ -1,22 +1,25 @@
 const formatArray = (arr) => {
+
     let result = [];
     Array.from(arr).forEach(el => {
         let newObject = {
             serviceGroupName: el._doc.serviceGroupName,
             data: []
         }
-        el._doc.service.data.forEach((item) => {
-            let { data } = item // hope this will work :)
-            if (typeof data == 'object' && data.hasOwnProperty('defaultName')) { // only include the object with defaultName property okok
-                return newObject.data.push({ defaultName: data.defaultName, text: data.text })
-            }
-        })
-        result.push(newObject)
+        let _data = el._doc.service.data
+        if (Array.isArray(_data)) {
+            _data.forEach((item) => {
+                let { data } = item // hope this will work :)
+                if (typeof data == 'object' && data.hasOwnProperty('defaultName')) { // only include the object with defaultName property okok
+                    //    if(data.defaultName === "quantity")
+                    return newObject.data.push({ defaultName: data.defaultName, text: data.text })
+
+                }
+            })
+            result.push(newObject)
+        }
     })
     return result;
-
-
-
 }
 
 const formatComponentArray = (arr) => {
@@ -61,10 +64,54 @@ const formatComponentArray = (arr) => {
             return item.type = text
         }
     });
-    // console.log("page:", item);
-
     return item;
-
 }
 
-module.exports = { formatArray, formatComponentArray }
+
+const formatPendingArray = (arr) => {
+
+    let result = [];
+
+    // arr.arr._doc.data = arr._doc.data.shift();
+    if (Array.isArray(arr)) {
+        arr.map(el => {
+            let newObject = {
+                data: []
+            }
+            let { data } = el;
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    if (item.data.defaultName) {
+                        newObject['serviceGroupName'] = item.data.text;
+                    } else {
+                        item.data.map(_item => {
+                            if (typeof _item.data == 'object' && _item.data.hasOwnProperty('defaultName')) {
+                                // only include the object with defaultName property 
+                                newObject.data.push({ defaultName: _item.data.defaultName, text: _item.data.text })
+                            }
+                        })
+                    }
+                })
+                result.push(newObject)
+
+                //     data.shift();
+                //     data.forEach(element => {
+                //         // try daw
+                //         element.data.map(el => {
+                //               
+                //             })
+                //             // console.log({ element: element.data[0].data });
+                //             // if (typeof element == 'object' && element.hasOwnProperty('defaultName')) { // only include the object with defaultName property 
+                //             //     newObject.data.push({ defaultName: element.defaultName, text: element.text })
+                //             // }
+                //     });
+                // }
+                // 
+            }
+
+        })
+    }
+    return result;
+
+}
+module.exports = { formatArray, formatComponentArray, formatPendingArray }

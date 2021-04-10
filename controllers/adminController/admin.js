@@ -1,11 +1,13 @@
 const Account = require('../../models/adminSchemas/adminAccount');
 const booking = require("../../models/booking");
 const Page = require("../../models/page")
-const { formatArray, formatComponentArray } = require('./func')
+const { formatArray, formatComponentArray, formatPendingArray } = require('./func')
 const jwt = require('jsonwebtoken')
 const bcrypt = require("bcryptjs");
 const Pusher = require('pusher');
 const notification = require("../../models/notification");
+const { Item } = require("../../models/item");
+const mongoose = require("mongoose");
 
 const pusher = new Pusher({
     appId: "1170708",
@@ -15,7 +17,7 @@ const pusher = new Pusher({
 
 function createToken(user) {
     return jwt.sign({ id: user.id, username: user.username, password: user.password }, "access_token", {
-        expiresIn: 2000 // 86400 expires in 24 hours
+        expiresIn: "12h" // 86400 expires in 24 hours
     })
 }
 // module.exports.adminAccount = async(req, res) => {
@@ -50,7 +52,7 @@ module.exports.login = (req, res) => {
 }
 
 module.exports.pusher = (req, res) => {
-    console.log('POST to /pusher/auth');
+    //console.log('POST to /pusher/auth');
     const socketId = req.body.socket_id;
     const channel = req.body.channel_name;
     const auth = pusher.authenticate(socketId, channel);
@@ -59,12 +61,11 @@ module.exports.pusher = (req, res) => {
 
 module.exports.getAllBookings = (req, res) => {
     booking.find({ status: req.params.bookingStatus })
-        .populate({ path: "tourist", model: "Account", select: "fullName address" })
+        .populate({ path: "tourist", model: "Account", select: "fullName address contactNumber email" })
         .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .populate({ path: "selectedServices.service", model: "Item" })
         .exec((error, bookings) => {
             if (error) {
-                console.log(error);
                 return res.status(500).json(error);
             } else {
                 // start get booking Info
@@ -91,12 +92,12 @@ module.exports.getAllBookings = (req, res) => {
                             });
                             formattedObject.bookingInfo = simplifiedDetail;
                         }
-                        console.log('line 94');
-
                         let components = formatComponentArray(formattedObject.pageId._doc.components);
 
                         if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
+                        formattedObject.selectedServiceData = formattedObject.selectedServices
                         formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
+
                         result.push(formattedObject)
                     });
                 }
@@ -106,34 +107,37 @@ module.exports.getAllBookings = (req, res) => {
         })
 }
 
-
 module.exports.getAllPendingNotifications = (req, res) => {
     Page.find({ status: req.params.pageStatus })
         .populate({ path: "hostTouristSpot", model: "Page" })
         .populate({ path: "creator", model: "Account", select: "fullName" })
+        .populate({ path: "services.data", model: "Item" })
         .exec((err, pages) => {
 
             if (err) {
                 res.status(500).json({ error: err })
             }
             if (pages.length) {
-                console.log(pages.length);
+                pages.forEach((page, idx) => {
+                    page._doc.components = formatComponentArray(page._doc.components) //onlycomponents property 
+                    let services = page.services;
 
-                pages.forEach(page => {
-                    page._doc.components = formatComponentArray(page._doc.components) //only components property is passed
+                    if (!services || !services.length) {
+                        return
+                    }
+                    page._doc.services = formatPendingArray(services)
                 });
             }
+
             res.status(200).json(pages)
         })
 }
 
 module.exports.setBookingStatus = async(req, res) => {
-    console.log("Body: ", req.body)
-
     const notifForProvider = new notification({
         receiver: req.body.serviceProviderReceiver,
         booking: req.body.bookingId,
-        type: "booking",
+        type: "page-booking",
         message: req.body.messageForServiceProvider
     })
 
@@ -143,7 +147,20 @@ module.exports.setBookingStatus = async(req, res) => {
         type: "booking",
         message: req.body.messageForTourist
     })
-    console.log(req.body);
+
+    if (req.body.servicesToUpdate) {
+        req.body.servicesToUpdate.forEach(service => {
+            Item.updateOne({
+                _id: mongoose.Types.ObjectId(service._id)
+            }, {
+                $set: service.bookingData
+            }, function(error, result) {
+                if (error) {
+                    return res.status(500).json(error);
+                }
+            })
+        })
+    }
     booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
         .exec(async(err, data) => {
@@ -156,34 +173,26 @@ module.exports.setBookingStatus = async(req, res) => {
                 const result2 = await notifForTourist.save()
                 return res.status(200).json({ data: data, result: result, result2: result2 })
             } catch (error) {
-                console.log(error)
                 res.status(500).json(error)
             }
         })
 }
 
 
-
-
 module.exports.setPageStatus = async(req, res) => {
-        console.log(req.body)
         const notif = new notification({
             receiver: req.body.pageCreator,
             page: req.body.pageId,
             type: "page",
             message: req.body.message,
-
         })
-        console.log(req.body);
         Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {
             if (err) {
-                console.log(err);
                 return res.status(500).json({ error: err })
             }
             notif.save().then((result) => {
                 return res.status(200).json({ page: page, result: result })
             }).catch(error => {
-                console.log(error)
                 res.status(500).json(error)
             })
         })
@@ -193,7 +202,7 @@ module.exports.setPageStatus = async(req, res) => {
     //         if (err) {
     //             res.status(500).json({ error: err })
     //         }
-    //         console.log(page);
+    //         //console.log(page);
     //         res.status(200).json(page)
     //     })
     // }
