@@ -1,5 +1,5 @@
 const express = require("express");
-const app = express();
+const app = require('express')();
 const bodyParser = require("body-parser");
 const dbConfig = require("./database/db");
 const mongoose = require("mongoose");
@@ -41,6 +41,23 @@ app.use("/api", require("./router/mainRouter"));
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`App is listening on port ${port}`);
+});
+
+
+let io = require('socket.io')(server, {
+  cors: {
+    origin: "http://localhost:4200",
+    methods: ["GET", "POST"]
+  }
+});
+
+io.on('connection', (socket) => {
+
+      socket.on('notify', (data) => {
+        socket.user = data.user;
+        io.emit('send-notification', data);    
+      });
+
 });
