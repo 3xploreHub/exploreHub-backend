@@ -98,6 +98,7 @@ module.exports.getBooking = async (req, res) => {
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
             .populate({ path: "pageId", model: "Page" })
+            .populate({ path: "tourist", model: "Account", select: "firstName lastName" })
             .exec((error, bookingData) => {
                 if (error) {
                     console.log(error);
@@ -228,7 +229,7 @@ module.exports.viewBooking = (req, res) => {
         .populate({ path: "pageId", model: "Page" })
         // .populate({path:"pageId", populate: { path: "creator", model: "Account", select: "fullName"}})
         .populate({ path: "selectedServices.service", model: "Item" })
-        .populate({ path: "tourist", model: "Account" })
+        .populate({ path: "tourist", model: "Account", select: "firstName lastName email contactNumber address" })
         .exec((error, bookings) => {
             if (error) {
                 return res.status(500).json(error);
