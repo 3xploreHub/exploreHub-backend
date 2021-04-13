@@ -88,10 +88,27 @@ module.exports.createConversation = (req, res) => {
 
 module.exports.getConversation = async (req, res) => {
     try {
-        const conv = await conversation.findOne({page: req.params.pageId, booking:req.params.bookingId})
+        const conv = await conversation.findOne({ page: req.params.pageId, booking: req.params.bookingId })
+        if (!conv) return res.status(200).json({ noConversation: true, message: "no converstion yet!" })
         res.status(200).json(conv)
-    } catch(error) {
+    } catch (error) {
         console.log(error)
         res.status(500).send(error);
     }
+}
+
+module.exports.sendMessage = (req, res) => {
+    const message = new messageModel({ sender: req.user._id, senderFullName: req.user.fullName, message: req.body.message })
+    conversation.updateOne({ "_id": mongoose.Types.ObjectId(req.body.conversationId) },
+        {
+            $push: {
+                messages: message,
+            }
+        },
+        function (err, response) {
+            if (err) {
+                return res.status(500).json({ type: "internal error", error: err })
+            }
+            res.status(200).json(message);
+        })
 }

@@ -43,6 +43,7 @@ router.get("/getPageBooking/:bookingStatus/:pageId", serviceProvider.getPageBook
 router.get("/getNotificationsCount", serviceProvider.getNotificationsCount)
 router.post("/createConversation", serviceProvider.createConversation)
 router.get("/getConversation/:bookingId/:pageId", serviceProvider.getConversation)
+router.post("/sendMessage", serviceProvider.sendMessage)
 
 router.get("/getOnlinePages/", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
