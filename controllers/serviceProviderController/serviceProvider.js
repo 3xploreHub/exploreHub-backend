@@ -105,10 +105,15 @@ module.exports.sendMessage = (req, res) => {
                 messages: message,
             }
         },
-        function (err, response) {
+        async function (err, response) {
             if (err) {
                 return res.status(500).json({ type: "internal error", error: err })
             }
-            res.status(200).json(message);
+            try {
+               const convo = await conversation.findById(req.body.conversationId)
+               res.status(200).json(convo);
+            } catch(error) {
+                res.status(500).json(error)
+            }
         })
 }
