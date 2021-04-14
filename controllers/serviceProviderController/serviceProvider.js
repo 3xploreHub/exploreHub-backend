@@ -76,6 +76,7 @@ module.exports.createConversation = (req, res) => {
     const message = new conversation({
         booking: data.booking,
         page: data.page,
+        receiver: data.receiver,
         messages: [firstMessage],
     })
 
@@ -88,7 +89,7 @@ module.exports.createConversation = (req, res) => {
 
 module.exports.getConversation = async (req, res) => {
     try {
-        const conv = await conversation.findOne({ page: req.params.pageId, booking: req.params.bookingId })
+        const conv = await conversation.findOne({ page: req.params.pageId, booking: req.params.bookingId, receiver: req.params.receiver })
         if (!conv) return res.status(200).json({ noConversation: true, message: "no converstion yet!" })
         res.status(200).json(conv)
     } catch (error) {

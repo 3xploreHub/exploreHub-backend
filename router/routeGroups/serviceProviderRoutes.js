@@ -42,7 +42,7 @@ router.get("/getServices/:pageId/:pageType", serviceProvider.getServices)
 router.get("/getPageBooking/:bookingStatus/:pageId", serviceProvider.getPageBooking)
 router.get("/getNotificationsCount", serviceProvider.getNotificationsCount)
 router.post("/createConversation", serviceProvider.createConversation)
-router.get("/getConversation/:bookingId/:pageId", serviceProvider.getConversation)
+router.get("/getConversation/:bookingId/:pageId/:receiver", serviceProvider.getConversation)
 router.post("/sendMessage", serviceProvider.sendMessage)
 
 router.get("/getOnlinePages/", tourist.getOnlinePages)
