@@ -8,6 +8,7 @@ const notification = require("../../models/notification");
 const Page = require("../../models/page");
 const { service } = require("../../models/service");
 const helper = require("./helper");
+const notificationGroup = require("../../models/notificationGroup");
 
 
 module.exports.getOnlinePages = async (req, res) => {
@@ -251,9 +252,12 @@ module.exports.deleteBooking = (req, res) => {
 
 
 module.exports.getNotifications = (req, res) => {
-    notification.find({ receiver: req.user._id })
+    notificationGroup.find({ receiver: req.user._id })
+        .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
+        .populate({ path: 'initiator', model: 'Account', select: "fullName"})
         .populate({ path: 'booking', model: 'Booking' })
+        .sort({ 'updatedAt': -1 })
         .exec((error, result) => {
             console.log(error);
             if (error) return res.status(500).json(error)

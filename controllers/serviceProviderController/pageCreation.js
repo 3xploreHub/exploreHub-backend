@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const { ComponentModel } = require("../../models/commonSchemas/component");
 const { ImageModel } = require("../../models/commonSchemas/image");
-const servicePage = require("../../models/servicePage");
-const touristSpotPage = require("../../models/touristSpotPage");
 const deleteImage = require("../../uploads/deleteImage");
 const helper = require("./helper");
 const touristSpotCategoriesCrud = require("./touristSpotCategories");

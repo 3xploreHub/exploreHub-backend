@@ -4,8 +4,6 @@ const { messageModel } = require("../../models/commonSchemas/message");
 const conversation = require("../../models/conversation");
 const notification = require("../../models/notification");
 const Page = require("../../models/page");
-const servicePage = require("../../models/servicePage");
-const touristSpotPage = require("../../models/touristSpotPage");
 
 
 module.exports.getPages = async (req, res) => {

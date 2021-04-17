@@ -2,9 +2,8 @@ const mongoose = require("mongoose");
 const { ComponentModel } = require("../../models/commonSchemas/component");
 const { Item } = require("../../models/item");
 const notification = require("../../models/notification");
+const notificationGroup = require("../../models/notificationGroup");
 const Page = require("../../models/page");
-const servicePage = require("../../models/servicePage");
-const touristSpotPage = require("../../models/touristSpotPage");
 const deleteImage = require("../../uploads/deleteImage");
 
 const addComponent = (model, touristSpotId, res, data, returnData = true) => {
@@ -54,10 +53,6 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
 }
 
 module.exports.deleteItem = (model, query, condition, res, images) => {
-
-
-
-
   model.updateOne(
     query,
     {
@@ -193,7 +188,7 @@ function getItemImages(data) {
 }
 
 module.exports.updateItemBookingCount = (service, res, booked = true) => {
-  const data = booked? {booked : service.booked} : {manuallyBooked: service.manuallyBooked}
+  const data = booked ? { booked: service.booked } : { manuallyBooked: service.manuallyBooked }
   Item.updateOne({
     _id: mongoose.Types.ObjectId(service._id)
   }, {
@@ -211,18 +206,46 @@ function createNotification(data) {
     try {
       let { receiver, initiator, page, booking, type, message } = data;
 
-      let notif = new notification({
-        receiver: receiver,
-        initiator: initiator,
-        page: page,
-        booking: booking,
-        type: type,
-        message: message,
-        opened: false
+      const findNotif = await notificationGroup.findOne({
+        receiver: mongoose.Types.ObjectId(receiver),
+        initiator: mongoose.Types.ObjectId(initiator),
+        page: mongoose.Types.ObjectId(page),
+        booking: mongoose.Types.ObjectId(booking),
       })
 
-      await notif.save();
-      resolve(notif)
+      const firstNotif = new notification({ message: message, receiver: receiver })
+      if (!findNotif) {
+
+        let notif = new notificationGroup({
+          receiver: receiver,
+          initiator: initiator,
+          page: page,
+          type: type,
+          booking: booking,
+          notifications: [firstNotif._id]
+        })
+
+        await firstNotif.save();
+        await notif.save();
+        resolve(notif)
+      } else {
+        notificationGroup.updateOne({
+          receiver: mongoose.Types.ObjectId(receiver),
+          initiator: mongoose.Types.ObjectId(initiator),
+          page: mongoose.Types.ObjectId(page),
+          booking: mongoose.Types.ObjectId(booking),
+        }, {
+          $push: {
+            notifications: firstNotif._id
+          }
+        }).then(async (result) => {
+          await firstNotif.save();
+          findNotif.notifications.push(firstNotif)
+          resolve(findNotif)
+        }).catch(error => {
+          reject(error)
+        })
+      }
     } catch (error) {
       reject(error)
     }
