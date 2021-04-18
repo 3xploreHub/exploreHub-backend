@@ -7,9 +7,9 @@ const bcrypt = require("bcryptjs");
 const notification = require("../../models/notification");
 const { Item } = require("../../models/item");
 const mongoose = require("mongoose");
-
+const MY_SECRET = process.env.MY_SECRET;
 function createToken(user) {
-    return jwt.sign({ id: user.id, username: user.username, password: user.password }, "access_token", {
+    return jwt.sign({ id: user.id, username: user.username, password: user.password }, MY_SECRET, {
         expiresIn: "12h" // 86400 expires in 24 hours
     })
 }
@@ -56,7 +56,7 @@ module.exports.getAllBookings = (req, res) => {
         .populate({ path: "tourist", model: "Account", select: "fullName address contactNumber email" })
         .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .populate({ path: "selectedServices.service", model: "Item" })
-        .sort({ 'updatedAt': -1 })
+        .sort({ 'updatedAt': 1 })
         .exec((error, bookings) => {
             if (error) {
                 return res.status(500).json(error);

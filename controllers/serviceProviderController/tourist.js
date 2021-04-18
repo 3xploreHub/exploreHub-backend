@@ -331,9 +331,9 @@ module.exports.changeBookingStatus = async (req, res) => {
                                 }
                                 let quantity = getValue(doc.data, 'quantity')
                                 quantity = quantity.length > 0 ? quantity[0] : 0
-                                if (quantity < (doc.manuallyBooked + doc.booked)) {
+                                if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
                                     const name = getValue(doc.data, 'name')
-                                    return res.status(200).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name : 'Untitled Service'} has no more available item!` })
+                                    return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name : 'Untitled Service'} has no more available item!` })
                                 } else {
                                     doc.save()
                                 }
