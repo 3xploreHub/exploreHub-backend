@@ -24,7 +24,6 @@ module.exports = async (req, res) => {
     await VerificationCode.deleteMany({ expiryDate: { $lt: new Date() } });
 
     if (userAccount.fullName == undefined) {
-      console.log(userAccount, '***');
       unfinished_registration = true;
       tokenType = userTokenType.accountVerification;
       const codesSent = await VerificationCode.find({
