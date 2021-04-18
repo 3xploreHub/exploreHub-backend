@@ -204,11 +204,10 @@ module.exports.updateItemBookingCount = (service, res, booked = true) => {
 function createNotification(data) {
   return new Promise(async (resolve, reject) => {
     try {
-      let { receiver, initiator, page, booking, type, message } = data;
+      let { receiver, mainReceiver, page, booking, type, message } = data;
 
       const findNotif = await notificationGroup.findOne({
         receiver: mongoose.Types.ObjectId(receiver),
-        initiator: mongoose.Types.ObjectId(initiator),
         page: mongoose.Types.ObjectId(page),
         booking: mongoose.Types.ObjectId(booking),
       })
@@ -218,7 +217,7 @@ function createNotification(data) {
 
         let notif = new notificationGroup({
           receiver: receiver,
-          initiator: initiator,
+          mainReceiver: mainReceiver,
           page: page,
           type: type,
           booking: booking,
@@ -231,7 +230,6 @@ function createNotification(data) {
       } else {
         notificationGroup.updateOne({
           receiver: mongoose.Types.ObjectId(receiver),
-          initiator: mongoose.Types.ObjectId(initiator),
           page: mongoose.Types.ObjectId(page),
           booking: mongoose.Types.ObjectId(booking),
         }, {

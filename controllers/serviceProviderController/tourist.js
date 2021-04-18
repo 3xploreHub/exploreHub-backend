@@ -9,6 +9,7 @@ const Page = require("../../models/page");
 const { service } = require("../../models/service");
 const helper = require("./helper");
 const notificationGroup = require("../../models/notificationGroup");
+const adminAccount = require("../../models/adminSchemas/adminAccount");
 
 
 module.exports.getOnlinePages = async (req, res) => {
@@ -180,13 +181,14 @@ module.exports.submitBooking = async (req, res) => {
                 })
             }
         } else {
+            const message = req.body.resubmitted ? `${req.user.fullName} resubmitted his booking` : `${req.user.fullName} submitted a booking`
             const notification = await helper.createNotification({
                 receiver: req.body.receiver,
-                initiator: req.user._id,
+                mainReceiver: req.user._id,
                 page: req.body.page,
                 booking: req.body.booking,
                 type: req.body.type,
-                message: `${req.user.fullName} submitted a booking to your service`
+                message: message
             })
         }
         const status = req.body.isManual ? "Booked" : "Pending"
@@ -255,13 +257,17 @@ module.exports.getNotifications = (req, res) => {
     notificationGroup.find({ receiver: req.user._id })
         .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
-        .populate({ path: 'initiator', model: 'Account', select: "fullName"})
+        .populate({ path: 'mainReceiver', model: 'Account' })
         .populate({ path: 'booking', model: 'Booking' })
         .sort({ 'updatedAt': -1 })
-        .exec((error, result) => {
-            console.log(error);
+        .exec(async (error, result) => {
             if (error) return res.status(500).json(error)
-            res.status(200).json(result);
+            try {
+
+                res.status(200).json(result);
+            } catch (error) {
+
+            }
         })
 
 }
@@ -308,7 +314,7 @@ module.exports.changeBookingStatus = async (req, res) => {
     try {
         let notif = {
             receiver: req.body.receiver,
-            initiator: req.user._id,
+            mainReceiver: req.body.mainReceiver,
             page: req.body.page,
             booking: req.body.booking,
             type: req.body.type,
@@ -350,7 +356,7 @@ module.exports.changeBookingStatus = async (req, res) => {
                 }
             })
         }
-        const notification = await helper.createNotification(notif)
+        await helper.createNotification(notif)
         booking.updateOne(
             {
                 _id: req.body.booking

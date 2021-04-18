@@ -7,9 +7,10 @@ const bcrypt = require("bcryptjs");
 const notification = require("../../models/notification");
 const { Item } = require("../../models/item");
 const mongoose = require("mongoose");
+const helper = require("../serviceProviderController/helper");
 const MY_SECRET = process.env.MY_SECRET;
 function createToken(user) {
-    return jwt.sign({ id: user.id, username: user.username, password: user.password }, MY_SECRET, {
+    return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
         expiresIn: "12h" // 86400 expires in 24 hours
     })
 }
@@ -121,25 +122,12 @@ module.exports.getAllPendingNotifications = (req, res) => {
                     page._doc.services = formatPendingArray(services)
                 });
             }
-
             res.status(200).json(pages)
         })
 }
 
 module.exports.setBookingStatus = async (req, res) => {
-    const notifForProvider = new notification({
-        receiver: req.body.serviceProviderReceiver,
-        booking: req.body.bookingId,
-        type: "page-booking",
-        message: req.body.messageForServiceProvider
-    })
-
-    const notifForTourist = new notification({
-        receiver: req.body.touristReceiver,
-        booking: req.body.bookingId,
-        type: "booking",
-        message: req.body.messageForTourist
-    })
+    
 
     if (req.body.servicesToUpdate) {
         req.body.servicesToUpdate.forEach(service => {
@@ -149,6 +137,7 @@ module.exports.setBookingStatus = async (req, res) => {
                 $set: service.bookingData
             }, function (error, result) {
                 if (error) {
+                    console.log(error)
                     return res.status(500).json(error);
                 }
             })
@@ -158,12 +147,44 @@ module.exports.setBookingStatus = async (req, res) => {
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
         .exec(async (err, data) => {
             if (err) {
+                console.log(err)
                 res.status(500).json({ error: err })
             }
             try {
+                
 
-                const result = await notifForProvider.save()
-                const result2 = await notifForTourist.save()
+                // const notifForProvider = helper. ({
+                //     receiver: req.body.serviceProviderReceiver,
+                //     booking: req.body.bookingId,
+                //     type: "page-booking",
+                //     message: req.body.messageForServiceProvider
+                // })
+                console.log("ADMIN ID:", req.user )
+                helper.createNotification({
+                    receiver: req.body.serviceProviderReceiver,  
+                    mainReceiver: req.body.mainReceiver,
+                    page: req.body.page,
+                    booking: req.body.bookingId,
+                    type: "page-booking",
+                    message: req.body.messageForServiceProvider
+                })
+            
+                // const notifForTourist = new notification({
+                //     receiver: req.body.touristReceiver,
+                //     booking: req.body.bookingId,
+                //     type: "booking",
+                //     message: req.body.messageForTourist
+                // })
+
+                helper.createNotification({
+                    receiver: req.body.touristReceiver,
+                    mainReceiver: req.body.mainReceiver,
+                    page: req.body.page,
+                    booking: req.body.bookingId,
+                    type: "booking",
+                    message: req.body.messageForTourist
+                })
+
                 booking.findOne({ _id: req.body.bookingId })
                     .populate({ path: "tourist", model: "Account", select: "firstName lastName" })
                     .populate({ path: "pageId", model: "Page"})
@@ -175,6 +196,7 @@ module.exports.setBookingStatus = async (req, res) => {
                         res.status(200).json(bookingData);
                     })
             } catch (error) {
+                console.log(error)
                 res.status(500).json(error)
             }
         })
