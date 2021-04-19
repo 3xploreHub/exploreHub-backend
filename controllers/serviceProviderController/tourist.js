@@ -17,7 +17,7 @@ module.exports.getOnlinePages = async (req, res) => {
     { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
     ]).exec(function (err, pages) {
         if (err) {
-            res.status(500).json(err);
+            res.status(500).json(err.message);
         }
         res.status(200).json(pages)
     })
@@ -32,7 +32,7 @@ module.exports.viewPage = (req, res) => {
                 return res.status(500).json({
                     type: "internal_error",
                     message: "unexpected error occured!",
-                    error: error
+                    error: error.message
                 });
             }
             if (!page) {
@@ -48,7 +48,7 @@ module.exports.viewAllServices = async (req, res) => {
         res.status(200).json(otherServices);
     }
     catch (error) {
-        res.status(500).json(500);
+        res.status(500).json(error.message);
     }
 }
 
@@ -91,7 +91,7 @@ module.exports.createBooking = async (req, res) => {
 
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
@@ -105,7 +105,7 @@ module.exports.getBooking = async (req, res) => {
             .exec((error, bookingData) => {
                 if (error) {
                     console.log(error);
-                    return res.status(500).json(error);
+                    return res.status(500).json(error.message);
                 }
 
                 const result = { bookingData: bookingData };
@@ -113,7 +113,7 @@ module.exports.getBooking = async (req, res) => {
                     Page.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
                         .populate({ path: "services.data", model: "Item" }).exec((error, page) => {
                             if (error) {
-                                return res.status(500).json(error)
+                                return res.status(500).json(error.message)
                             }
                             result["services"] = page.services
                             return res.status(200).json(result);
@@ -126,7 +126,7 @@ module.exports.getBooking = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
@@ -158,7 +158,7 @@ module.exports.getPageBookingInfo = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
@@ -176,13 +176,13 @@ module.exports.submitBooking = async (req, res) => {
                     }).then(result => {
                         console.log("updated item ", service)
                     }).catch(error => {
-                        return res.status(500).json(error)
+                        return res.status(500).json(error.message)
                     })
                 })
             }
         } else {
             const message = req.body.resubmitted ? `${req.user.fullName} resubmitted his booking` : `${req.user.fullName} submitted a booking`
-            const notification = await helper.createNotification({
+            await helper.createNotification({
                 receiver: req.body.receiver,
                 mainReceiver: req.user._id,
                 page: req.body.page,
@@ -199,7 +199,7 @@ module.exports.submitBooking = async (req, res) => {
                 }
             }).then((result, error) => {
                 if (error) {
-                    return res.status(500).json(error);
+                    return res.status(500).json(error.message);
                 }
                 res.status(200).json(result);
             })
@@ -221,7 +221,7 @@ module.exports.getBookings = (req, res) => {
     ]).exec((error, bookings) => {
         if (error) {
             console.log(error)
-            return res.status(500).json(error);
+            return res.status(500).json(error.message);
         }
         res.status(200).json(bookings);
     })
@@ -236,7 +236,7 @@ module.exports.viewBooking = (req, res) => {
         .populate({ path: "tourist", model: "Account", select: "firstName lastName email contactNumber address fullName" })
         .exec((error, bookings) => {
             if (error) {
-                return res.status(500).json(error);
+                return res.status(500).json(error.message);
             }
             res.status(200).json(bookings);
         })
@@ -248,20 +248,21 @@ module.exports.deleteBooking = (req, res) => {
         res.status(200).json(result);
     }).catch(error => {
         console.log(error);
-        return res.status(500).json(error);
+        return res.status(500).json(error.message);
     })
 }
 
 
 module.exports.getNotifications = (req, res) => {
-    notificationGroup.find({ receiver: req.user._id })
+    const condition = req.user.username? {}: { receiver: req.user._id }
+    notificationGroup.find(condition)
         .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
         .populate({ path: 'mainReceiver', model: 'Account' })
         .populate({ path: 'booking', model: 'Booking' })
         .sort({ 'updatedAt': -1 })
         .exec(async (error, result) => {
-            if (error) return res.status(500).json(error)
+            if (error) return res.status(500).json(error.message)
             try {
 
                 res.status(200).json(result);
@@ -280,7 +281,7 @@ module.exports.viewNotification = (req, res) => {
             opened: true
         }
     }, function (err, result) {
-        if (err) return res.status(500).json(err)
+        if (err) return res.status(500).json(err.message)
         res.status(200).json(result)
     })
 }
@@ -296,7 +297,7 @@ module.exports.removeSelectedItem = (req, res) => {
             }
         }, function (err, response) {
             if (err) {
-                return res.status(500).json({ type: "internal error", error: err })
+                return res.status(500).json({ type: "internal error", error: err.message })
             }
             res.status(200).json(response);
         })
@@ -367,13 +368,13 @@ module.exports.changeBookingStatus = async (req, res) => {
                 }
             }, function (err, response) {
                 if (err) {
-                    return res.status(500).json({ type: "internal error", error: err })
+                    return res.status(500).json({ type: "internal error", error: err.message })
                 }
                 res.status(200).json(response);
             })
     } catch (error) {
         console.log(error);
-        res.status(500).json(error)
+        res.status(500).json(error.message)
     }
 }
 

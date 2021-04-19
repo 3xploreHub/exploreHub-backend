@@ -41,7 +41,7 @@ module.exports.addServiceComponent = async (req, res) => {
         if (err) {
           return res.status(500).json({
             type: "internal_error",
-            error: err,
+            error: err.message,
           });
         }
         const itemList = new ComponentModel(req.body);
@@ -97,7 +97,7 @@ module.exports.addServiceChildComponent = async (req, res) => {
       },
       function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(validComponent);
       })
@@ -131,7 +131,7 @@ module.exports.addItemChildComponentImage = (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json(err)
+          return res.status(500).json(err.message)
         }
         res.status(200).json(newImage);
       })
@@ -163,7 +163,7 @@ module.exports.editChildComponent = async (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -185,7 +185,7 @@ module.exports.deleteChildComponent = (req, res) => {
         "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -199,7 +199,7 @@ module.exports.deleteItemChild = (req, res) => {
         }
       },function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         if (req.body.images) {
           req.body.images.forEach(image => {
@@ -234,7 +234,7 @@ module.exports.deleteItem = async (req, res) => {
         ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         console.log(images);
         images.forEach(image => {
@@ -265,7 +265,7 @@ module.exports.editServiceInfo = async (req, res) => {
         console.log("yehe: ", response)
         if (err) {
           console.log(err);
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -323,7 +323,7 @@ module.exports.getItemUpdatedData = async (req, res) => {
 module.exports.getUpdatedItemListData = (req, res) => {
   Item.find({serviceId: req.params.serviceId}).then((data, err) => {
     if (err) {
-      return res.status(500).json({ type: "internal_error", error: err })
+      return res.status(500).json({ type: "internal_error", error: err.message })
     }
     res.status(200).json(data);
   })
@@ -367,7 +367,7 @@ module.exports.deleteServiceComponent = async (req, res) => {
       $pull: { 'services': { '_id': req.params.serviceId } }
     }, function (err, result) {
       if (err) {
-        return res.status(500).json({ type: "internal_error", error: err });
+        return res.status(500).json({ type: "internal_error", error: err.message });
       }
       res.status(200).json(result);
     })
@@ -401,7 +401,7 @@ module.exports.deleteItemImage = (req, res) => {
       }, function (err, response) {
         if (err) {
           console.log(err)
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         helper.deletePhoto(req.body.imageUrl)
         res.status(200).json(response);
@@ -474,7 +474,7 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
       Page.updateOne({_id: hostTouristSpot._id}, {$push: {otherServices: page._id}}).then((result, error) => {
         if (error) {
           console.log(error)
-          return res.status(500).json(error);
+          return res.status(500).json(error.message);
         }
       })
     }
@@ -483,14 +483,14 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
         return res.status(500).json({
           type: "internal_error",
           message: "Unexpected error occured!",
-          error: error
+          error: error.message
         })
       }
       res.status(200).json(createdPage)
     })
   } catch (error) {
     console.log(error)
-    res.status(500).json(error);
+    res.status(500).json(error.message);
   }
 }
 
@@ -528,7 +528,7 @@ module.exports.deletePage = async (req, res) => {
       }
     })
   } catch (error) {
-    res.status(500).json(error)
+    res.status(500).json(error.message)
   }
 }
 
@@ -541,7 +541,7 @@ module.exports.retrievePage = (req, res) => {
       return res.status(500).json({
         type: "internal_error",
         message: "unexpected error occured!",
-        error: error
+        error: error.message
       });
     }
     if (!page) {
@@ -555,7 +555,7 @@ module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
   Page.find({ status: 'Online' }).then((pages, error) => {
     if (error) {
-      return res.status(500).json(error);
+      return res.status(500).json(error.message);
     }
     res.status(200).json(pages)
   })
@@ -570,7 +570,7 @@ module.exports.submitPage = async (req, res) => {
       }
     }, function (err, response) {
       if (err) {
-        return res.status(500).json({ type: "internal error", error: err })
+        return res.status(500).json({ type: "internal error", error: err.message })
       }
       res.status(200).json({ message: "Page successfully submitted" });
     })

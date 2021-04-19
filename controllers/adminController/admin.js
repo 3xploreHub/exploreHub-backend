@@ -60,7 +60,7 @@ module.exports.getAllBookings = (req, res) => {
         .sort({ 'updatedAt': 1 })
         .exec((error, bookings) => {
             if (error) {
-                return res.status(500).json(error);
+                return res.status(500).json(error.message);
             } else {
                 // start get booking Info
                 let result = []; // initialize result
@@ -109,7 +109,7 @@ module.exports.getAllPendingNotifications = (req, res) => {
         .exec((err, pages) => {
 
             if (err) {
-                res.status(500).json({ error: err })
+                res.status(500).json({ error: err.message })
             }
             if (pages.length) {
                 pages.forEach((page, idx) => {
@@ -138,7 +138,7 @@ module.exports.setBookingStatus = async (req, res) => {
             }, function (error, result) {
                 if (error) {
                     console.log(error)
-                    return res.status(500).json(error);
+                    return res.status(500).json(error.message);
                 }
             })
         })
@@ -148,7 +148,7 @@ module.exports.setBookingStatus = async (req, res) => {
         .exec(async (err, data) => {
             if (err) {
                 console.log(err)
-                res.status(500).json({ error: err })
+                res.status(500).json({ error: err.message })
             }
             try {
                 
@@ -191,13 +191,13 @@ module.exports.setBookingStatus = async (req, res) => {
                     .populate({ path: "selectedServices.service", model: "Item" })
                     .exec((error, bookingData) => {
                         if (error) {
-                            return res.status(500).json(error);
+                            return res.status(500).json(error.message);
                         }
                         res.status(200).json(bookingData);
                     })
             } catch (error) {
                 console.log(error)
-                res.status(500).json(error)
+                res.status(500).json(error.message)
             }
         })
 }
@@ -212,12 +212,12 @@ module.exports.setPageStatus = async (req, res) => {
     })
     Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {
         if (err) {
-            return res.status(500).json({ error: err })
+            return res.status(500).json({ error: err.message })
         }
         notif.save().then((result) => {
             return res.status(200).json({ page: page, result: result })
         }).catch(error => {
-            res.status(500).json(error)
+            res.status(500).json(error.message)
         })
     })
 }

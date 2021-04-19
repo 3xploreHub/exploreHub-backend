@@ -15,7 +15,7 @@ const addComponent = (model, touristSpotId, res, data, returnData = true) => {
       if (err) {
         return res.status(500).json({
           type: "internal_error",
-          error: err,
+          error: err.message,
         });
       }
       if (returnData) {
@@ -48,7 +48,7 @@ module.exports.editComponent = (model, query, data, res, newData, deleteImg = nu
       if (deleteImg) deleteImg(newData.imageUrl)
       res.status(200).json(newData);
     }).catch(error => {
-      res.status(500).json({ type: 'internal_error!', error: error });
+      res.status(500).json({ type: 'internal_error!', error: error.message });
     })
 }
 
@@ -59,7 +59,7 @@ module.exports.deleteItem = (model, query, condition, res, images) => {
       $pull: condition
     }, function (err, numberAffected) {
       if (err) {
-        return res.status(500).json({ type: "internal_error", error: err });
+        return res.status(500).json({ type: "internal_error", error: err.message });
       }
       if (images) {
         images.forEach(image => { deletePhoto(image) });
@@ -196,7 +196,7 @@ module.exports.updateItemBookingCount = (service, res, booked = true) => {
   }).then(result => {
     console.log("updated item ", service)
   }).catch(error => {
-    return res.status(500).json(error)
+    return res.status(500).json(error.message)
   })
 }
 
@@ -213,6 +213,11 @@ function createNotification(data) {
       })
 
       const firstNotif = new notification({ message: message, receiver: receiver })
+      if (data.isMessage) {
+        firstNotif["isMessage"] = true
+        firstNotif["subject"] = data.subject
+        firstNotif["sender"] = data.sender
+      }
       if (!findNotif) {
 
         let notif = new notificationGroup({
@@ -228,21 +233,46 @@ function createNotification(data) {
         await notif.save();
         resolve(notif)
       } else {
-        notificationGroup.updateOne({
-          receiver: mongoose.Types.ObjectId(receiver),
-          page: mongoose.Types.ObjectId(page),
-          booking: mongoose.Types.ObjectId(booking),
-        }, {
-          $push: {
-            notifications: firstNotif._id
-          }
-        }).then(async (result) => {
-          await firstNotif.save();
-          findNotif.notifications.push(firstNotif)
-          resolve(findNotif)
-        }).catch(error => {
-          reject(error)
-        })
+          notificationGroup.updateOne({
+            receiver: mongoose.Types.ObjectId(receiver),
+            page: mongoose.Types.ObjectId(page),
+            booking: mongoose.Types.ObjectId(booking),
+          }, {
+            $push: {
+              notifications: firstNotif._id
+            }
+          }).then(async (result) => {
+
+            if (!data.isMessage) {
+              await firstNotif.save();
+              findNotif.notifications.push(firstNotif)
+              resolve(findNotif)
+            } 
+            else {
+              notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true },
+                { $set: { opened: false, updatedAt: new Date(), message: message } })
+                .then(async (result) => {
+                  try {
+    
+                    if (!result) {
+                      await firstNotif.save()
+                    }
+    
+                    resolve(findNotif)
+                  }
+                  catch (error) {
+                    reject(error)
+                  }
+                }).catch(error => {
+                  reject(error)
+                })
+            }
+            
+          }).catch(error => {
+            reject(error)
+          })
+          
+        
       }
     } catch (error) {
       reject(error)
@@ -275,7 +305,7 @@ const handleError = (error, res) => {
       res.status(500).json({
         type: "internal_error",
         message: "unexpected error occured",
-        error: error.error,
+        error: error.error.message,
       });
       break;
   }
