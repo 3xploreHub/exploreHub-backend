@@ -70,7 +70,8 @@ module.exports.getNotificationsCount = (req, res) => {
 
 module.exports.createConversation = (req, res) => {
     const data = req.body
-    const firstMessage = new messageModel({ sender: req.user._id, senderFullName: req.user.fullName, message: data.message })
+    const fullName = req.user && req.user.username && !req.user.fullName? "Admin": req.user.fullName
+    const firstMessage = new messageModel({ sender: req.user._id, senderFullName: fullName, message: data.message })
     const message = new conversation({
         booking: data.booking,
         page: data.page,
@@ -97,7 +98,8 @@ module.exports.getConversation = async (req, res) => {
 }
 
 module.exports.sendMessage = (req, res) => {
-    const message = new messageModel({ sender: req.user._id, senderFullName: req.user.fullName, message: req.body.message })
+    const fullName = req.user && req.user.username && !req.user.fullName? "Admin": req.user.fullName
+    const message = new messageModel({ sender: req.user._id, senderFullName: fullName, message: req.body.message })
     conversation.updateOne({ "_id": mongoose.Types.ObjectId(req.body.conversationId) },
         {
             $push: {
