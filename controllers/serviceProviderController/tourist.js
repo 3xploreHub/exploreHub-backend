@@ -254,8 +254,8 @@ module.exports.deleteBooking = (req, res) => {
 
 
 module.exports.getNotifications = (req, res) => {
-    const condition = req.user.username? {}: { receiver: req.user._id }
-    notificationGroup.find(condition)
+    const condition = req.user.username ? {} : { receiver: req.user._id }
+    notificationGroup.find({ receiver: req.user._id })
         .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
         .populate({ path: 'mainReceiver', model: 'Account' })
@@ -320,9 +320,9 @@ module.exports.changeBookingStatus = async (req, res) => {
             booking: req.body.booking,
             type: req.body.type,
         }
-        if (req.body.type == "page-booking") {
+        if (req.body.type == "booking-provider") {
             notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking to your service`
-        } else if (req.body.type == "booking") {
+        } else if (req.body.type == "booking-tourist") {
             notif["message"] = req.body.message
         }
         if (req.body.updateBookingCount) {

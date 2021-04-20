@@ -165,7 +165,7 @@ module.exports.setBookingStatus = async (req, res) => {
                     mainReceiver: req.body.mainReceiver,
                     page: req.body.page,
                     booking: req.body.bookingId,
-                    type: "page-booking",
+                    type: "booking-provider",
                     message: req.body.messageForServiceProvider
                 })
             
@@ -181,7 +181,7 @@ module.exports.setBookingStatus = async (req, res) => {
                     mainReceiver: req.body.mainReceiver,
                     page: req.body.page,
                     booking: req.body.bookingId,
-                    type: "booking",
+                    type: "booking-tourist",
                     message: req.body.messageForTourist
                 })
 
