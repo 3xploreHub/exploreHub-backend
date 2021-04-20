@@ -9,6 +9,7 @@ const { Item } = require("../../models/item");
 const mongoose = require("mongoose");
 const helper = require("../serviceProviderController/helper");
 const MY_SECRET = process.env.MY_SECRET;
+
 function createToken(user) {
     return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
         expiresIn: "12h" // 86400 expires in 24 hours
@@ -67,7 +68,7 @@ module.exports.getAllBookings = (req, res) => {
                 if (bookings.length) {
                     // format object algorithm
                     bookings.forEach(bookingDetail => {
-                        let formattedObject = { ...bookingDetail._doc }; //deep copy
+                        let formattedObject = {...bookingDetail._doc }; //deep copy
                         let { bookingInfo } = formattedObject; //object destructuring
                         if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
                             //loop through booking info array
@@ -126,8 +127,8 @@ module.exports.getAllPendingNotifications = (req, res) => {
         })
 }
 
-module.exports.setBookingStatus = async (req, res) => {
-    
+module.exports.setBookingStatus = async(req, res) => {
+
 
     if (req.body.servicesToUpdate) {
         req.body.servicesToUpdate.forEach(service => {
@@ -135,7 +136,7 @@ module.exports.setBookingStatus = async (req, res) => {
                 _id: mongoose.Types.ObjectId(service._id)
             }, {
                 $set: service.bookingData
-            }, function (error, result) {
+            }, function(error, result) {
                 if (error) {
                     console.log(error)
                     return res.status(500).json(error);
@@ -145,13 +146,13 @@ module.exports.setBookingStatus = async (req, res) => {
     }
     booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
-        .exec(async (err, data) => {
+        .exec(async(err, data) => {
             if (err) {
                 console.log(err)
                 res.status(500).json({ error: err })
             }
             try {
-                
+
 
                 // const notifForProvider = helper. ({
                 //     receiver: req.body.serviceProviderReceiver,
@@ -159,16 +160,16 @@ module.exports.setBookingStatus = async (req, res) => {
                 //     type: "page-booking",
                 //     message: req.body.messageForServiceProvider
                 // })
-                console.log("ADMIN ID:", req.user )
+                console.log("ADMIN ID:", req.user)
                 helper.createNotification({
-                    receiver: req.body.serviceProviderReceiver,  
+                    receiver: req.body.serviceProviderReceiver,
                     mainReceiver: req.body.mainReceiver,
                     page: req.body.page,
                     booking: req.body.bookingId,
                     type: "page-booking",
                     message: req.body.messageForServiceProvider
                 })
-            
+
                 // const notifForTourist = new notification({
                 //     receiver: req.body.touristReceiver,
                 //     booking: req.body.bookingId,
@@ -187,7 +188,7 @@ module.exports.setBookingStatus = async (req, res) => {
 
                 booking.findOne({ _id: req.body.bookingId })
                     .populate({ path: "tourist", model: "Account", select: "firstName lastName" })
-                    .populate({ path: "pageId", model: "Page"})
+                    .populate({ path: "pageId", model: "Page" })
                     .populate({ path: "selectedServices.service", model: "Item" })
                     .exec((error, bookingData) => {
                         if (error) {
@@ -203,24 +204,24 @@ module.exports.setBookingStatus = async (req, res) => {
 }
 
 
-module.exports.setPageStatus = async (req, res) => {
-    const notif = new notification({
-        receiver: req.body.pageCreator,
-        page: req.body.pageId,
-        type: "page",
-        message: req.body.message,
-    })
-    Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {
-        if (err) {
-            return res.status(500).json({ error: err })
-        }
-        notif.save().then((result) => {
-            return res.status(200).json({ page: page, result: result })
-        }).catch(error => {
-            res.status(500).json(error)
+module.exports.setPageStatus = async(req, res) => {
+        const notif = new notification({
+            receiver: req.body.pageCreator,
+            page: req.body.pageId,
+            type: "page",
+            message: req.body.message,
         })
-    })
-}
+        Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {
+            if (err) {
+                return res.status(500).json({ error: err })
+            }
+            notif.save().then((result) => {
+                return res.status(200).json({ page: page, result: result })
+            }).catch(error => {
+                res.status(500).json(error)
+            })
+        })
+    }
     // module.exports.getOnlinePage = (req, res) => {
     //     Page.findByIdAndUpdate({ _id: req.params.pageId }, { $set: { status: "Online" } }, { new: true }, (err, page) => {
     //         if (err) {

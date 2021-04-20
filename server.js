@@ -9,25 +9,25 @@ require("dotenv").config();
 
 mongoose.set("useCreateIndex", true);
 mongoose.connect(dbConfig.local_db, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
 });
 
 var db = mongoose.connection;
 db.on("connected", () => {
-  console.log("connected to database" + dbConfig.local_db);
+    console.log("connected to database" + dbConfig.local_db);
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 app.use(morgan("common"));
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    next();
 });
 
 var publicDir = require('path').join(__dirname, '/uploads');
@@ -42,22 +42,22 @@ app.use("/api", require("./router/mainRouter"));
 const port = process.env.PORT || 3000;
 
 const server = app.listen(port, () => {
-  console.log(`App is listening on port ${port}`);
+    console.log(`App is listening on port ${port}`);
 });
 
 
 let io = require('socket.io')(server, {
-  cors: {
-    origin: ["http://localhost:4200", "http://localhost:58333"],
-    methods: ["GET", "POST"]
-  }
+    cors: {
+        origin: ["http://localhost:4200", "http://localhost:8100"],
+        methods: ["GET", "POST"]
+    }
 });
 
 io.on('connection', (socket) => {
 
-      socket.on('notify', (data) => {
+    socket.on('notify', (data) => {
         socket.user = data.user;
-        io.emit('send-notification', data);    
-      });
+        io.emit('send-notification', data);
+    });
 
 });

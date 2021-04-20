@@ -26,26 +26,27 @@ const formatComponentArray = (arr) => {
     if (!Array.isArray(arr)) {
         return
     }
-
     let item = {
             name: '',
             image: '',
             location: '',
             type: '',
-            category: ''
+            category: '',
+            description: '',
         }
         // let result = [];
     arr.forEach(({ _doc }) => {
 
         if (_doc.type == 'photo') {
-
             return item.image = _doc.data[0].url;
         }
-
         let { defaultName, text } = _doc.data
 
         if (defaultName == 'pageName') {
             return item.name = text;
+        }
+        if (defaultName == 'description') {
+            return item.description = text;
         }
 
         if (['barangay', 'municipality', 'province'].includes(defaultName)) {
@@ -55,11 +56,9 @@ const formatComponentArray = (arr) => {
             }
             return item.location
         }
-
         if (defaultName == 'category') {
             return item.category = text
         }
-
         if (defaultName == 'type') {
             return item.type = text
         }
@@ -71,47 +70,37 @@ const formatComponentArray = (arr) => {
 const formatPendingArray = (arr) => {
 
     let result = [];
-
     // arr.arr._doc.data = arr._doc.data.shift();
     if (Array.isArray(arr)) {
-        arr.map(el => {
-            let newObject = {
-                data: []
-            }
-            let { data } = el;
-            if (Array.isArray(data)) {
-                data.forEach(item => {
-                    if (item.data.defaultName) {
-                        newObject['serviceGroupName'] = item.data.text;
-                    } else {
-                        item.data.map(_item => {
-                            if (typeof _item.data == 'object' && _item.data.hasOwnProperty('defaultName')) {
-                                // only include the object with defaultName property 
-                                newObject.data.push({ defaultName: _item.data.defaultName, text: _item.data.text })
-                            }
-                        })
-                    }
-                })
-                result.push(newObject)
+        console.log("DATA:::", arr)
+        result = arr.map(service => {
+            service.data = service.data.map(item => {
+                let newObject = { data: [], item: { photo: "", labelledText: "", text: "" } }
+                console.log("Item: ", item);
 
-                //     data.shift();
-                //     data.forEach(element => {
-                //         // try daw
-                //         element.data.map(el => {
-                //               
-                //             })
-                //             // console.log({ element: element.data[0].data });
-                //             // if (typeof element == 'object' && element.hasOwnProperty('defaultName')) { // only include the object with defaultName property 
-                //             //     newObject.data.push({ defaultName: element.defaultName, text: element.text })
-                //             // }
-                //     });
-                // }
-                // 
-            }
+                if (item.data.defaultName) {
+                    newObject['serviceGroupName'] = item.data.text;
+                } else if (item.type == "item") {
 
+                    item.data.forEach(_item => {
+                        if (_item.type == 'photo') {
+                            newObject.data.push(_item.data[0])
+                        }
+                        if (typeof _item.data == 'object' && _item.data.hasOwnProperty('defaultName') || _item.type == "labelled-text") {
+                            newObject.data.push({ label: _item.data.label, labelledText: _item.data.text })
+                        }
+
+                        if (_item.type == 'text' && !_item.data.hasOwnProperty('defaultName')) {
+                            newObject.data.push({ text: _item.data.text })
+                        }
+                    })
+                }
+                return newObject
+            })
+            return service;
         })
+        console.log(result);
+        return result;
     }
-    return result;
-
 }
 module.exports = { formatArray, formatComponentArray, formatPendingArray }
