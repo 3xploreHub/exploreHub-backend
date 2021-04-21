@@ -97,7 +97,6 @@ module.exports.createBooking = async (req, res) => {
 
 module.exports.getBooking = async (req, res) => {
     try {
-        console.log("booking:Id: ", req.params.bookingId);
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
             .populate({ path: "pageId", model: "Page" })
@@ -164,6 +163,9 @@ module.exports.getPageBookingInfo = async (req, res) => {
 
 module.exports.submitBooking = async (req, res) => {
     try {
+        const adminAcc = await adminAccount.find({})
+        const admin = adminAcc.length > 0 ? adminAcc[0]: {_id: "605839a8268f4b69047e4bb1"}
+        console.log(admin)
         if (req.body.isManual) {
             if (req.body.selectedServices) {
                 req.body.selectedServices.forEach(service => {
@@ -184,6 +186,14 @@ module.exports.submitBooking = async (req, res) => {
             const message = req.body.resubmitted ? `${req.user.fullName} resubmitted his booking` : `${req.user.fullName} submitted a booking`
             await helper.createNotification({
                 receiver: req.body.receiver,
+                mainReceiver: req.user._id,
+                page: req.body.page,
+                booking: req.body.booking,
+                type: req.body.type,
+                message: message
+            })
+            await helper.createNotification({
+                receiver: admin._id,
                 mainReceiver: req.user._id,
                 page: req.body.page,
                 booking: req.body.booking,
@@ -254,7 +264,7 @@ module.exports.deleteBooking = (req, res) => {
 
 
 module.exports.getNotifications = (req, res) => {
-    const condition = req.user.username ? {} : { receiver: req.user._id }
+    // const condition = req.user.username ? {} : { receiver: req.user._id }
     notificationGroup.find({ receiver: req.user._id })
         .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
@@ -313,6 +323,9 @@ function getValue(data, type) {
 
 module.exports.changeBookingStatus = async (req, res) => {
     try {
+        const adminAcc = await adminAccount.find({})
+        const admin = adminAcc.length > 0 ? adminAcc[0]: {_id: "605839a8268f4b69047e4bb1"}
+        console.log(admin)
         let notif = {
             receiver: req.body.receiver,
             mainReceiver: req.body.mainReceiver,
@@ -320,8 +333,17 @@ module.exports.changeBookingStatus = async (req, res) => {
             booking: req.body.booking,
             type: req.body.type,
         }
+        let notifForAdmin = {
+            receiver: admin._id,
+            mainReceiver: req.body.mainReceiver,
+            page: req.body.page,
+            booking: req.body.booking,
+            type: "booking-admin",
+            message: req.body.messageForAdmin
+        }
         if (req.body.type == "booking-provider") {
-            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking to your service`
+            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking`
+            notifForAdmin["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking`
         } else if (req.body.type == "booking-tourist") {
             notif["message"] = req.body.message
         }
@@ -358,6 +380,7 @@ module.exports.changeBookingStatus = async (req, res) => {
             })
         }
         await helper.createNotification(notif)
+        await helper.createNotification(notifForAdmin)
         booking.updateOne(
             {
                 _id: req.body.booking
