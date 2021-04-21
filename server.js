@@ -1,5 +1,5 @@
 const express = require("express");
-const app = express();
+const app = require('express')();
 const bodyParser = require("body-parser");
 const dbConfig = require("./database/db");
 const mongoose = require("mongoose");
@@ -8,7 +8,7 @@ const morgan = require("morgan");
 require("dotenv").config();
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(dbConfig.online_db, {
+mongoose.connect(dbConfig.local_db, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
@@ -16,7 +16,7 @@ mongoose.connect(dbConfig.online_db, {
 
 var db = mongoose.connection;
 db.on("connected", () => {
-    console.log("connected to database" + dbConfig.online_db);
+    console.log("connected to database" + dbConfig.local_db);
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
@@ -41,6 +41,23 @@ app.use("/api", require("./router/mainRouter"));
 
 const port = process.env.PORT || 3000;
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`App is listening on port ${port}`);
+});
+
+
+let io = require('socket.io')(server, {
+    cors: {
+        origin: ["http://localhost:4200", "http://localhost:8100"],
+        methods: ["GET", "POST"]
+    }
+});
+
+io.on('connection', (socket) => {
+
+    socket.on('notify', (data) => {
+        socket.user = data.user;
+        io.emit('send-notification', data);
+    });
+
 });

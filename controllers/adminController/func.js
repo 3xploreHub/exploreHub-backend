@@ -69,7 +69,6 @@ const formatComponentArray = (arr) => {
 
 
 const formatPendingArray = (arr) => {
-
     let result = [];
     // arr.arr._doc.data = arr._doc.data.shift();
     if (Array.isArray(arr)) {
