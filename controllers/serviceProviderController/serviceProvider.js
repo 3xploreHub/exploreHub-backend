@@ -115,7 +115,7 @@ module.exports.sendMessage = (req, res) => {
                 return res.status(500).json({ type: "internal error", error: err.message })
             }
             try {
-                await helper.createNotification(req.body.notificationData)
+                if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
                 const convo = await conversation.findById(req.body.conversationId)
                 res.status(200).json(convo);
             } catch (error) {
@@ -160,4 +160,56 @@ module.exports.changeInitialStatus = (req, res) => {
         if (error) return res.status(500).json(error.message)
         res.status(200).json(result)
     })
+}
+
+module.exports.getPageConversation = (req, res) => {
+    conversation.findOne({ _id: req.params.conversationId })
+        .populate({ path: "receiver", model: "Account" })
+        .exec((error, conversation) => {
+            if (error) return res.status(500).json(error.message)
+            res.status(200).json(conversation)
+        })
+}
+
+
+module.exports.getConvoForHostApproval = (req, res) => {
+    conversation.findOne({ page: req.params.pageId, type: "host_page_creator_approval" })
+        .then(conversation => {
+            res.status(200).json(conversation)
+        }).catch(error => {
+            res.status(500).json(error.message)
+        })
+}
+
+module.exports.createConvoForHostApproval = (req, res) => {
+    const data = req.body
+    const fullName = req.user && req.user.username && !req.user.fullName ? "Admin" : req.user.fullName
+    const firstMessage = new messageModel({ sender: req.user._id, senderFullName: fullName, message: data.message })
+    const message = new conversation({
+        booking: data.booking,
+        page: data.page,
+        receiver: data.receiver,
+        type: data.type,
+        messages: [firstMessage],
+    })
+
+    message.save().then(async (message) => {
+        // try {
+        //     await helper.createNotification(data.notificationData)
+        // } catch (error) {
+        // }
+        res.status(200).json(message);
+    }).catch(error => {
+        res.status(500).json(error.message)
+    })
+}
+
+module.exports.getAllConversations = (req, res) => {
+    conversation.find({ page: mongoose.Types.ObjectId(req.params.pageId), booking: { $eq: null } })
+        .populate({ path: "receiver", model: "Account", select: "fullName" })
+        .sort({ 'updatedAt': -1 })
+        .exec((error, convos) => {
+            if (error) return res.status(500).json(error.message)
+            res.status(200).json(convos)
+        })
 }

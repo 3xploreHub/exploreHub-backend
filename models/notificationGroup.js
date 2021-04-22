@@ -9,7 +9,7 @@ const NotificationGroup = new Schema(
         receiver: { type: Schema.Types.ObjectId, required: true, ref: "Account" },
         mainReceiver: { type: Schema.Types.ObjectId, required: false, ref: "Account" },
         page: { type: Schema.Types.ObjectId, required: true, ref: "Page" },
-        booking: { type: Schema.Types.ObjectId, required: true, ref: "Booking" },
+        booking: { type: Schema.Types.ObjectId, required: false, ref: "Booking" },
         type: { type: String, enum: [ "page", "booking", "booking-tourist", "booking-provider", "booking-admin"], required: true },
         notifications: [{ type: Schema.Types.ObjectId, required: true, ref: "Notification" }]
     },

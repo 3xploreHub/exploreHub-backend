@@ -6,6 +6,7 @@ const touristSpotCategories = require("../../controllers/serviceProviderControll
 const uploadImage = require("../../middlewares/uploadImage");
 const serviceProvider = require("../../controllers/serviceProviderController/serviceProvider");
 const tourist = require("../../controllers/serviceProviderController/tourist");
+const { service } = require("../../models/service");
 
 router.post("/addDefaultCategories", touristSpotCategories.addDefaultCategories);
 
@@ -47,6 +48,10 @@ router.post("/sendMessage", serviceProvider.sendMessage)
 router.post("/changePageStatus", serviceProvider.changePageStatus)
 router.get("/getHostedPages/:pageId", serviceProvider.getHostedPages)
 router.post("/changeInitialStatus", serviceProvider.changeInitialStatus)
+router.get("/getPageConversation/:conversationId", serviceProvider.getPageConversation)
+router.get("/getConvoForHostApproval/:pageId", serviceProvider.getConvoForHostApproval)
+router.post("/createConvoForHostApproval", serviceProvider.createConvoForHostApproval)
+router.get("/getAllConversations/:pageId", serviceProvider.getAllConversations)
 
 router.get("/getOnlinePages/", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
