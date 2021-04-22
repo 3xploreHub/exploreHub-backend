@@ -45,6 +45,7 @@ router.post("/createConversation", serviceProvider.createConversation)
 router.get("/getConversation/:bookingId/:pageId/:receiver", serviceProvider.getConversation)
 router.post("/sendMessage", serviceProvider.sendMessage)
 router.post("/changePageStatus", serviceProvider.changePageStatus)
+router.get("/getHostedPages/:pageId", serviceProvider.getHostedPages)
 
 router.get("/getOnlinePages/", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)

@@ -139,3 +139,12 @@ module.exports.changePageStatus = (req, res) => {
         res.status(200).json(response)
     })
 }
+
+module.exports.getHostedPages = async (req, res) => {
+    try {
+        const pages = await Page.find({hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId)})
+        res.status(200).json(pages)
+    } catch(error) {
+        res.status(500).json(error.message)
+    }
+}
