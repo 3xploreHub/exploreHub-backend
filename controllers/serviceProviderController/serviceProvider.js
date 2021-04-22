@@ -120,7 +120,22 @@ module.exports.sendMessage = (req, res) => {
                 res.status(200).json(convo);
             } catch (error) {
                 console.log(error)
-                res.status(500).json({error: error.message})
+                res.status(500).json({ error: error.message })
             }
         })
+}
+
+module.exports.changePageStatus = (req, res) => {
+    Page.updateOne({
+        _id: req.body.pageId
+    }, {
+        $set: {
+            status: req.body.status
+        }
+    }, function(error, response) {
+        if (error) {
+            return res.status(500).json(error.message)
+        }
+        res.status(200).json(response)
+    })
 }
