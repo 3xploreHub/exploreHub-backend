@@ -172,8 +172,8 @@ module.exports.getPageConversation = (req, res) => {
 }
 
 
-module.exports.getConvoForHostApproval = (req, res) => {
-    conversation.findOne({ page: req.params.pageId, type: "host_page_creator_approval" })
+module.exports.getConvoForPageSubmission = (req, res) => {
+    conversation.findOne({ page: req.params.pageId, type: req.params.type })
         .then(conversation => {
             res.status(200).json(conversation)
         }).catch(error => {
@@ -181,7 +181,7 @@ module.exports.getConvoForHostApproval = (req, res) => {
         })
 }
 
-module.exports.createConvoForHostApproval = (req, res) => {
+module.exports.createConvoForPageSubmission = (req, res) => {
     const data = req.body
     const fullName = req.user && req.user.username && !req.user.fullName ? "Admin" : req.user.fullName
     const firstMessage = new messageModel({ sender: req.user._id, senderFullName: fullName, message: data.message })

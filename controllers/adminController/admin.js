@@ -102,7 +102,7 @@ module.exports.getAllBookings = (req, res) => {
 }
 
 module.exports.getAllPendingNotifications = (req, res) => {
-    Page.find({ status: req.params.pageStatus })
+    Page.find({ status: req.params.pageStatus, initialStatus: "Approved" })
         .populate({ path: "hostTouristSpot", model: "Page" })
         .populate({ path: "creator", model: "Account", select: "fullName" })
         .populate({ path: "services.data", model: "Item" })
