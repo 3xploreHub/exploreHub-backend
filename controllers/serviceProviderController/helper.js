@@ -206,7 +206,7 @@ function createNotification(data) {
     try {
       let { receiver, mainReceiver, page, booking, type, message } = data;
 
-      const findNotif = await notificationGroup.findOne({
+      const notifGroup = await notificationGroup.findOne({
         receiver: mongoose.Types.ObjectId(receiver),
         page: mongoose.Types.ObjectId(page),
         booking: mongoose.Types.ObjectId(booking),
@@ -218,7 +218,7 @@ function createNotification(data) {
         firstNotif["subject"] = data.subject
         firstNotif["sender"] = data.sender
       }
-      if (!findNotif) {
+      if (!notifGroup) {
 
         let notif = new notificationGroup({
           receiver: receiver,
@@ -228,11 +228,12 @@ function createNotification(data) {
           booking: booking,
           notifications: [firstNotif._id]
         })
-
+        firstNotif["notificationGroup"]= notif._id
         await firstNotif.save();
         await notif.save();
         resolve(notif)
       } else {
+          firstNotif["notificationGroup"] = notifGroup._id
           notificationGroup.updateOne({
             receiver: mongoose.Types.ObjectId(receiver),
             page: mongoose.Types.ObjectId(page),
@@ -245,8 +246,8 @@ function createNotification(data) {
 
             if (!data.isMessage) {
               await firstNotif.save();
-              findNotif.notifications.push(firstNotif)
-              resolve(findNotif)
+              notifGroup.notifications.push(firstNotif)
+              resolve(notifGroup)
             } 
             else {
               notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true },
@@ -258,7 +259,7 @@ function createNotification(data) {
                       await firstNotif.save()
                     }
     
-                    resolve(findNotif)
+                    resolve(notifGroup)
                   }
                   catch (error) {
                     reject(error)

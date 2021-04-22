@@ -10,7 +10,7 @@ const NotificationGroup = new Schema(
         mainReceiver: { type: Schema.Types.ObjectId, required: false, ref: "Account" },
         page: { type: Schema.Types.ObjectId, required: true, ref: "Page" },
         booking: { type: Schema.Types.ObjectId, required: true, ref: "Booking" },
-        type: { type: String, enum: [ "page", "booking", "booking-tourist", "booking-provider"], required: true },
+        type: { type: String, enum: [ "page", "booking", "booking-tourist", "booking-provider", "booking-admin"], required: true },
         notifications: [{ type: Schema.Types.ObjectId, required: true, ref: "Notification" }]
     },
     { timestamps: true }

@@ -284,8 +284,8 @@ module.exports.getNotifications = (req, res) => {
 }
 
 module.exports.viewNotification = (req, res) => {
-    notification.updateOne({
-        _id: req.params.notificationId
+    notification.updateMany({
+        notificationGroup: mongoose.Types.ObjectId(req.params.notificationId)
     }, {
         $set: {
             opened: true
