@@ -132,7 +132,7 @@ module.exports.changePageStatus = (req, res) => {
         $set: {
             status: req.body.status
         }
-    }, function(error, response) {
+    }, function (error, response) {
         if (error) {
             return res.status(500).json(error.message)
         }
@@ -142,9 +142,22 @@ module.exports.changePageStatus = (req, res) => {
 
 module.exports.getHostedPages = async (req, res) => {
     try {
-        const pages = await Page.find({hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId)})
+        const pages = await Page.find({ hostTouristSpot: mongoose.Types.ObjectId(req.params.pageId) })
         res.status(200).json(pages)
-    } catch(error) {
+    } catch (error) {
         res.status(500).json(error.message)
     }
+}
+
+module.exports.changeInitialStatus = (req, res) => {
+    Page.updateOne({
+        _id: mongoose.Types.ObjectId(req.body.pageId)
+    }, {
+        $set: {
+            initialStatus: req.body.status
+        }
+    }, function (error, result) {
+        if (error) return res.status(500).json(error.message)
+        res.status(200).json(result)
+    })
 }

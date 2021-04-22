@@ -417,7 +417,8 @@ module.exports.createPage = async (req, res) => {
   const hostTouristSpot = req.params.pageType == 'service' ? req.body : null;
   const isService = req.params.pageType == 'service';
   const inputNameLabel = req.params.pageType == 'service' ? "Enter service name here" : "Enter tourist spot name here";
-  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType)
+  const initialStatus = req.params.pageType == "tourist_spot" ? "Approved": "Pending"
+  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType, initialStatus)
 }
 
 module.exports.getDefaultCategories = async (req, res) => {
@@ -432,7 +433,7 @@ module.exports.getDefaultCategories = async (req, res) => {
 }
 
 
-async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType) {
+async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType, initialStatus) {
   try {
 
 
@@ -464,7 +465,7 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
 
 
     const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
-    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, initialStatus: initialStatus, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
     item.pageId = page._id;
     serviceInfoDefault["pageId"] = page._id;
     await item.save()
