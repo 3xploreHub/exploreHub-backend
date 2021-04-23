@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const adminAccount = require("../../models/adminSchemas/adminAccount");
 const booking = require("../../models/booking");
 const { messageModel } = require("../../models/commonSchemas/message");
 const conversation = require("../../models/conversation");
@@ -81,6 +82,7 @@ module.exports.createConversation = (req, res) => {
 
     message.save().then(async (message) => {
         try {
+            data.notificationData["conversation"] = message._id
             await helper.createNotification(data.notificationData)
         } catch (error) {
         }
@@ -115,6 +117,7 @@ module.exports.sendMessage = (req, res) => {
                 return res.status(500).json({ type: "internal error", error: err.message })
             }
             try {
+                req.body.notificationData["conversation"] = req.body.conversationId
                 if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
                 const convo = await conversation.findById(req.body.conversationId)
                 res.status(200).json(convo);
@@ -165,19 +168,33 @@ module.exports.changeInitialStatus = (req, res) => {
 module.exports.getPageConversation = (req, res) => {
     conversation.findOne({ _id: req.params.conversationId })
         .populate({ path: "receiver", model: "Account" })
+        .populate({ path: "page", model: "Page" })
         .exec((error, conversation) => {
             if (error) return res.status(500).json(error.message)
-            res.status(200).json(conversation)
+            if (!conversation) res.status(200).json({})
+
+            if (!conversation.receiver) {
+                adminAccount.find({}).then(account => {
+                    conversation.receiver = account.length > 0 ? account[0] : { fullName: "Admin" }
+                    return res.status(200).json(conversation)
+                }).catch(error => {
+                    return res.status(500).json(error.message)
+                })
+            } else {
+
+                res.status(200).json(conversation)
+            }
         })
 }
 
 
 module.exports.getConvoForPageSubmission = (req, res) => {
     conversation.findOne({ page: req.params.pageId, type: req.params.type })
-        .then(conversation => {
+        .populate({ path: "page", model: "Page" })
+        .exec((error, conversation) => {
+            if (error) return res.status(500).json(error.message)
+            conversation = conversation ? conversation : { noConversation: true }
             res.status(200).json(conversation)
-        }).catch(error => {
-            res.status(500).json(error.message)
         })
 }
 
@@ -194,10 +211,11 @@ module.exports.createConvoForPageSubmission = (req, res) => {
     })
 
     message.save().then(async (message) => {
-        // try {
-        //     await helper.createNotification(data.notificationData)
-        // } catch (error) {
-        // }
+        try {
+            data.notificationData["conversation"] = message._id
+            await helper.createNotification(data.notificationData)
+        } catch (error) {
+        }
         res.status(200).json(message);
     }).catch(error => {
         res.status(500).json(error.message)
@@ -213,3 +231,4 @@ module.exports.getAllConversations = (req, res) => {
             res.status(200).json(convos)
         })
 }
+

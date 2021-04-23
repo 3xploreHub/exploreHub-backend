@@ -205,18 +205,21 @@ function createNotification(data) {
   return new Promise(async (resolve, reject) => {
     try {
       let { receiver, mainReceiver, page, booking, type, message } = data;
-
-      const notifGroup = await notificationGroup.findOne({
+      const query = {
         receiver: mongoose.Types.ObjectId(receiver),
         page: mongoose.Types.ObjectId(page),
-        booking: mongoose.Types.ObjectId(booking),
-      })
+      }
+      if (booking) {
+        query["booking"] = mongoose.Types.ObjectId(booking)
+      }
+      const notifGroup = await notificationGroup.findOne(query)
 
       const firstNotif = new notification({ message: message, receiver: receiver })
       if (data.isMessage) {
         firstNotif["isMessage"] = true
         firstNotif["subject"] = data.subject
         firstNotif["sender"] = data.sender
+        firstNotif["conversation"] = data.conversation
       }
       if (!notifGroup) {
 
@@ -228,52 +231,48 @@ function createNotification(data) {
           booking: booking,
           notifications: [firstNotif._id]
         })
-        firstNotif["notificationGroup"]= notif._id
+        firstNotif["notificationGroup"] = notif._id
         await firstNotif.save();
         await notif.save();
         resolve(notif)
       } else {
-          firstNotif["notificationGroup"] = notifGroup._id
-          notificationGroup.updateOne({
-            receiver: mongoose.Types.ObjectId(receiver),
-            page: mongoose.Types.ObjectId(page),
-            booking: mongoose.Types.ObjectId(booking),
-          }, {
-            $push: {
-              notifications: firstNotif._id
-            }
-          }).then(async (result) => {
+        firstNotif["notificationGroup"] = notifGroup._id
+        notificationGroup.updateOne(query, {
+          $push: {
+            notifications: firstNotif._id
+          }
+        }).then(async (result) => {
 
-            if (!data.isMessage) {
-              await firstNotif.save();
-              notifGroup.notifications.push(firstNotif)
-              resolve(notifGroup)
-            } 
-            else {
-              notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true },
-                { $set: { opened: false, updatedAt: new Date(), message: message } })
-                .then(async (result) => {
-                  try {
-    
-                    if (!result) {
-                      await firstNotif.save()
-                    }
-    
-                    resolve(notifGroup)
+          if (!data.isMessage) {
+            await firstNotif.save();
+            notifGroup.notifications.push(firstNotif)
+            resolve(notifGroup)
+          }
+          else {
+            notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true },
+              { $set: { opened: false, updatedAt: new Date(), message: message } })
+              .then(async (result) => {
+                try {
+
+                  if (!result) {
+                    await firstNotif.save()
                   }
-                  catch (error) {
-                    reject(error)
-                  }
-                }).catch(error => {
+
+                  resolve(notifGroup)
+                }
+                catch (error) {
                   reject(error)
-                })
-            }
-            
-          }).catch(error => {
-            reject(error)
-          })
-          
-        
+                }
+              }).catch(error => {
+                reject(error)
+              })
+          }
+
+        }).catch(error => {
+          reject(error)
+        })
+
+
       }
     } catch (error) {
       reject(error)

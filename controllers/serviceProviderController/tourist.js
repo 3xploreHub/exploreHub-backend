@@ -27,6 +27,7 @@ module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
         .populate({ path: "otherServices", model: "Page" })
+        .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {
             if (error) {
                 return res.status(500).json({
@@ -164,7 +165,7 @@ module.exports.getPageBookingInfo = async (req, res) => {
 module.exports.submitBooking = async (req, res) => {
     try {
         const adminAcc = await adminAccount.find({})
-        const admin = adminAcc.length > 0 ? adminAcc[0]: {_id: "605839a8268f4b69047e4bb1"}
+        const admin = adminAcc.length > 0 ? adminAcc[0] : { _id: "605839a8268f4b69047e4bb1" }
         console.log(admin)
         if (req.body.isManual) {
             if (req.body.selectedServices) {
@@ -284,9 +285,8 @@ module.exports.getNotifications = (req, res) => {
 }
 
 module.exports.viewNotification = (req, res) => {
-    notification.updateMany({
-        notificationGroup: mongoose.Types.ObjectId(req.params.notificationId)
-    }, {
+    const field = req.body.isMessage ? { _id: req.body.notifId } : { notificationGroup: mongoose.Types.ObjectId(req.body.notifId), isMessage: false }
+    notification.updateMany(field, {
         $set: {
             opened: true
         }
@@ -324,7 +324,7 @@ function getValue(data, type) {
 module.exports.changeBookingStatus = async (req, res) => {
     try {
         const adminAcc = await adminAccount.find({})
-        const admin = adminAcc.length > 0 ? adminAcc[0]: {_id: "605839a8268f4b69047e4bb1"}
+        const admin = adminAcc.length > 0 ? adminAcc[0] : { _id: "605839a8268f4b69047e4bb1" }
         console.log(admin)
         let notif = {
             receiver: req.body.receiver,

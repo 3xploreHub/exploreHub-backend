@@ -10,6 +10,7 @@ const Notification = new Schema(
     receiver: { type: Schema.Types.ObjectId, required: true, ref: "Account" },
     subject: {type: String, required: false},
     isMessage: {type: Boolean, required: false, default: false},
+    conversation: {type:  Schema.Types.ObjectId, required: false, ref: "Conversation"},
     notificationGroup: {type: Schema.Types.ObjectId, required: true, ref: "NotificationGroup"},
     sender: {type: String, required: false}
   },
