@@ -8,9 +8,10 @@ const Conversation = new Schema(
     page: { type: Schema.Types.ObjectId, required: true, ref: "Page" },
     booking: { type: Schema.Types.ObjectId, required: false, ref: "Booking" },
     messages: [message],
-    receiver: { type: Schema.Types.ObjectId, required: true, ref: "Account" },
+    receiver: { type: Schema.Types.ObjectId, required: false, ref: "Account" },
+    participants: [{ type: Schema.Types.ObjectId, required: false, ref: "Account" }],
     type: {type: String, required: false},
-    opened: { type: Boolean, required: false, default: false }
+    opened: { type: Boolean, required: false, default: false },
   },
   { timestamps: true }
 );

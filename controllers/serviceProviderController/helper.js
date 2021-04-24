@@ -211,6 +211,8 @@ function createNotification(data) {
       }
       if (booking) {
         query["booking"] = mongoose.Types.ObjectId(booking)
+      } else {
+        query["type"] = type
       }
       const notifGroup = await notificationGroup.findOne(query)
 

@@ -166,16 +166,19 @@ module.exports.changeInitialStatus = (req, res) => {
 }
 
 module.exports.getPageConversation = (req, res) => {
-    conversation.findOne({ _id: req.params.conversationId })
+    conversation.findOne({ _id: req.params.conversationId })    
         .populate({ path: "receiver", model: "Account" })
+        .populate({ path: "participants" })
         .populate({ path: "page", model: "Page" })
         .exec((error, conversation) => {
             if (error) return res.status(500).json(error.message)
-            if (!conversation) res.status(200).json({})
+            if (!conversation) return res.status(200).json({})
 
-            if (!conversation.receiver) {
-                adminAccount.find({}).then(account => {
-                    conversation.receiver = account.length > 0 ? account[0] : { fullName: "Admin" }
+            if (conversation && conversation.participants.length == 1) {
+                adminAccount.find({}).then(admin => {
+                    if (admin.length > 0) { 
+                        conversation.participants.push({_id: admin[0]._id, fullName: "Admin"})
+                    }
                     return res.status(200).json(conversation)
                 }).catch(error => {
                     return res.status(500).json(error.message)
@@ -189,8 +192,9 @@ module.exports.getPageConversation = (req, res) => {
 
 
 module.exports.getConvoForPageSubmission = (req, res) => {
-    conversation.findOne({ page: req.params.pageId, type: req.params.type })
+    conversation.findOne({ page: req.params.pageId, type: req.params.type, participants: { "$in": [req.user._id] } })
         .populate({ path: "page", model: "Page" })
+        .populate({ path: "receiver", model: "Account" })
         .exec((error, conversation) => {
             if (error) return res.status(500).json(error.message)
             conversation = conversation ? conversation : { noConversation: true }
@@ -205,7 +209,7 @@ module.exports.createConvoForPageSubmission = (req, res) => {
     const message = new conversation({
         booking: data.booking,
         page: data.page,
-        receiver: data.receiver,
+        participants: [req.user._id, data.receiver],
         type: data.type,
         messages: [firstMessage],
     })
@@ -223,12 +227,26 @@ module.exports.createConvoForPageSubmission = (req, res) => {
 }
 
 module.exports.getAllConversations = (req, res) => {
-    conversation.find({ page: mongoose.Types.ObjectId(req.params.pageId), booking: { $eq: null } })
-        .populate({ path: "receiver", model: "Account", select: "fullName" })
+    conversation.find({ participants: { $in: [req.user._id] } })
+        .populate({ path: "participants" })
         .sort({ 'updatedAt': -1 })
         .exec((error, convos) => {
             if (error) return res.status(500).json(error.message)
-            res.status(200).json(convos)
+            adminAccount.find({}).then(admin => {
+                console.log("Admin:",admin);
+                if (admin.length > 0) {
+                    convos = convos.map(convo => {
+                        if (convo.participants.length == 1) convo.participants.push({_id: admin[0]._id, fullName: "Admin"})
+                        console.log('participants: ',convo.participants)
+                        return convo
+                    })
+                }
+                res.status(200).json(convos)
+
+            }).catch(error => {
+                return res.status(500).json(error.message)
+            })
+
         })
 }
 
