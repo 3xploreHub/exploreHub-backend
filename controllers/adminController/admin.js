@@ -102,7 +102,11 @@ module.exports.getAllBookings = (req, res) => {
 }
 
 module.exports.getAllPendingNotifications = (req, res) => {
-    Page.find({ status: req.params.pageStatus, initialStatus: "Approved" })
+    let cond = {$or : [{status: "Pending"}, {status: "Processing"}]} 
+    if (req.params.pageStatus == "Online") {
+        cond = {$or : [{status: req.params.pageStatus}, {status: "Not Operating"}]}
+    } 
+    Page.find(cond)
         .populate({ path: "hostTouristSpot", model: "Page" })
         .populate({ path: "creator", model: "Account", select: "fullName" })
         .populate({ path: "services.data", model: "Item" })
@@ -127,7 +131,7 @@ module.exports.getAllPendingNotifications = (req, res) => {
 }
 
 module.exports.setBookingStatus = async (req, res) => {
-    
+
 
     if (req.body.servicesToUpdate) {
         req.body.servicesToUpdate.forEach(service => {
@@ -151,7 +155,7 @@ module.exports.setBookingStatus = async (req, res) => {
                 res.status(500).json({ error: err.message })
             }
             try {
-                
+
 
                 // const notifForProvider = helper. ({
                 //     receiver: req.body.serviceProviderReceiver,
@@ -159,16 +163,16 @@ module.exports.setBookingStatus = async (req, res) => {
                 //     type: "page-booking",
                 //     message: req.body.messageForServiceProvider
                 // })
-                console.log("ADMIN ID:", req.user )
+                console.log("ADMIN ID:", req.user)
                 helper.createNotification({
-                    receiver: req.body.serviceProviderReceiver,  
+                    receiver: req.body.serviceProviderReceiver,
                     mainReceiver: req.body.mainReceiver,
                     page: req.body.page,
                     booking: req.body.bookingId,
                     type: "booking-provider",
                     message: req.body.messageForServiceProvider
                 })
-            
+
                 // const notifForTourist = new notification({
                 //     receiver: req.body.touristReceiver,
                 //     booking: req.body.bookingId,
@@ -187,7 +191,7 @@ module.exports.setBookingStatus = async (req, res) => {
 
                 booking.findOne({ _id: req.body.bookingId })
                     .populate({ path: "tourist", model: "Account", select: "firstName lastName" })
-                    .populate({ path: "pageId", model: "Page"})
+                    .populate({ path: "pageId", model: "Page" })
                     .populate({ path: "selectedServices.service", model: "Item" })
                     .exec((error, bookingData) => {
                         if (error) {
@@ -204,29 +208,27 @@ module.exports.setBookingStatus = async (req, res) => {
 
 
 module.exports.setPageStatus = async (req, res) => {
-    const notif = new notification({
-        receiver: req.body.pageCreator,
-        page: req.body.pageId,
-        type: "page",
-        message: req.body.message,
-    })
-    Page.findByIdAndUpdate({ _id: req.body.pageId }, { $set: { status: req.body.status } }, { new: true }, (err, page) => {
-        if (err) {
-            return res.status(500).json({ error: err.message })
-        }
-        notif.save().then((result) => {
-            return res.status(200).json({ page: page, result: result })
-        }).catch(error => {
-            res.status(500).json(error.message)
+    try {
+        Page.findByIdAndUpdate({ _id: req.body.page }, { $set: { status: req.body.status } }, { new: true }, async (err, page) => {
+            if (err) {
+                console.log(err)
+                return res.status(500).json({ error: err.message })
+            }
+
+            await helper.createNotification({
+                receiver: req.body.receiver,
+                mainReceiver: req.body.mainReceiver,
+                page: req.body.page,
+                booking: null,
+                type: req.body.type,
+                message: req.body.message,
+                subject: req.body.subject
+            })
+            return res.status(200).json({ page: page })
+
         })
-    })
+    } catch (error) {
+        console.log(error);
+        res.status(500).json(error.message)
+    }
 }
-    // module.exports.getOnlinePage = (req, res) => {
-    //     Page.findByIdAndUpdate({ _id: req.params.pageId }, { $set: { status: "Online" } }, { new: true }, (err, page) => {
-    //         if (err) {
-    //             res.status(500).json({ error: err })
-    //         }
-    //         //console.log(page);
-    //         res.status(200).json(page)
-    //     })
-    // }

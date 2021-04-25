@@ -13,7 +13,7 @@ const adminAccount = require("../../models/adminSchemas/adminAccount");
 
 
 module.exports.getOnlinePages = async (req, res) => {
-    Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
+    Page.aggregate([{$match: { $or:[ { status:  'Online', initialStatus: 'Approved'}, {status: 'Not Operating', initialStatus: 'Approved'}]}},
     { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
     ]).exec(function (err, pages) {
         if (err) {

@@ -48,7 +48,7 @@ const server = app.listen(port, () => {
 
 let io = require('socket.io')(server, {
   cors: {
-    origin: ["http://localhost:4200", "http://localhost:53935"],
+    origin: ["http://localhost:4200", "http://localhost:56450"],
     methods: ["GET", "POST"]
   }
 });

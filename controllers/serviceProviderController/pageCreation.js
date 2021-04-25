@@ -537,6 +537,7 @@ module.exports.retrievePage = (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
   Page.findOne({ _id: req.params.pageId })
   .populate({ path: "services.data", model: "Item" })
+  .populate({ path: "hostTouristSpot", model: "Page" })
   .exec((error, page) => {
     if (error) {
       return res.status(500).json({

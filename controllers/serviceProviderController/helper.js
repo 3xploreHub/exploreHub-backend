@@ -249,9 +249,8 @@ function createNotification(data) {
             await firstNotif.save();
             notifGroup.notifications.push(firstNotif)
             resolve(notifGroup)
-          }
-          else {
-            notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true },
+          } else {
+            notification.findOneAndUpdate({ receiver: data.receiver, sender: data.sender, subject: data.subject, isMessage: true, notificationGroup: notifGroup._id },
               { $set: { opened: false, updatedAt: new Date(), message: message } })
               .then(async (result) => {
                 try {
@@ -268,6 +267,7 @@ function createNotification(data) {
               }).catch(error => {
                 reject(error)
               })
+
           }
 
         }).catch(error => {
