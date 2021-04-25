@@ -236,6 +236,7 @@ module.exports.createConvoForPageSubmission = (req, res) => {
 module.exports.getAllConversations = (req, res) => {
     conversation.find({ participants: { $in: [req.user._id] } })
         .populate({ path: "participants" })
+        .populate({ path: "page" })
         .sort({ 'updatedAt': -1 })
         .exec((error, convos) => {
             if (error) return res.status(500).json(error.message)
