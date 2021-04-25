@@ -11,6 +11,7 @@ const Conversation = new Schema(
     receiver: { type: Schema.Types.ObjectId, required: false, ref: "Account" },
     participants: [{ type: Schema.Types.ObjectId, required: false, ref: "Account" }],
     type: {type: String, required: false},
+    viewedBy: [{type: String, required: false}],
     opened: { type: Boolean, required: false, default: false },
   },
   { timestamps: true }

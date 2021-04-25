@@ -110,21 +110,25 @@ module.exports.sendMessage = (req, res) => {
         {
             $push: {
                 messages: message,
-            }
+            },
+
         },
         async function (err, response) {
             if (err) {
                 return res.status(500).json({ type: "internal error", error: err.message })
             }
-            try {
-                req.body.notificationData["conversation"] = req.body.conversationId
-                if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
-                const convo = await conversation.findById(req.body.conversationId)
+            // req.body.notificationData["conversation"] = req.body.conversationId
+            // if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
+            // const convo = await conversation.findById(req.body.conversationId)
+            conversation.findOneAndUpdate({ "_id": mongoose.Types.ObjectId(req.body.conversationId) }, {
+                $set: {
+                    viewedBy: mongoose.Types.ObjectId(req.user._id)
+                }
+            }, function (error, convo) {
+                if (error) return res.status(500).json(error.message);
                 res.status(200).json(convo);
-            } catch (error) {
-                console.log(error)
-                res.status(500).json({ error: error.message })
-            }
+            })
+
         })
 }
 
@@ -218,6 +222,7 @@ module.exports.createConvoForPageSubmission = (req, res) => {
         page: data.page,
         participants: [req.user._id, data.receiver],
         type: data.type,
+        viewedBy: [req.user._id],
         messages: [firstMessage],
     })
 
@@ -258,3 +263,13 @@ module.exports.getAllConversations = (req, res) => {
         })
 }
 
+module.exports.openConvo = (req, res) => {
+    conversation.updateOne({
+        _id: mongoose.Types.ObjectId(req.body.convoId)
+    }, {
+        $push: { viewedBy: req.user._id }
+    }, function (error, result) {
+        if (error) return res.status(500).json(error.message)
+        res.status(200).json(result)
+    })
+}
