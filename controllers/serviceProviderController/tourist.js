@@ -26,7 +26,7 @@ module.exports.getOnlinePages = async (req, res) => {
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
-        .populate({ path: "otherServices", model: "Page" })
+        .populate({ path: "otherServices", model: "Page" , match: {status: "Online"}})
         .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {
             if (error) {
