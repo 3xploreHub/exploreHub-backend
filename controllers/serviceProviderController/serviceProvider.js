@@ -159,14 +159,21 @@ module.exports.changeInitialStatus = (req, res) => {
         $set: {
             initialStatus: req.body.status
         }
-    }, function (error, result) {
+    }, async function (error, result) {
         if (error) return res.status(500).json(error.message)
-        res.status(200).json(result)
+        try {
+            if (req.body.notificationData) {
+                await helper.createNotification(req.body.notificationData)
+            }
+            res.status(200).json(result)
+        } catch (error) {
+            res.status(500).json(error.message)
+        }
     })
 }
 
 module.exports.getPageConversation = (req, res) => {
-    conversation.findOne({ _id: req.params.conversationId })    
+    conversation.findOne({ _id: req.params.conversationId })
         .populate({ path: "receiver", model: "Account" })
         .populate({ path: "participants" })
         .populate({ path: "page", model: "Page" })
@@ -176,8 +183,8 @@ module.exports.getPageConversation = (req, res) => {
 
             if (conversation && conversation.participants.length == 1) {
                 adminAccount.find({}).then(admin => {
-                    if (admin.length > 0) { 
-                        conversation.participants.push({_id: admin[0]._id, fullName: "Admin"})
+                    if (admin.length > 0) {
+                        conversation.participants.push({ _id: admin[0]._id, fullName: "Admin" })
                     }
                     return res.status(200).json(conversation)
                 }).catch(error => {
@@ -233,11 +240,11 @@ module.exports.getAllConversations = (req, res) => {
         .exec((error, convos) => {
             if (error) return res.status(500).json(error.message)
             adminAccount.find({}).then(admin => {
-                console.log("Admin:",admin);
+                console.log("Admin:", admin);
                 if (admin.length > 0) {
                     convos = convos.map(convo => {
-                        if (convo.participants.length == 1) convo.participants.push({_id: admin[0]._id, fullName: "Admin"})
-                        console.log('participants: ',convo.participants)
+                        if (convo.participants.length == 1) convo.participants.push({ _id: admin[0]._id, fullName: "Admin" })
+                        console.log('participants: ', convo.participants)
                         return convo
                     })
                 }

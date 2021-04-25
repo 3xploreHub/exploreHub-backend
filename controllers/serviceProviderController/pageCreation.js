@@ -570,10 +570,19 @@ module.exports.submitPage = async (req, res) => {
       $set: {
         status: 'Pending',
       }
-    }, function (err, response) {
+    }, async function (err, response) {
       if (err) {
         return res.status(500).json({ type: "internal error", error: err.message })
       }
-      res.status(200).json({ message: "Page successfully submitted" });
+      try {
+        if (req.body) {
+          await helper.createNotification(req.body)
+        }
+         res.status(200).json({ message: "Page successfully submitted" });
+
+      } catch(error) {
+        console.log(error)
+        return res.status(500).json(error.message)
+      }
     })
 }
