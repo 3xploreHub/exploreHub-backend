@@ -55,7 +55,7 @@ router.post("/createConvoForPageSubmission", serviceProvider.createConvoForPageS
 router.get("/getAllConversations/:pageId", serviceProvider.getAllConversations)
 router.post("/openConvo", serviceProvider.openConvo)
 
-router.get("/getOnlinePages/", tourist.getOnlinePages)
+router.get("/getOnlinePages/:category", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
 router.get("/viewItems/:pageId/:serviceId/:pageType", tourist.viewItems)
 router.get("/viewAllServices/:pageId", tourist.viewAllServices)
@@ -73,5 +73,6 @@ router.put("/viewNotification", tourist.viewNotification)
 router.put("/removeSelectedItem/:bookingId/:selectedId", tourist.removeSelectedItem)
 router.post("/changeBookingStatus/:status", tourist.changeBookingStatus)
 router.post("/searchTouristSpot", tourist.searchTouristSpot)
-// router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
+router.get("/getAllCategories", tourist.getAllCategories)
+
 module.exports = router;

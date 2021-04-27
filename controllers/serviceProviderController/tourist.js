@@ -10,10 +10,37 @@ const { service } = require("../../models/service");
 const helper = require("./helper");
 const notificationGroup = require("../../models/notificationGroup");
 const adminAccount = require("../../models/adminSchemas/adminAccount");
-
+const touristSpotCategory = require("../../models/touristSpotCategory");
 
 module.exports.getOnlinePages = async (req, res) => {
-    Page.aggregate([{$match: { $or:[ { status:  'Online', initialStatus: 'Approved'}, {status: 'Not Operating', initialStatus: 'Approved'}]}},
+    const condition = req.params.category != "all" ? {
+        $or: [
+            {
+                status: 'Online', pageType: "tourist_spot",
+                initialStatus: 'Approved',
+                "components.data.text": req.params.category
+            },
+            {
+                status: 'Not Operating',
+                initialStatus: 'Approved',
+                "components.data.text": req.params.category
+            }
+        ]
+    } : {
+        $or: [
+            {
+                status: 'Online', pageType: "tourist_spot",
+                initialStatus: 'Approved',
+            },
+            {
+                status: 'Not Operating',
+                initialStatus: 'Approved',
+            }
+        ]
+    }
+    Page.aggregate([{
+        $match: condition
+    },
     { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
     ]).exec(function (err, pages) {
         if (err) {
@@ -26,7 +53,7 @@ module.exports.getOnlinePages = async (req, res) => {
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
-        .populate({ path: "otherServices", model: "Page" , match: {status: "Online"}})
+        .populate({ path: "otherServices", model: "Page", match: { status: "Online", initialStatus: "Approved" } })
         .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {
             if (error) {
@@ -152,13 +179,13 @@ module.exports.addBookingInfo = (req, res) => {
 module.exports.getPageBookingInfo = async (req, res) => {
     try {
         const bookingData = await booking.findOne({ _id: req.params.bookingId })
-        .populate({path: "pageId"})
-        .exec((error, booking) => {
-            if (error) {
-                return res.status(500).json(error.message)
-            }
-            res.status(200).json({ bookingInfo: booking.pageId.bookingInfo, booking: booking })
-        })
+            .populate({ path: "pageId" })
+            .exec((error, booking) => {
+                if (error) {
+                    return res.status(500).json(error.message)
+                }
+                res.status(200).json({ bookingInfo: booking.pageId.bookingInfo, booking: booking })
+            })
     }
     catch (error) {
         console.log(error);
@@ -407,12 +434,20 @@ module.exports.changeBookingStatus = async (req, res) => {
 
 module.exports.searchTouristSpot = (req, res) => {
     Page.find({
-        "components.data.text":  { "$regex": req.body.pageName, "$options": "i"},
-        "components.data.defaultName":  "pageName",
-        status: "Online"
+        "components.data.text": { "$regex": req.body.pageName, "$options": "i" },
+        "components.data.defaultName": "pageName",
+        status: "Online", initialStatus: "Approved"
     }).then(pages => {
         res.status(200).json(pages)
     }).catch(error => {
         res.status(500).json(error.message)
+    })
+}
+
+module.exports.getAllCategories = (req, res) => {
+    touristSpotCategory.find({}).then(categories => {
+        res.status(200).json({ categories: categories })
+    }).catch(error => {
+        res.status(500).json(error.status)
     })
 }

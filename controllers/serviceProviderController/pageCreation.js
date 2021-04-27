@@ -555,7 +555,7 @@ module.exports.retrievePage = (req, res) => {
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Page.find({ status: 'Online' }).then((pages, error) => {
+  Page.find({ status: 'Online', pageType: "tourist_spot"}).then((pages, error) => {
     if (error) {
       return res.status(500).json(error.message);
     }

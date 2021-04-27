@@ -58,16 +58,19 @@ module.exports.getAllBookings = (req, res) => {
         .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .populate({ path: "selectedServices.service", model: "Item" })
         .sort({ 'updatedAt': 1 })
-        .exec((error, bookings) => {
+        .exec((error, bookings) => { 
             if (error) {
+                console.log(error)
                 return res.status(500).json(error.message);
             } else {
-                // start get booking Info
-                let result = []; // initialize result
-                if (bookings.length) {
-                    // format object algorithm
-                    bookings.forEach(bookingDetail => {
-                        let formattedObject = { ...bookingDetail._doc }; //deep copy
+                try {
+
+                    // start get booking Info
+                    let result = []; // initialize result
+                    if (bookings.length) {
+                        // format object algorithm
+                        bookings.forEach(bookingDetail => {
+                            let formattedObject = { ...bookingDetail._doc }; //deep copy
                         let { bookingInfo } = formattedObject; //object destructuring
                         if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
                             //loop through booking info array
@@ -87,7 +90,7 @@ module.exports.getAllBookings = (req, res) => {
                             formattedObject.bookingInfo = simplifiedDetail;
                         }
                         let components = formatComponentArray(formattedObject.pageId._doc.components);
-
+                        
                         if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
                         formattedObject.selectedServiceData = formattedObject.selectedServices
                         formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
@@ -95,8 +98,12 @@ module.exports.getAllBookings = (req, res) => {
                         result.push(formattedObject)
                     });
                 }
-
+                
+                // res.status(200).json(bookings);
                 res.status(200).json(result);
+                } catch(error) {
+                    res.status(500).json(error.message)
+                }
             }
         })
 }
