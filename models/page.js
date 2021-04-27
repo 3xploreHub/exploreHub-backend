@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Component } = require("./commonSchemas/component");
+const { service, serviceModel } = require("./service");
 
 const Schema = mongoose.Schema;
 
@@ -9,7 +10,7 @@ const Page = new Schema(
     hostTouristSpot: { type: Schema.Types.ObjectId, ref: "Page" },
     pageType: { type: String, enum: ['tourist_spot', 'service'], required: true },
     components: [Component],
-    services: [Component],
+    services: [service],
     otherServices: [{ type: Schema.Types.ObjectId }],
     bookingInfo: [Component],
     initialStatus: { type: String, enum: ['Approved', 'Declined', 'Pending'], required: false, default: 'Pending' },

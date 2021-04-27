@@ -32,6 +32,7 @@ router.put("/editServiceInfo/:pageId/:serviceId/:infoId/:pageType", pageCreation
 router.post("/saveInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.editInputField)
 router.delete("/deletePage/:pageId/:pageType", pageCreation.deletePage)
+router.post("/editServiceSettings", pageCreation.editServiceSettings)
 
 router.get("/retrieveAllTouristSpotsPage", pageCreation.retrieveAllTouristSpotsPage)
 router.post("/createPage/:pageType", pageCreation.createPage)
@@ -71,5 +72,6 @@ router.get("/getNotifications", tourist.getNotifications)
 router.put("/viewNotification", tourist.viewNotification)
 router.put("/removeSelectedItem/:bookingId/:selectedId", tourist.removeSelectedItem)
 router.post("/changeBookingStatus/:status", tourist.changeBookingStatus)
+router.post("/searchTouristSpot", tourist.searchTouristSpot)
 // router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
 module.exports = router;

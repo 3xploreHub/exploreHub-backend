@@ -151,10 +151,14 @@ module.exports.addBookingInfo = (req, res) => {
 
 module.exports.getPageBookingInfo = async (req, res) => {
     try {
-        // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-        const page = await Page.findOne({ _id: req.params.pageId }, { bookingInfo: 1 });
-        const bookingData = await booking.findOne({ _id: req.params.bookingId });
-        res.status(200).json({ bookingInfo: page.bookingInfo, booking: bookingData })
+        const bookingData = await booking.findOne({ _id: req.params.bookingId })
+        .populate({path: "pageId"})
+        .exec((error, booking) => {
+            if (error) {
+                return res.status(500).json(error.message)
+            }
+            res.status(200).json({ bookingInfo: booking.pageId.bookingInfo, booking: booking })
+        })
     }
     catch (error) {
         console.log(error);
@@ -401,3 +405,14 @@ module.exports.changeBookingStatus = async (req, res) => {
     }
 }
 
+module.exports.searchTouristSpot = (req, res) => {
+    Page.find({
+        "components.data.text":  { "$regex": req.body.pageName, "$options": "i"},
+        "components.data.defaultName":  "pageName",
+        status: "Online"
+    }).then(pages => {
+        res.status(200).json(pages)
+    }).catch(error => {
+        res.status(500).json(error.message)
+    })
+}

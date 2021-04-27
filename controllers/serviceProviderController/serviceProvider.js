@@ -117,18 +117,18 @@ module.exports.sendMessage = (req, res) => {
             if (err) {
                 return res.status(500).json({ type: "internal error", error: err.message })
             }
-            // req.body.notificationData["conversation"] = req.body.conversationId
-            // if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
-            // const convo = await conversation.findById(req.body.conversationId)
+
+
+            req.body.notificationData["conversation"] = req.body.conversationId
+            if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
             conversation.findOneAndUpdate({ "_id": mongoose.Types.ObjectId(req.body.conversationId) }, {
                 $set: {
-                    viewedBy: mongoose.Types.ObjectId(req.user._id)
+                    viewedBy: [mongoose.Types.ObjectId(req.user._id)]
                 }
             }, function (error, convo) {
                 if (error) return res.status(500).json(error.message);
                 res.status(200).json(convo);
             })
-
         })
 }
 
@@ -263,13 +263,25 @@ module.exports.getAllConversations = (req, res) => {
         })
 }
 
-module.exports.openConvo = (req, res) => {
-    conversation.updateOne({
-        _id: mongoose.Types.ObjectId(req.body.convoId)
-    }, {
-        $push: { viewedBy: req.user._id }
-    }, function (error, result) {
-        if (error) return res.status(500).json(error.message)
-        res.status(200).json(result)
-    })
+module.exports.openConvo = async (req, res) => {
+    try {
+        const conv = await conversation.findOne({ _id: req.body.convoId })
+        if (!conv.viewedBy.includes(req.user._id)) {
+
+            conversation.updateOne({
+                _id: mongoose.Types.ObjectId(req.body.convoId)
+            }, {
+                $push: { viewedBy: req.user._id }
+            }, function (error, result) {
+                if (error) return res.status(500).json(error.message)
+                res.status(200).json(result)
+            })
+        } else {
+            res.status(200).json({ message: "Already opened" })
+        }
+    } catch (error) {
+        res.status(500).json(error.message)
+    }
 }
+
+

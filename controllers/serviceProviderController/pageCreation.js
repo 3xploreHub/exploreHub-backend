@@ -575,14 +575,27 @@ module.exports.submitPage = async (req, res) => {
         return res.status(500).json({ type: "internal error", error: err.message })
       }
       try {
-        if (req.body) {
-          await helper.createNotification(req.body)
+        console.log("notificationDAta: ",req.body.notificationData);
+        if (req.body.notificationData) {
+          await helper.createNotification(req.body.notificationData)
         }
          res.status(200).json({ message: "Page successfully submitted" });
-
+ 
       } catch(error) {
         console.log(error)
         return res.status(500).json(error.message)
       }
+    })
+}
+
+
+module.exports.editServiceSettings = (req, res) => {
+  Page.updateOne(
+    { "_id": req.body.pageId, "services._id": req.body.serviceId },
+    { $set: { "services.$.required": req.body.required, "services.$.selectMultiple": req.body.selectMultiple} })
+    .then(result => {
+      res.status(200).json(result);
+    }).catch(error => {
+      res.status(500).json({ type: 'internal_error!', error: error.message });
     })
 }
