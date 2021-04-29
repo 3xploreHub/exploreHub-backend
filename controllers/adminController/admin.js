@@ -58,7 +58,7 @@ module.exports.getAllBookings = (req, res) => {
         .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .populate({ path: "selectedServices.service", model: "Item" })
         .sort({ 'updatedAt': 1 })
-        .exec((error, bookings) => { 
+        .exec((error, bookings) => {
             if (error) {
                 console.log(error)
                 return res.status(500).json(error.message);
@@ -71,37 +71,37 @@ module.exports.getAllBookings = (req, res) => {
                         // format object algorithm
                         bookings.forEach(bookingDetail => {
                             let formattedObject = { ...bookingDetail._doc }; //deep copy
-                        let { bookingInfo } = formattedObject; //object destructuring
-                        if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
-                            //loop through booking info array
-                            let simplifiedDetail = bookingInfo.map((info) => {
-                                //loop every object
-                                let { inputLabel, value } = info._doc;
-                                if (value && typeof value == 'object') {
-                                    let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
-                                    if (objectKeys.includes('month')) {
-                                        let { month, day, year } = value;
-                                        let date = `${month.text} ${day.text},${year.text}`
-                                        value = date;
+                            let { bookingInfo } = formattedObject; //object destructuring
+                            if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
+                                //loop through booking info array
+                                let simplifiedDetail = bookingInfo.map((info) => {
+                                    //loop every object
+                                    let { inputLabel, value } = info._doc;
+                                    if (value && typeof value == 'object') {
+                                        let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
+                                        if (objectKeys.includes('month')) {
+                                            let { month, day, year } = value;
+                                            let date = `${month.text} ${day.text},${year.text}`
+                                            value = date;
+                                        }
                                     }
-                                }
-                                return { label: inputLabel, value }
-                            });
-                            formattedObject.bookingInfo = simplifiedDetail;
-                        }
-                        let components = formatComponentArray(formattedObject.pageId._doc.components);
-                        
-                        if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
-                        formattedObject.selectedServiceData = formattedObject.selectedServices
-                        formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
+                                    return { label: inputLabel, value }
+                                });
+                                formattedObject.bookingInfo = simplifiedDetail;
+                            }
+                            let components = formatComponentArray(formattedObject.pageId._doc.components);
 
-                        result.push(formattedObject)
-                    });
-                }
-                
-                // res.status(200).json(bookings);
-                res.status(200).json(result);
-                } catch(error) {
+                            if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
+                            formattedObject.selectedServiceData = formattedObject.selectedServices
+                            formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
+
+                            result.push(formattedObject)
+                        });
+                    }
+
+                    // res.status(200).json(bookings);
+                    res.status(200).json(result);
+                } catch (error) {
                     res.status(500).json(error.message)
                 }
             }
@@ -109,10 +109,10 @@ module.exports.getAllBookings = (req, res) => {
 }
 
 module.exports.getAllPendingNotifications = (req, res) => {
-    let cond = {$or : [{status: "Pending", initialStatus:"Approved"}, {status: "Processing", initialStatus:"Approved"}]} 
+    let cond = { $or: [{ status: "Pending", initialStatus: "Approved" }, { status: "Processing", initialStatus: "Approved" }] }
     if (req.params.pageStatus == "Online") {
-        cond = {$or : [{status: req.params.pageStatus, initialStatus:"Approved"}, {status: "Not Operating", initialStatus:"Approved"}]}
-    } 
+        cond = { $or: [{ status: req.params.pageStatus, initialStatus: "Approved" }, { status: "Not Operating", initialStatus: "Approved" }] }
+    }
     Page.find(cond)
         .populate({ path: "hostTouristSpot", model: "Page" })
         .populate({ path: "creator", model: "Account", select: "fullName" })
@@ -122,19 +122,32 @@ module.exports.getAllPendingNotifications = (req, res) => {
             if (err) {
                 res.status(500).json({ error: err.message })
             }
-            if (pages.length) {
-                pages.forEach((page, idx) => {
-                    page._doc.components = formatComponentArray(page._doc.components) //onlycomponents property 
-                    let services = page.services;
+            
+            // if (pages.length) {
+            //     pages.forEach((page, idx) => {
+            //         page._doc.components = formatComponentArray(page._doc.components) //onlycomponents property 
+            //         let services = page.services;
 
-                    if (!services || !services.length) {
-                        return
-                    }
-                    page._doc.services = formatPendingArray(services)
-                });
-            }
+            //         if (!services || !services.length) {
+            //             return
+            //         }
+            //         page._doc.services = formatPendingArray(services)
+            //     });
+            // }
             res.status(200).json(pages)
         })
+
+    // Page.aggregate({
+    //     $match: cond
+    // }).populate({ path: "hostTouristSpot", model: "Page" })
+    //     .populate({ path: "creator", model: "Account", select: "fullName" })
+    //     .populate({ path: "services.data", model: "Item" })
+    //     .exec(function (err, pages) {
+    //         if (err) {
+    //             res.status(500).json(err.message);
+    //         }
+    //         res.status(200).json(pages)
+    //     })
 }
 
 module.exports.setBookingStatus = async (req, res) => {

@@ -69,38 +69,38 @@ const formatComponentArray = (arr) => {
 
 
 const formatPendingArray = (arr) => {
-    let result = [];
+    // let result = [];
     // arr.arr._doc.data = arr._doc.data.shift();
-    if (Array.isArray(arr)) {
-        console.log("DATA:::", arr)
-        result = arr.map(service => {
-            service.data = service.data.map(item => {
-                let newObject = { data: [], item: { photo: "", labelledText: "", text: "" } }
-                console.log("Item: ", item);
+    // if (Array.isArray(arr)) {
+    //     console.log("DATA:::", arr)
+    //     result = arr.map(service => {
+    //         service.data = service.data.map(item => {
+    //             let newObject = { data: [], item: { photo: "", labelledText: "", text: "" } }
+    //             console.log("Item: ", item);
 
-                if (item.data.defaultName) {
-                    newObject['serviceGroupName'] = item.data.text;
-                } else if (item.type == "item") {
+    //             if (item.data.defaultName) {
+    //                 newObject['serviceGroupName'] = item.data.text;
+    //             } else if (item.type == "item") {
 
-                    item.data.forEach(_item => {
-                        if (_item.type == 'photo') {
-                            newObject.data.push(_item.data[0])
-                        }
-                        if (typeof _item.data == 'object' && _item.data.hasOwnProperty('defaultName') || _item.type == "labelled-text") {
-                            newObject.data.push({ label: _item.data.label, labelledText: _item.data.text })
-                        }
+    //                 item.data.forEach(_item => {
+    //                     if (_item.type == 'photo') {
+    //                         newObject.data.push(_item.data[0])
+    //                     }
+    //                     if (typeof _item.data == 'object' && _item.data.hasOwnProperty('defaultName') || _item.type == "labelled-text") {
+    //                         newObject.data.push({ label: _item.data.label, labelledText: _item.data.text })
+    //                     }
 
-                        if (_item.type == 'text' && !_item.data.hasOwnProperty('defaultName')) {
-                            newObject.data.push({ text: _item.data.text })
-                        }
-                    })
-                }
-                return newObject
-            })
-            return service;
-        })
-        console.log(result);
-        return result;
-    }
+    //                     if (_item.type == 'text' && !_item.data.hasOwnProperty('defaultName')) {
+    //                         newObject.data.push({ text: _item.data.text })
+    //                     }
+    //                 })
+    //             }
+    //             return newObject
+    //         })
+    //         return service;
+    //     })
+    //     console.log(result);
+    //     return result;
+    // }
 }
 module.exports = { formatArray, formatComponentArray, formatPendingArray }
