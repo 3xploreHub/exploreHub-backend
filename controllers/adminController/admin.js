@@ -8,6 +8,8 @@ const notification = require("../../models/notification");
 const { Item } = require("../../models/item");
 const mongoose = require("mongoose");
 const helper = require("../serviceProviderController/helper");
+const touristSpotCategory = require('../../models/touristSpotCategory');
+const { addTouristSpotCategory } = require('../serviceProviderController/touristSpotCategories');
 const MY_SECRET = process.env.MY_SECRET;
 function createToken(user) {
     return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
@@ -122,7 +124,7 @@ module.exports.getAllPendingNotifications = (req, res) => {
             if (err) {
                 res.status(500).json({ error: err.message })
             }
-            
+
             // if (pages.length) {
             //     pages.forEach((page, idx) => {
             //         page._doc.components = formatComponentArray(page._doc.components) //onlycomponents property 
@@ -229,11 +231,14 @@ module.exports.setBookingStatus = async (req, res) => {
 
 module.exports.setPageStatus = async (req, res) => {
     try {
+      
         Page.findByIdAndUpdate({ _id: req.body.page }, { $set: { status: req.body.status } }, { new: true }, async (err, page) => {
             if (err) {
                 console.log(err)
                 return res.status(500).json({ error: err.message })
             }
+
+           
 
             await helper.createNotification({
                 receiver: req.body.receiver,
@@ -244,7 +249,27 @@ module.exports.setPageStatus = async (req, res) => {
                 message: req.body.message,
                 subject: req.body.subject
             })
-            return res.status(200).json({ page: page })
+
+            if (req.body.status== "Online") {
+                page.components.forEach(async (data) => {
+                    if (data.data.defaultName == "category") {
+                        const existingCategory = await touristSpotCategory.findOne({name: data.data.text})
+                        console.log(existingCategory)
+                        if (!existingCategory) {
+                            let request = req
+
+                            request['body'] = {name: data.data.text};
+                            request['continue'] = true;
+                            const resultAdding = await addTouristSpotCategory(request, res)
+                            console.log("category adding result: :::::",resultAdding);
+                            return res.status(200).json({ page: page })
+                        }
+                    }
+                })
+            } 
+
+                return res.status(200).json({ page: page })
+            
 
         })
     } catch (error) {
