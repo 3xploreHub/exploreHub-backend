@@ -10,6 +10,8 @@ const mongoose = require("mongoose");
 const helper = require("../serviceProviderController/helper");
 const touristSpotCategory = require('../../models/touristSpotCategory');
 const { addTouristSpotCategory } = require('../serviceProviderController/touristSpotCategories');
+const serviceCategory = require('../../models/serviceCategory');
+const { addServiceCategory } = require('../serviceProviderController/serviceCategories');
 const MY_SECRET = process.env.MY_SECRET;
 function createToken(user) {
     return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
@@ -253,16 +255,29 @@ module.exports.setPageStatus = async (req, res) => {
             if (req.body.status== "Online") {
                 page.components.forEach(async (data) => {
                     if (data.data.defaultName == "category") {
-                        const existingCategory = await touristSpotCategory.findOne({name: data.data.text})
-                        console.log(existingCategory)
-                        if (!existingCategory) {
-                            let request = req
+                        if (page.pageType == "tourist_spot") {
 
-                            request['body'] = {name: data.data.text};
-                            request['continue'] = true;
-                            const resultAdding = await addTouristSpotCategory(request, res)
-                            console.log("category adding result: :::::",resultAdding);
-                            return res.status(200).json({ page: page })
+                            const existingCategory = await touristSpotCategory.findOne({name: data.data.text})
+                            console.log(existingCategory)
+                            if (!existingCategory) {
+                                let request = req
+                                
+                                request['body'] = {name: data.data.text};
+                                request['continue'] = true;
+                                const resultAdding = await addTouristSpotCategory(request, res)
+                                return res.status(200).json({ page: page })
+                            }
+                        } else {
+                            const existingCategory = await serviceCategory.findOne({name: data.data.text})
+                            console.log(existingCategory)
+                            if (!existingCategory) {
+                                let request = req
+                                
+                                request['body'] = {name: data.data.text};
+                                request['continue'] = true;
+                                const resultAdding = await addServiceCategory(request, res)
+                                return res.status(200).json({ page: page })
+                            }
                         }
                     }
                 })
