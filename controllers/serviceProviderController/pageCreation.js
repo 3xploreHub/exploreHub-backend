@@ -499,46 +499,82 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
 
 module.exports.deletePage = async (req, res) => {
   try {
-    if (req.body.password) {
+    if (req.body.password && req.body.requiredPassword) {
+      console.log("he 12");
       const user = await account.findById(req.user._id)
       if (!bcrypt.compareSync(req.body.password, user.password)) {
         return res.status(400).json({ type: "incorrect_password" });
       }
-    }
-    Page.findByIdAndRemove(req.params.pageId).then((page, error) => {
-      if (error) {
-        return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
-      }
-
-      if (!page) {
-        return res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
-      }
-      let images = [];
-
-      page.components.forEach(comp => {
-        if (comp.type == "photo") {
-          comp.data.forEach(img => {
-            images.push(img.url);
-          })
+    } if (req.body.requiredPassword && !req.body.password) {
+      console.log("he 34234")
+      return res.status(400).json({ type: "incorrent_password" })
+    } else {
+      Page.findByIdAndRemove(req.params.pageId).then((page, error) => {
+        if (error) {
+          return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
         }
-      })
-      page.services.forEach(item => {
-        let imgs = helper.getImages(item);
-        if (imgs.length) {
-          images = [...images, ...imgs];
+
+        if (!page) {
+          return res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
         }
-      })
+        let images = [];
 
-
-      if (page) {
-        images.forEach(image => {
-          let img = image.split("/");
-          deleteImage(img[img.length - 1]);
+        page.components.forEach(comp => {
+          if (comp.type == "photo") {
+            comp.data.forEach(img => {
+              images.push(img.url);
+            })
+          }
         })
-        return res.status(200).json({ message: "successfully deleted", result: page })
-      }
-    })
+
+        page.services.forEach(item => {
+          let imgs = helper.getImages(item);
+          if (imgs.length) {
+            images = [...images, ...imgs];
+          }
+        })
+
+
+        if (page) {
+          console.log("HERE")
+          
+          images.forEach(image => {
+            let img = image.split("/");
+            deleteImage(img[img.length - 1]);
+          })
+
+          if (req.body.otherServices.length > 0) {
+            let address = page.components.map(com => {
+              const dName = com.data.defaultName
+              if (dName == "barangay" || dName == "municipality" || dName == "province") {
+                return com.data.text
+              }
+            })
+            console.log("address: ", address)
+            address = address.filter(data => data)
+
+            let name = page.components.filter(com => com.data.defaultName == "pageName")
+
+            const pageName = new ComponentModel({ type: "text", data: { placeholder: "", text: name.length > 0? name[0].data.text: "Untitled Page", defaultName: 'pageName' }, styles: [], default: true })
+            const location = new ComponentModel({type: "text", data: {text: address.join(", "), defaultName:"location"}})
+            const defaultComponents = [pageName, location];
+            const services = req.body.otherServices.map(service => service._id)
+            const serviceGroup = new Page({ creator: req.user._id, pageType: "service_group", otherServices: services, components: defaultComponents, status:"Online",initialStatus: "Approved", services: [], bookingInfo: [] });
+            serviceGroup.save().then((result, error) => {
+              if (error) {
+                console.log(error)
+                return res.status(500).json(error.message)
+              }
+              console.log(page)
+              return res.status(200).json({ message: "successfully deleted", result: page })
+            })
+          } 
+          return res.status(200).json({ message: "successfully deleted", result: page })
+        }
+      })
+    }
   } catch (error) {
+    console.log(error)
     res.status(500).json(error.message)
   }
 }

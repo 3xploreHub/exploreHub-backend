@@ -8,8 +8,9 @@ const Page = require("../../models/page");
 const helper = require("./helper");
 
 module.exports.getPages = async (req, res) => {
+
     try {
-        let cond = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, status: { $eq: 'Unfinished' } }
+        let cond = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, pageType: {$ne: "service_group"}, status: { $eq: 'Unfinished' } }
         if (req.params.status == "submitted") cond.status = { $ne: 'Unfinished' }
         const services = await Page.aggregate([{ $match: cond }]);
         res.status(200).json(services)
@@ -19,7 +20,7 @@ module.exports.getPages = async (req, res) => {
 }
 
 module.exports.getPage = async (req, res) => {
-    Page.findById(req.params.pageId).then((page, error) => {
+    Page.findOne({_id: req.params.pageId}).populate({path: "otherServices", model: "Page"}).exec((error, page) => {
         if (error) {
             return res.status(500).json(error.message)
         }

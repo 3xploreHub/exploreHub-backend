@@ -16,20 +16,20 @@ module.exports.getOnlinePages = async (req, res) => {
     const condition = req.params.category != "all" ? {
         $or: [
             {
-                status: 'Online', pageType: "tourist_spot",
+                status: 'Online', pageType: { $ne: "service" },
                 initialStatus: 'Approved',
-                "components.data.text":{ "$regex": req.params.category, "$options": "i" }
+                "components.data.text": { "$regex": req.params.category, "$options": "i" }
             },
             {
                 status: 'Not Operating',
                 initialStatus: 'Approved',
-                "components.data.text":{ "$regex": req.params.category, "$options": "i" }
+                "components.data.text": { "$regex": req.params.category, "$options": "i" }
             }
         ]
     } : {
         $or: [
             {
-                status: 'Online', pageType: "tourist_spot",
+                status: 'Online', pageType: { $ne: "service" },
                 initialStatus: 'Approved',
             },
             {
@@ -41,7 +41,8 @@ module.exports.getOnlinePages = async (req, res) => {
     Page.aggregate([{
         $match: condition
     },
-    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
+    { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } },
+    { $lookup: { from: 'pages', localField: 'otherServices', foreignField: '_id', as: 'otherServicesData' } }
     ]).exec(function (err, pages) {
         if (err) {
             res.status(500).json(err.message);
