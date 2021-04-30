@@ -42,7 +42,8 @@ module.exports.getOnlinePages = async (req, res) => {
         $match: condition
     },
     { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } },
-    { $lookup: { from: 'pages', localField: 'otherServices', foreignField: '_id', as: 'otherServicesData' } }
+    { $lookup: { from: 'pages', localField: 'otherServices', foreignField: '_id', as: 'otherServicesData' } },
+    { $lookup: { from: 'items', localField: 'services.data', foreignField: '_id', as: 'pageServices' } }
     ]).exec(function (err, pages) {
         if (err) {
             res.status(500).json(err.message);
@@ -437,6 +438,7 @@ module.exports.searchTouristSpot = (req, res) => {
     Page.find({
         "components.data.text": { "$regex": req.body.pageName, "$options": "i" },
         "components.data.defaultName": "pageName",
+        "pageType": {$ne: "service_group"},
         status: "Online", initialStatus: "Approved"
     }).then(pages => {
         res.status(200).json(pages)
