@@ -285,3 +285,27 @@ module.exports.openConvo = async (req, res) => {
 }
 
 
+module.exports.getPageActiveBookings = async (req, res) => {
+    try {
+
+        const bookings = await booking.aggregate([{
+            $match: {
+                $or: [
+                    {
+                        status: 'Booked',
+                        pageId: mongoose.Types.ObjectId(req.params.pageId)
+                    },
+                    {
+                        status: 'Processing',
+                        pageId: mongoose.Types.ObjectId(req.params.pageId)
+                    }
+                ]
+            }
+        }])
+        res.status(200).json({ bookings: bookings })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error.message)
+    }
+}
+

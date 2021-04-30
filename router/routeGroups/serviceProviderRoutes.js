@@ -54,6 +54,8 @@ router.get("/getConvoForPageSubmission/:pageId/:type", serviceProvider.getConvoF
 router.post("/createConvoForPageSubmission", serviceProvider.createConvoForPageSubmission)
 router.get("/getAllConversations/:pageId", serviceProvider.getAllConversations)
 router.post("/openConvo", serviceProvider.openConvo)
+router.post("/deleteConfirmedPage/:pageId/:pageType", pageCreation.deletePage)
+router.get("/getPageActiveBookings/:pageId", serviceProvider.getPageActiveBookings)
 
 router.get("/getOnlinePages/:category", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)

@@ -233,14 +233,12 @@ module.exports.setBookingStatus = async (req, res) => {
 
 module.exports.setPageStatus = async (req, res) => {
     try {
-      
+
         Page.findByIdAndUpdate({ _id: req.body.page }, { $set: { status: req.body.status } }, { new: true }, async (err, page) => {
             if (err) {
                 console.log(err)
                 return res.status(500).json({ error: err.message })
             }
-
-           
 
             await helper.createNotification({
                 receiver: req.body.receiver,
@@ -252,39 +250,44 @@ module.exports.setPageStatus = async (req, res) => {
                 subject: req.body.subject
             })
 
-            if (req.body.status== "Online") {
+            if (req.body.status == "Online") {
                 page.components.forEach(async (data) => {
                     if (data.data.defaultName == "category") {
                         if (page.pageType == "tourist_spot") {
 
-                            const existingCategory = await touristSpotCategory.findOne({name: data.data.text})
-                            console.log(existingCategory)
-                            if (!existingCategory) {
-                                let request = req
-                                
-                                request['body'] = {name: data.data.text};
-                                request['continue'] = true;
-                                const resultAdding = await addTouristSpotCategory(request, res)
-                                return res.status(200).json({ page: page })
-                            }
+                            touristSpotCategory.findOne({ name: { "$regex": data.data.text, "$options": "i" } })
+                                .then(async function (error, existingCategory) {
+                                    console.log(existingCategory)
+                                    if (!existingCategory) {
+                                        let request = req
+                                        request['body'] = { name: data.data.text };
+                                        request['continue'] = true;
+                                        const resultAdding = await addTouristSpotCategory(request, res)
+                                        console.log("Result adding:-----", resultAdding)
+                                        return res.status(200).json({ page: page })
+                                    }
+                                })
                         } else {
-                            const existingCategory = await serviceCategory.findOne({name: data.data.text})
-                            console.log(existingCategory)
-                            if (!existingCategory) {
-                                let request = req
-                                
-                                request['body'] = {name: data.data.text};
-                                request['continue'] = true;
-                                const resultAdding = await addServiceCategory(request, res)
-                                return res.status(200).json({ page: page })
-                            }
+                            serviceCategory.findOne({ name: { "$regex": data.data.text, "$options": "i" } })
+                                .then(async function (error, existingCategory) {
+                                    console.log(existingCategory)
+                                    if (!existingCategory) {
+                                        let request = req
+
+                                        request['body'] = { name: data.data.text };
+                                        request['continue'] = true;
+                                        const resultAdding = await addServiceCategory(request, res)
+                                        console.log("Result adding:-----", resultAdding)
+                                        return res.status(200).json({ page: page })
+                                    }
+                                })
                         }
                     }
                 })
-            } 
+            }
 
-                return res.status(200).json({ page: page })
-            
+            return res.status(200).json({ page: page })
+
 
         })
     } catch (error) {

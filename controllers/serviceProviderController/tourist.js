@@ -18,12 +18,12 @@ module.exports.getOnlinePages = async (req, res) => {
             {
                 status: 'Online', pageType: "tourist_spot",
                 initialStatus: 'Approved',
-                "components.data.text": req.params.category
+                "components.data.text":{ "$regex": req.params.category, "$options": "i" }
             },
             {
                 status: 'Not Operating',
                 initialStatus: 'Approved',
-                "components.data.text": req.params.category
+                "components.data.text":{ "$regex": req.params.category, "$options": "i" }
             }
         ]
     } : {

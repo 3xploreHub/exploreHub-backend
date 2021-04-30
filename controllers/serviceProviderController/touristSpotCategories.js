@@ -14,7 +14,7 @@ async function addTouristSpotCategory(req, res) {
     if (!req.continue) {
       res.status(200).json(newCategory.data);
     } else {
-      return true;
+      return newCategory.data;
     }
   } catch (error) {
     if (error.type == "validation_error") {
