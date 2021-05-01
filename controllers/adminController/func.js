@@ -1,24 +1,24 @@
 const formatArray = (arr) => {
 
-    let result = [];
-    Array.from(arr).forEach(el => {
-        let newObject = {
-            serviceGroupName: el._doc.serviceGroupName,
-            data: []
-        }
-        let _data = el._doc.service.data
-        if (Array.isArray(_data)) {
-            _data.forEach((item) => {
-                let { data } = item // hope this will work :)
-                if (typeof data == 'object' && data.hasOwnProperty('defaultName')) { // only include the object with defaultName property okok
-                    //    if(data.defaultName === "quantity")
-                    return newObject.data.push({ defaultName: data.defaultName, text: data.text })
+    // let result = [];
+    // Array.from(arr).forEach(el => {
+    //     let newObject = {
+    //         serviceGroupName: el._doc.serviceGroupName,
+    //         data: []
+    //     }
+    //     let _data = el._doc.service.data
+    //     if (Array.isArray(_data)) {
+    //         _data.forEach((item) => {
+    //             let { data } = item // hope this will work :)
+    //             if (typeof data == 'object' && data.hasOwnProperty('defaultName')) { // only include the object with defaultName property okok
+    //                 //    if(data.defaultName === "quantity")
+    //                 return newObject.data.push({ defaultName: data.defaultName, text: data.text })
 
-                }
-            })
-            result.push(newObject)
-        }
-    })
+    //             }
+    //         })
+    //         result.push(newObject)
+    //     }
+    // })
     return result;
 }
 

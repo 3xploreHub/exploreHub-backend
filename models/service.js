@@ -9,6 +9,7 @@ const Service = new Schema({
   data: [{ type: Schema.Types.ObjectId, required: true, ref: "Item" }],
   required: {type: Boolean, required: false , default: false},
   selectMultiple: {type: Boolean, required: false , default: false},
+  inputQuantity: {type: Boolean, required: false , default: false},
   default: { type: Boolean, required: false, default: false }
 });
 

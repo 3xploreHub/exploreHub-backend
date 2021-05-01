@@ -347,9 +347,9 @@ module.exports.removeSelectedItem = (req, res) => {
 }
 
 function getValue(data, type) {
-    return data.map(item => {
+    return data.filter(item => {
         if (item.data.defaultName && item.data.defaultName == type) {
-            return item.data.text;
+            return item
         }
     })
 }
@@ -382,28 +382,49 @@ module.exports.changeBookingStatus = async (req, res) => {
         }
         if (req.body.updateBookingCount) {
             booking.findById(req.body.booking).then((bookingData, result) => {
-                if (bookingData.status == "Booked") {
+                if (bookingData.status == "Booked" || bookingData.status == "Processing") {
                     bookingData.selectedServices.forEach(service => {
                         Item.findOne({ _id: mongoose.Types.ObjectId(service.service) }, function (error, doc) {
                             if (req.body.increment) {
-                                if (bookingData.isManual) {
-                                    doc.manuallyBooked = doc.manuallyBooked + 1;
+                                if (bookingData.status == "Booked") {
+                                    if (bookingData.isManual) {
+                                        doc.manuallyBooked = doc.manuallyBooked + service.quantity;
+                                    } else {
+                                        doc.booked = doc.booked + service.quantity;
+                                    }
+                                    let quantity = getValue(doc.data, 'quantity')
+                                    quantity = quantity.length > 0 ? parseInt(quantity[0].data.text) : 0
+                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
+                                        const name = getValue(doc.data, 'name')
+                                        return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name[0].data.text : 'Untitled Service'} has no more available item!` })
+                                    } else {
+                                        doc.save()
+                                    }
                                 } else {
-                                    doc.booked = doc.booked + 1;
-                                }
-                                let quantity = getValue(doc.data, 'quantity')
-                                quantity = quantity.length > 0 ? quantity[0] : 0
-                                if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
-                                    const name = getValue(doc.data, 'name')
-                                    return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name : 'Untitled Service'} has no more available item!` })
-                                } else {
-                                    doc.save()
+                                    if (!bookingData.isManual) {
+                                        doc.toBeBooked = doc.toBeBooked + service.quantity;
+                                    }
+
+                                    let quantity = getValue(doc.data, 'quantity')
+                                    quantity = quantity.length > 0 ? parseInt(quantity[0].data.text) : 0
+                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
+                                        const name = getValue(doc.data, 'name')
+                                        return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name[0].data.text : 'Untitled Service'} has no more available item!` })
+                                    } else {
+                                        doc.save()
+                                    }
                                 }
                             } else {
-                                if (bookingData.isManual) {
-                                    doc.manuallyBooked = doc.manuallyBooked - 1;
-                                } else {
-                                    doc.booked = doc.booked - 1;
+                                if (bookingData.status == "Booked") {
+                                    if (bookingData.isManual) {
+                                        doc.manuallyBooked = doc.manuallyBooked - service.quantity;
+                                    } else {
+                                        doc.booked = doc.booked - service.quantity;
+                                    }
+                                } else if (bookingData.status == "Processing") {
+                                    if (!bookingData.isManual) {
+                                        doc.toBeBooked = doc.toBeBooked - service.quantity
+                                    }
                                 }
                                 doc.save()
                             }
@@ -438,7 +459,7 @@ module.exports.searchTouristSpot = (req, res) => {
     Page.find({
         "components.data.text": { "$regex": req.body.pageName, "$options": "i" },
         "components.data.defaultName": "pageName",
-        "pageType": {$ne: "service_group"},
+        "pageType": { $ne: "service_group" },
         status: "Online", initialStatus: "Approved"
     }).then(pages => {
         res.status(200).json(pages)

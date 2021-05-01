@@ -638,7 +638,10 @@ module.exports.submitPage = async (req, res) => {
 module.exports.editServiceSettings = (req, res) => {
   Page.updateOne(
     { "_id": req.body.pageId, "services._id": req.body.serviceId },
-    { $set: { "services.$.required": req.body.required, "services.$.selectMultiple": req.body.selectMultiple } })
+    { $set: { "services.$.required": req.body.required,
+     "services.$.selectMultiple": req.body.selectMultiple,
+     "services.$.inputQuantity": req.body.inputQuantity
+     } })
     .then(result => {
       res.status(200).json(result);
     }).catch(error => {

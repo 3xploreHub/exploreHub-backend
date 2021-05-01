@@ -59,8 +59,8 @@ module.exports.pusher = (req, res) => {
 module.exports.getAllBookings = (req, res) => {
     booking.find({ status: req.params.bookingStatus })
         .populate({ path: "tourist", model: "Account", select: "fullName address contactNumber email" })
-        .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .populate({ path: "selectedServices.service", model: "Item" })
+        .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .sort({ 'updatedAt': 1 })
         .exec((error, bookings) => {
             if (error) {
@@ -69,43 +69,44 @@ module.exports.getAllBookings = (req, res) => {
             } else {
                 try {
 
-                    // start get booking Info
-                    let result = []; // initialize result
-                    if (bookings.length) {
-                        // format object algorithm
-                        bookings.forEach(bookingDetail => {
-                            let formattedObject = { ...bookingDetail._doc }; //deep copy
-                            let { bookingInfo } = formattedObject; //object destructuring
-                            if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
-                                //loop through booking info array
-                                let simplifiedDetail = bookingInfo.map((info) => {
-                                    //loop every object
-                                    let { inputLabel, value } = info._doc;
-                                    if (value && typeof value == 'object') {
-                                        let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
-                                        if (objectKeys.includes('month')) {
-                                            let { month, day, year } = value;
-                                            let date = `${month.text} ${day.text},${year.text}`
-                                            value = date;
-                                        }
-                                    }
-                                    return { label: inputLabel, value }
-                                });
-                                formattedObject.bookingInfo = simplifiedDetail;
-                            }
-                            let components = formatComponentArray(formattedObject.pageId._doc.components);
+                    // // start get booking Info
+                    // let result = []; // initialize result
+                    // if (bookings.length) {
+                    //     // format object algorithm
+                    //     bookings.forEach(bookingDetail => {
+                    //         let formattedObject = { ...bookingDetail._doc }; //deep copy
+                    //         let { bookingInfo } = formattedObject; //object destructuring
+                    //         if (bookingInfo && bookingInfo.length) { //bookingInfo != null , bookingInfo!=  && bookingInfo [*,*,*]
+                    //             //loop through booking info array
+                    //             let simplifiedDetail = bookingInfo.map((info) => {
+                    //                 //loop every object
+                    //                 let { inputLabel, value } = info._doc;
+                    //                 if (value && typeof value == 'object') {
+                    //                     let objectKeys = Object.keys(value) //Object.keys return all the keys of the object as a string array , not sure sa nested
+                    //                     if (objectKeys.includes('month')) {
+                    //                         let { month, day, year } = value;
+                    //                         let date = `${month.text} ${day.text},${year.text}`
+                    //                         value = date;
+                    //                     }
+                    //                 }
+                    //                 return { label: inputLabel, value }
+                    //             });
+                    //             formattedObject.bookingInfo = simplifiedDetail;
+                    //         }
+                    //         let components = formatComponentArray(formattedObject.pageId._doc.components);
 
-                            if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
-                            formattedObject.selectedServiceData = formattedObject.selectedServices
-                            formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
+                    //         if (components != undefined) formattedObject.pageId._doc.components = components; //get page Default vale
+                    //         formattedObject.selectedServiceData = formattedObject.selectedServices
+                    //         formattedObject.selectedServices = formatArray(formattedObject.selectedServices)
 
-                            result.push(formattedObject)
-                        });
-                    }
+                    //         result.push(formattedObject)
+                    //     });
+                    // }
 
-                    // res.status(200).json(bookings);
-                    res.status(200).json(result);
+                    res.status(200).json(bookings);
+                    // res.status(200).json(result);
                 } catch (error) {
+                    console.log(error)
                     res.status(500).json(error.message)
                 }
             }
