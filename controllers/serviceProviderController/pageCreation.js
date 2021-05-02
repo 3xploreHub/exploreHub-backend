@@ -41,7 +41,7 @@ module.exports.addServiceComponent = async (req, res) => {
         if (err) {
           return res.status(500).json({
             type: "internal_error",
-            error: err,
+            error: err.message,
           });
         }
         const itemList = new ComponentModel(req.body);
@@ -97,7 +97,7 @@ module.exports.addServiceChildComponent = async (req, res) => {
       },
       function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(validComponent);
       })
@@ -131,7 +131,7 @@ module.exports.addItemChildComponentImage = (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json(err)
+          return res.status(500).json(err.message)
         }
         res.status(200).json(newImage);
       })
@@ -163,7 +163,7 @@ module.exports.editChildComponent = async (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -185,7 +185,7 @@ module.exports.deleteChildComponent = (req, res) => {
         "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -199,7 +199,7 @@ module.exports.deleteItemChild = (req, res) => {
         }
       },function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         if (req.body.images) {
           req.body.images.forEach(image => {
@@ -234,7 +234,7 @@ module.exports.deleteItem = async (req, res) => {
         ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         console.log(images);
         images.forEach(image => {
@@ -265,7 +265,7 @@ module.exports.editServiceInfo = async (req, res) => {
         console.log("yehe: ", response)
         if (err) {
           console.log(err);
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -323,7 +323,7 @@ module.exports.getItemUpdatedData = async (req, res) => {
 module.exports.getUpdatedItemListData = (req, res) => {
   Item.find({serviceId: req.params.serviceId}).then((data, err) => {
     if (err) {
-      return res.status(500).json({ type: "internal_error", error: err })
+      return res.status(500).json({ type: "internal_error", error: err.message })
     }
     res.status(200).json(data);
   })
@@ -367,7 +367,7 @@ module.exports.deleteServiceComponent = async (req, res) => {
       $pull: { 'services': { '_id': req.params.serviceId } }
     }, function (err, result) {
       if (err) {
-        return res.status(500).json({ type: "internal_error", error: err });
+        return res.status(500).json({ type: "internal_error", error: err.message });
       }
       res.status(200).json(result);
     })
@@ -401,7 +401,7 @@ module.exports.deleteItemImage = (req, res) => {
       }, function (err, response) {
         if (err) {
           console.log(err)
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         helper.deletePhoto(req.body.imageUrl)
         res.status(200).json(response);
@@ -417,7 +417,8 @@ module.exports.createPage = async (req, res) => {
   const hostTouristSpot = req.params.pageType == 'service' ? req.body : null;
   const isService = req.params.pageType == 'service';
   const inputNameLabel = req.params.pageType == 'service' ? "Enter service name here" : "Enter tourist spot name here";
-  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType)
+  const initialStatus = req.params.pageType == "tourist_spot" ? "Approved": "Pending"
+  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType, initialStatus)
 }
 
 module.exports.getDefaultCategories = async (req, res) => {
@@ -432,7 +433,7 @@ module.exports.getDefaultCategories = async (req, res) => {
 }
 
 
-async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType) {
+async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType, initialStatus) {
   try {
 
 
@@ -464,7 +465,7 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
 
 
     const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
-    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, initialStatus: initialStatus, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
     item.pageId = page._id;
     serviceInfoDefault["pageId"] = page._id;
     await item.save()
@@ -474,7 +475,7 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
       Page.updateOne({_id: hostTouristSpot._id}, {$push: {otherServices: page._id}}).then((result, error) => {
         if (error) {
           console.log(error)
-          return res.status(500).json(error);
+          return res.status(500).json(error.message);
         }
       })
     }
@@ -483,14 +484,14 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
         return res.status(500).json({
           type: "internal_error",
           message: "Unexpected error occured!",
-          error: error
+          error: error.message
         })
       }
       res.status(200).json(createdPage)
     })
   } catch (error) {
     console.log(error)
-    res.status(500).json(error);
+    res.status(500).json(error.message);
   }
 }
 
@@ -528,7 +529,7 @@ module.exports.deletePage = async (req, res) => {
       }
     })
   } catch (error) {
-    res.status(500).json(error)
+    res.status(500).json(error.message)
   }
 }
 
@@ -536,12 +537,13 @@ module.exports.retrievePage = (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
   Page.findOne({ _id: req.params.pageId })
   .populate({ path: "services.data", model: "Item" })
+  .populate({ path: "hostTouristSpot", model: "Page" })
   .exec((error, page) => {
     if (error) {
       return res.status(500).json({
         type: "internal_error",
         message: "unexpected error occured!",
-        error: error
+        error: error.message
       });
     }
     if (!page) {
@@ -553,9 +555,9 @@ module.exports.retrievePage = (req, res) => {
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Page.find({ status: 'Online' }).then((pages, error) => {
+  Page.find({ status: 'Online', pageType: "tourist_spot"}).then((pages, error) => {
     if (error) {
-      return res.status(500).json(error);
+      return res.status(500).json(error.message);
     }
     res.status(200).json(pages)
   })
@@ -568,10 +570,32 @@ module.exports.submitPage = async (req, res) => {
       $set: {
         status: 'Pending',
       }
-    }, function (err, response) {
+    }, async function (err, response) {
       if (err) {
-        return res.status(500).json({ type: "internal error", error: err })
+        return res.status(500).json({ type: "internal error", error: err.message })
       }
-      res.status(200).json({ message: "Page successfully submitted" });
+      try {
+        console.log("notificationDAta: ",req.body.notificationData);
+        if (req.body.notificationData) {
+          await helper.createNotification(req.body.notificationData)
+        }
+         res.status(200).json({ message: "Page successfully submitted" });
+ 
+      } catch(error) {
+        console.log(error)
+        return res.status(500).json(error.message)
+      }
+    })
+}
+
+
+module.exports.editServiceSettings = (req, res) => {
+  Page.updateOne(
+    { "_id": req.body.pageId, "services._id": req.body.serviceId },
+    { $set: { "services.$.required": req.body.required, "services.$.selectMultiple": req.body.selectMultiple} })
+    .then(result => {
+      res.status(200).json(result);
+    }).catch(error => {
+      res.status(500).json({ type: 'internal_error!', error: error.message });
     })
 }

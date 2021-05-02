@@ -10,14 +10,41 @@ const { service } = require("../../models/service");
 const helper = require("./helper");
 const notificationGroup = require("../../models/notificationGroup");
 const adminAccount = require("../../models/adminSchemas/adminAccount");
-
+const touristSpotCategory = require("../../models/touristSpotCategory");
 
 module.exports.getOnlinePages = async (req, res) => {
-    Page.aggregate([{ $match: { status: { $eq: 'Online' } } },
+    const condition = req.params.category != "all" ? {
+        $or: [
+            {
+                status: 'Online', pageType: "tourist_spot",
+                initialStatus: 'Approved',
+                "components.data.text": req.params.category
+            },
+            {
+                status: 'Not Operating',
+                initialStatus: 'Approved',
+                "components.data.text": req.params.category
+            }
+        ]
+    } : {
+        $or: [
+            {
+                status: 'Online', pageType: "tourist_spot",
+                initialStatus: 'Approved',
+            },
+            {
+                status: 'Not Operating',
+                initialStatus: 'Approved',
+            }
+        ]
+    }
+    Page.aggregate([{
+        $match: condition
+    },
     { $lookup: { from: 'accounts', localField: 'creator', foreignField: '_id', as: 'pageCreator' } }
     ]).exec(function (err, pages) {
         if (err) {
-            res.status(500).json(err);
+            res.status(500).json(err.message);
         }
         res.status(200).json(pages)
     })
@@ -26,13 +53,14 @@ module.exports.getOnlinePages = async (req, res) => {
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
-        .populate({ path: "otherServices", model: "Page" })
+        .populate({ path: "otherServices", model: "Page", match: { status: "Online", initialStatus: "Approved" } })
+        .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {
             if (error) {
                 return res.status(500).json({
                     type: "internal_error",
                     message: "unexpected error occured!",
-                    error: error
+                    error: error.message
                 });
             }
             if (!page) {
@@ -48,7 +76,7 @@ module.exports.viewAllServices = async (req, res) => {
         res.status(200).json(otherServices);
     }
     catch (error) {
-        res.status(500).json(500);
+        res.status(500).json(error.message);
     }
 }
 
@@ -91,13 +119,12 @@ module.exports.createBooking = async (req, res) => {
 
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
 module.exports.getBooking = async (req, res) => {
     try {
-        console.log("booking:Id: ", req.params.bookingId);
         booking.findOne({ _id: req.params.bookingId })
             .populate({ path: "selectedServices.service", model: "Item" })
             .populate({ path: "pageId", model: "Page" })
@@ -105,7 +132,7 @@ module.exports.getBooking = async (req, res) => {
             .exec((error, bookingData) => {
                 if (error) {
                     console.log(error);
-                    return res.status(500).json(error);
+                    return res.status(500).json(error.message);
                 }
 
                 const result = { bookingData: bookingData };
@@ -113,7 +140,7 @@ module.exports.getBooking = async (req, res) => {
                     Page.findOne({ _id: bookingData.pageId }, { services: 1, _id: 0 })
                         .populate({ path: "services.data", model: "Item" }).exec((error, page) => {
                             if (error) {
-                                return res.status(500).json(error)
+                                return res.status(500).json(error.message)
                             }
                             result["services"] = page.services
                             return res.status(200).json(result);
@@ -126,7 +153,7 @@ module.exports.getBooking = async (req, res) => {
     }
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
@@ -151,19 +178,26 @@ module.exports.addBookingInfo = (req, res) => {
 
 module.exports.getPageBookingInfo = async (req, res) => {
     try {
-        // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-        const page = await Page.findOne({ _id: req.params.pageId }, { bookingInfo: 1 });
-        const bookingData = await booking.findOne({ _id: req.params.bookingId });
-        res.status(200).json({ bookingInfo: page.bookingInfo, booking: bookingData })
+        const bookingData = await booking.findOne({ _id: req.params.bookingId })
+            .populate({ path: "pageId" })
+            .exec((error, booking) => {
+                if (error) {
+                    return res.status(500).json(error.message)
+                }
+                res.status(200).json({ bookingInfo: booking.pageId.bookingInfo, booking: booking })
+            })
     }
     catch (error) {
         console.log(error);
-        res.status(500).json(error);
+        res.status(500).json(error.message);
     }
 }
 
 module.exports.submitBooking = async (req, res) => {
     try {
+        const adminAcc = await adminAccount.find({})
+        const admin = adminAcc.length > 0 ? adminAcc[0] : { _id: "605839a8268f4b69047e4bb1" }
+        console.log(admin)
         if (req.body.isManual) {
             if (req.body.selectedServices) {
                 req.body.selectedServices.forEach(service => {
@@ -176,14 +210,22 @@ module.exports.submitBooking = async (req, res) => {
                     }).then(result => {
                         console.log("updated item ", service)
                     }).catch(error => {
-                        return res.status(500).json(error)
+                        return res.status(500).json(error.message)
                     })
                 })
             }
         } else {
             const message = req.body.resubmitted ? `${req.user.fullName} resubmitted his booking` : `${req.user.fullName} submitted a booking`
-            const notification = await helper.createNotification({
+            await helper.createNotification({
                 receiver: req.body.receiver,
+                mainReceiver: req.user._id,
+                page: req.body.page,
+                booking: req.body.booking,
+                type: req.body.type,
+                message: message
+            })
+            await helper.createNotification({
+                receiver: admin._id,
                 mainReceiver: req.user._id,
                 page: req.body.page,
                 booking: req.body.booking,
@@ -199,7 +241,7 @@ module.exports.submitBooking = async (req, res) => {
                 }
             }).then((result, error) => {
                 if (error) {
-                    return res.status(500).json(error);
+                    return res.status(500).json(error.message);
                 }
                 res.status(200).json(result);
             })
@@ -221,7 +263,7 @@ module.exports.getBookings = (req, res) => {
     ]).exec((error, bookings) => {
         if (error) {
             console.log(error)
-            return res.status(500).json(error);
+            return res.status(500).json(error.message);
         }
         res.status(200).json(bookings);
     })
@@ -236,7 +278,7 @@ module.exports.viewBooking = (req, res) => {
         .populate({ path: "tourist", model: "Account", select: "firstName lastName email contactNumber address fullName" })
         .exec((error, bookings) => {
             if (error) {
-                return res.status(500).json(error);
+                return res.status(500).json(error.message);
             }
             res.status(200).json(bookings);
         })
@@ -248,12 +290,13 @@ module.exports.deleteBooking = (req, res) => {
         res.status(200).json(result);
     }).catch(error => {
         console.log(error);
-        return res.status(500).json(error);
+        return res.status(500).json(error.message);
     })
 }
 
 
 module.exports.getNotifications = (req, res) => {
+    // const condition = req.user.username ? {} : { receiver: req.user._id }
     notificationGroup.find({ receiver: req.user._id })
         .populate({ path: 'notifications', model: 'Notification' })
         .populate({ path: 'page', model: 'Page' })
@@ -261,7 +304,7 @@ module.exports.getNotifications = (req, res) => {
         .populate({ path: 'booking', model: 'Booking' })
         .sort({ 'updatedAt': -1 })
         .exec(async (error, result) => {
-            if (error) return res.status(500).json(error)
+            if (error) return res.status(500).json(error.message)
             try {
 
                 res.status(200).json(result);
@@ -273,14 +316,13 @@ module.exports.getNotifications = (req, res) => {
 }
 
 module.exports.viewNotification = (req, res) => {
-    notification.updateOne({
-        _id: req.params.notificationId
-    }, {
+    const field = req.body.isMessage ? { _id: req.body.notifId } : { notificationGroup: mongoose.Types.ObjectId(req.body.notifId), isMessage: false }
+    notification.updateMany(field, {
         $set: {
             opened: true
         }
     }, function (err, result) {
-        if (err) return res.status(500).json(err)
+        if (err) return res.status(500).json(err.message)
         res.status(200).json(result)
     })
 }
@@ -296,7 +338,7 @@ module.exports.removeSelectedItem = (req, res) => {
             }
         }, function (err, response) {
             if (err) {
-                return res.status(500).json({ type: "internal error", error: err })
+                return res.status(500).json({ type: "internal error", error: err.message })
             }
             res.status(200).json(response);
         })
@@ -312,6 +354,9 @@ function getValue(data, type) {
 
 module.exports.changeBookingStatus = async (req, res) => {
     try {
+        const adminAcc = await adminAccount.find({})
+        const admin = adminAcc.length > 0 ? adminAcc[0] : { _id: "605839a8268f4b69047e4bb1" }
+        console.log(admin)
         let notif = {
             receiver: req.body.receiver,
             mainReceiver: req.body.mainReceiver,
@@ -319,9 +364,18 @@ module.exports.changeBookingStatus = async (req, res) => {
             booking: req.body.booking,
             type: req.body.type,
         }
-        if (req.body.type == "page-booking") {
-            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking to your service`
-        } else if (req.body.type == "booking") {
+        let notifForAdmin = {
+            receiver: admin._id,
+            mainReceiver: req.body.mainReceiver,
+            page: req.body.page,
+            booking: req.body.booking,
+            type: "booking-admin",
+            message: req.body.messageForAdmin
+        }
+        if (req.body.type == "booking-provider") {
+            notif["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking`
+            notifForAdmin["message"] = `${req.user.fullName} cancelled ${req.user.gender == 'Male' ? 'his' : 'her'} booking`
+        } else if (req.body.type == "booking-tourist") {
             notif["message"] = req.body.message
         }
         if (req.body.updateBookingCount) {
@@ -357,6 +411,7 @@ module.exports.changeBookingStatus = async (req, res) => {
             })
         }
         await helper.createNotification(notif)
+        await helper.createNotification(notifForAdmin)
         booking.updateOne(
             {
                 _id: req.body.booking
@@ -367,13 +422,32 @@ module.exports.changeBookingStatus = async (req, res) => {
                 }
             }, function (err, response) {
                 if (err) {
-                    return res.status(500).json({ type: "internal error", error: err })
+                    return res.status(500).json({ type: "internal error", error: err.message })
                 }
                 res.status(200).json(response);
             })
     } catch (error) {
         console.log(error);
-        res.status(500).json(error)
+        res.status(500).json(error.message)
     }
 }
 
+module.exports.searchTouristSpot = (req, res) => {
+    Page.find({
+        "components.data.text": { "$regex": req.body.pageName, "$options": "i" },
+        "components.data.defaultName": "pageName",
+        status: "Online", initialStatus: "Approved"
+    }).then(pages => {
+        res.status(200).json(pages)
+    }).catch(error => {
+        res.status(500).json(error.message)
+    })
+}
+
+module.exports.getAllCategories = (req, res) => {
+    touristSpotCategory.find({}).then(categories => {
+        res.status(200).json({ categories: categories })
+    }).catch(error => {
+        res.status(500).json(error.status)
+    })
+}
