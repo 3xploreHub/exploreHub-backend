@@ -236,16 +236,43 @@ module.exports.submitBooking = async (req, res) => {
             })
         }
         const status = req.body.isManual ? "Booked" : "Pending"
-        booking.updateOne({ _id: req.params.bookingId },
+        booking.findOneAndUpdate({ _id: req.params.bookingId },
             {
                 $set: {
                     status: status
                 }
-            }).then((result, error) => {
+            }).then((booking, error) => {
                 if (error) {
                     return res.status(500).json(error.message);
                 }
-                res.status(200).json(result);
+                if (!req.body.isManual) {
+                    booking.selectedServices.forEach(service => {
+                        Item.findOne({ _id: mongoose.Types.ObjectId(service.service) }, function (error, doc) {
+
+                            doc.pending = doc.pending + service.quantity;
+
+                            let quantity = getValue(doc.data, 'quantity')
+                            quantity = quantity.length > 0 ? parseInt(quantity[0].data.text) : 0
+                            if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked + doc.pending)) {
+                                const name = getValue(doc.data, 'name')
+                                console.log(quantity, (doc.manuallyBooked + doc.booked + doc.toBeBooked + doc.pending))
+                                return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name[0].data.text : 'Untitled Service'} has no more available item!` })
+                            } else {
+                                doc.save()
+                            }
+
+                            if (service._id == booking.selectedServices[booking.selectedServices.length - 1]._id) {
+                                res.status(200).json(booking)
+                            }
+                        })
+                    })
+                }
+                else {
+
+                    res.status(200).json(booking)
+                }
+
+
             })
     } catch (error) {
         console.log(error)
@@ -382,7 +409,7 @@ module.exports.changeBookingStatus = async (req, res) => {
         }
         if (req.body.updateBookingCount) {
             booking.findById(req.body.booking).then((bookingData, result) => {
-                if (bookingData.status == "Booked" || bookingData.status == "Processing") {
+                if (bookingData.status == "Booked" || bookingData.status == "Processing" || bookingData.status == "Pending") {
                     bookingData.selectedServices.forEach(service => {
                         Item.findOne({ _id: mongoose.Types.ObjectId(service.service) }, function (error, doc) {
                             if (req.body.increment) {
@@ -394,7 +421,7 @@ module.exports.changeBookingStatus = async (req, res) => {
                                     }
                                     let quantity = getValue(doc.data, 'quantity')
                                     quantity = quantity.length > 0 ? parseInt(quantity[0].data.text) : 0
-                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
+                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked + doc.pending)) {
                                         const name = getValue(doc.data, 'name')
                                         return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name[0].data.text : 'Untitled Service'} has no more available item!` })
                                     } else {
@@ -407,7 +434,7 @@ module.exports.changeBookingStatus = async (req, res) => {
 
                                     let quantity = getValue(doc.data, 'quantity')
                                     quantity = quantity.length > 0 ? parseInt(quantity[0].data.text) : 0
-                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked)) {
+                                    if (quantity < (doc.manuallyBooked + doc.booked + doc.toBeBooked + doc.pending)) {
                                         const name = getValue(doc.data, 'name')
                                         return res.status(400).json({ type: 'item_availability_issue', message: `${name.length > 0 ? name[0].data.text : 'Untitled Service'} has no more available item!` })
                                     } else {
@@ -422,9 +449,9 @@ module.exports.changeBookingStatus = async (req, res) => {
                                         doc.booked = doc.booked - service.quantity;
                                     }
                                 } else if (bookingData.status == "Processing") {
-                                    if (!bookingData.isManual) {
-                                        doc.toBeBooked = doc.toBeBooked - service.quantity
-                                    }
+                                    doc.toBeBooked = doc.toBeBooked - service.quantity
+                                } else if (bookingData.status == "Pending") {
+                                    doc.pending = doc.pending - service.quantity
                                 }
                                 doc.save()
                             }
