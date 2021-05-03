@@ -24,6 +24,6 @@ module.exports = (req, res, next) => {
     }
   } catch (err) {
     console.error("error in checking authorization: ", err);
-    res.status(500).json({ message: "error occured", error: err });
+    res.status(500).json({ message: "error occured", error: err.message });
   }
 };

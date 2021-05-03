@@ -6,6 +6,7 @@ const touristSpotCategories = require("../../controllers/serviceProviderControll
 const uploadImage = require("../../middlewares/uploadImage");
 const serviceProvider = require("../../controllers/serviceProviderController/serviceProvider");
 const tourist = require("../../controllers/serviceProviderController/tourist");
+const { service } = require("../../models/service");
 
 router.post("/addDefaultCategories", touristSpotCategories.addDefaultCategories);
 
@@ -31,21 +32,32 @@ router.put("/editServiceInfo/:pageId/:serviceId/:infoId/:pageType", pageCreation
 router.post("/saveInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.saveInputField)
 router.put("/editInputField/:pageId/:grandParentId/:parentId/:pageType", pageCreation.editInputField)
 router.delete("/deletePage/:pageId/:pageType", pageCreation.deletePage)
+router.post("/editServiceSettings", pageCreation.editServiceSettings)
 
 router.get("/retrieveAllTouristSpotsPage", pageCreation.retrieveAllTouristSpotsPage)
 router.post("/createPage/:pageType", pageCreation.createPage)
 router.get("/retrievePage/:pageId/:pageType", pageCreation.retrievePage)
 router.post("/submitPage/:pageId/:pageType", pageCreation.submitPage)
 router.get("/getPages/:status", serviceProvider.getPages);
-router.get("/getPage/:pageId/:pageType", serviceProvider.getPage)
+router.get("/getPage/:pageId", serviceProvider.getPage)
 router.get("/getServices/:pageId/:pageType", serviceProvider.getServices)
 router.get("/getPageBooking/:bookingStatus/:pageId", serviceProvider.getPageBooking)
 router.get("/getNotificationsCount", serviceProvider.getNotificationsCount)
 router.post("/createConversation", serviceProvider.createConversation)
 router.get("/getConversation/:bookingId/:pageId/:receiver", serviceProvider.getConversation)
 router.post("/sendMessage", serviceProvider.sendMessage)
+router.post("/changePageStatus", serviceProvider.changePageStatus)
+router.get("/getHostedPages/:pageId", serviceProvider.getHostedPages)
+router.post("/changeInitialStatus", serviceProvider.changeInitialStatus)
+router.get("/getPageConversation/:conversationId", serviceProvider.getPageConversation)
+router.get("/getConvoForPageSubmission/:pageId/:type", serviceProvider.getConvoForPageSubmission)
+router.post("/createConvoForPageSubmission", serviceProvider.createConvoForPageSubmission)
+router.get("/getAllConversations/:pageId", serviceProvider.getAllConversations)
+router.post("/openConvo", serviceProvider.openConvo)
+router.post("/deleteConfirmedPage/:pageId/:pageType", pageCreation.deletePage)
+router.get("/getPageActiveBookings/:pageId", serviceProvider.getPageActiveBookings)
 
-router.get("/getOnlinePages/", tourist.getOnlinePages)
+router.get("/getOnlinePages/:category", tourist.getOnlinePages)
 router.get("/viewPage/:pageId/:pageType", tourist.viewPage)
 router.get("/viewItems/:pageId/:serviceId/:pageType", tourist.viewItems)
 router.get("/viewAllServices/:pageId", tourist.viewAllServices)
@@ -59,8 +71,10 @@ router.get("/getBookings/:bookingStatus", tourist.getBookings)
 router.get("/viewBooking/:bookingId", tourist.viewBooking)
 router.delete("/deleteBooking/:bookingId", tourist.deleteBooking)
 router.get("/getNotifications", tourist.getNotifications)
-router.put("/viewNotification/:notificationId", tourist.viewNotification)
+router.put("/viewNotification", tourist.viewNotification)
 router.put("/removeSelectedItem/:bookingId/:selectedId", tourist.removeSelectedItem)
 router.post("/changeBookingStatus/:status", tourist.changeBookingStatus)
-// router.delete("/deleteTouristSpot/:id", touristSpotCrud.deleteTouristSpot);
+router.post("/searchTouristSpot", tourist.searchTouristSpot)
+router.get("/getAllCategories", tourist.getAllCategories)
+
 module.exports = router;
