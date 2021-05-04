@@ -12,6 +12,7 @@ const touristSpotCategory = require('../../models/touristSpotCategory');
 const { addTouristSpotCategory } = require('../serviceProviderController/touristSpotCategories');
 const serviceCategory = require('../../models/serviceCategory');
 const { addServiceCategory } = require('../serviceProviderController/serviceCategories');
+const page = require('../../models/page');
 const MY_SECRET = process.env.MY_SECRET;
 function createToken(user) {
     return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
@@ -296,3 +297,24 @@ module.exports.setPageStatus = async (req, res) => {
         res.status(500).json(error.message)
     }
 }
+
+module.exports.getPendingBookingsCount = (req, res) => {
+    booking.countDocuments({
+        'status': 'Pending',
+    }, function (err, docs) {
+        if (err) return res.status(500).json(err.message)
+        res.status(200).json(docs)
+    });
+}
+
+
+module.exports.getPendingPagesCount = (req, res) => {
+    page.countDocuments({
+        'status': 'Pending',
+        'initialStatus': 'Approved',
+    }, function (err, docs) {
+        if (err) return res.status(500).json(err.message)
+        res.status(200).json(docs)
+    });
+}
+

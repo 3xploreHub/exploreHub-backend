@@ -13,6 +13,8 @@ router.get('/getAllPendingNotifications/:pageStatus', admin.getAllPendingNotific
 // router.get("/getPendingBookings/:bookingId", admin.getPendingBookings)
 router.post("/setPageStatus", checkIfAuthorized, admin.setPageStatus)
 router.post("/setBookingStatus", checkIfAuthorized,  admin.setBookingStatus)
+router.get("/getPendingBookingsCount",  admin.getPendingBookingsCount)
+router.get("/getPendingPagesCount",  admin.getPendingPagesCount)
 
 
 // router.get("/getOnlinePage/:pageId", admin.getOnlinePage)
