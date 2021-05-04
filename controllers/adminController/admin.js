@@ -318,3 +318,12 @@ module.exports.getPendingPagesCount = (req, res) => {
     });
 }
 
+module.exports.getNotificationCount = (req, res) => {
+    notification.countDocuments({
+        'opened': false,
+        receiver: mongoose.Types.ObjectId(req.user._id)
+    }, function (err, docs) {
+        if (err) return res.status(500).json(err.message)
+        res.status(200).json(docs)
+    })
+}
