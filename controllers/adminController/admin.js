@@ -59,7 +59,7 @@ module.exports.pusher = (req, res) => {
 
 module.exports.getAllBookings = (req, res) => {
     booking.find({ status: req.params.bookingStatus })
-        .populate({ path: "tourist", model: "Account", select: "fullName address contactNumber email" })
+        .populate({ path: "tourist", model: "Account", select: "fullName address contactNumber email profile" })
         .populate({ path: "selectedServices.service", model: "Item" })
         .populate({ path: "pageId", populate: { path: "creator", model: "Account" } })
         .sort({ 'updatedAt': 1 })
@@ -121,7 +121,7 @@ module.exports.getAllPendingNotifications = (req, res) => {
     }
     Page.find(cond)
         .populate({ path: "hostTouristSpot", model: "Page" })
-        .populate({ path: "creator", model: "Account", select: "fullName" })
+        .populate({ path: "creator", model: "Account", select: "fullName profile" })
         .populate({ path: "services.data", model: "Item" })
         .exec((err, pages) => {
 
@@ -174,7 +174,7 @@ module.exports.setBookingStatus = async (req, res) => {
         })
     }
     booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
-        .populate({ path: "tourist", model: "Account", select: "firstName lastName address" })
+        .populate({ path: "tourist", model: "Account", select: "firstName lastName address profile" })
         .exec(async (err, data) => {
             if (err) {
                 console.log(err)
@@ -216,7 +216,7 @@ module.exports.setBookingStatus = async (req, res) => {
                 })
 
                 booking.findOne({ _id: req.body.bookingId })
-                    .populate({ path: "tourist", model: "Account", select: "firstName lastName" })
+                    .populate({ path: "tourist", model: "Account", select: "firstName lastName profile" })
                     .populate({ path: "pageId", model: "Page" })
                     .populate({ path: "selectedServices.service", model: "Item" })
                     .exec((error, bookingData) => {

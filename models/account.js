@@ -37,6 +37,7 @@ const Accountchema = new Schema(
     fullName: { type: String, required: false, trim: true },
     gender: { type: String, required: false },
     age: { type: Number, required: false },
+    profile:{type: String, required: false}
   },
   { timestamps: true }
 );

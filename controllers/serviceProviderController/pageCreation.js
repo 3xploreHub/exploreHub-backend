@@ -543,7 +543,7 @@ module.exports.deletePage = async (req, res) => {
             deleteImage(img[img.length - 1]);
           })
 
-          if (req.body.otherServices.length > 0) {
+          if (req.body.otherServices && req.body.otherServices.length > 0) {
             let address = page.components.map(com => {
               const dName = com.data.defaultName
               if (dName == "barangay" || dName == "municipality" || dName == "province") {
