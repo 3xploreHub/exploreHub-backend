@@ -419,8 +419,8 @@ module.exports.createPage = async (req, res) => {
   const hostTouristSpot = req.params.pageType == 'service' ? req.body : null;
   const isService = req.params.pageType == 'service';
   const inputNameLabel = req.params.pageType == 'service' ? "Enter service name here" : "Enter tourist spot name here";
-  const initialStatus = req.params.pageType == "tourist_spot" ? "Approved" : "Pending"
-  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType, initialStatus)
+  // const initialStatus = req.params.pageType == "tourist_spot" ? "Approved" : "Pending"
+  makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType)
 }
 
 module.exports.getDefaultCategories = async (req, res) => {
@@ -435,9 +435,8 @@ module.exports.getDefaultCategories = async (req, res) => {
 }
 
 
-async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType, initialStatus) {
+async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType) {
   try {
-
 
     //default components for services and offers
     let defaultService = new serviceModel({ type: "item-list", data: [], styles: [], default: false })
@@ -467,7 +466,7 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
 
 
     const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
-    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, initialStatus: initialStatus, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, initialStatus: "Approved", services: defaultService, bookingInfo: [arrival, departure, adults, children] });
     item.pageId = page._id;
     serviceInfoDefault["pageId"] = page._id;
     await item.save()
@@ -559,7 +558,7 @@ module.exports.deletePage = async (req, res) => {
             const location = new ComponentModel({type: "text", data: {text: address.join(", "), defaultName:"location"}})
             const defaultComponents = [pageName, location];
             const services = req.body.otherServices.map(service => service._id)
-            const serviceGroup = new Page({ creator: req.user._id, pageType: "service_group", otherServices: services, components: defaultComponents, status:"Online",initialStatus: "Approved", services: [], bookingInfo: [] });
+            const serviceGroup = new Page({ creator: req.user._id, pageType: "service_group", otherServices: services, components: defaultComponents, status:"Online" ,initialStatus: "Approved", services: [], bookingInfo: [] });
             serviceGroup.save().then((result, error) => {
               if (error) {
                 console.log(error)

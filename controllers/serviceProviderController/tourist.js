@@ -17,12 +17,10 @@ module.exports.getOnlinePages = async (req, res) => {
         $or: [
             {
                 status: 'Online', pageType: { $ne: "service" },
-                initialStatus: 'Approved',
                 "components.data.text": { "$regex": req.params.category, "$options": "i" }
             },
             {
                 status: 'Not Operating',
-                initialStatus: 'Approved',
                 "components.data.text": { "$regex": req.params.category, "$options": "i" }
             }
         ]
@@ -30,11 +28,9 @@ module.exports.getOnlinePages = async (req, res) => {
         $or: [
             {
                 status: 'Online', pageType: { $ne: "service" },
-                initialStatus: 'Approved',
             },
             {
                 status: 'Not Operating',
-                initialStatus: 'Approved',
             }
         ]
     }
@@ -55,7 +51,7 @@ module.exports.getOnlinePages = async (req, res) => {
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
-        .populate({ path: "otherServices", model: "Page", match: { status: "Online", initialStatus: "Approved" } })
+        .populate({ path: "otherServices", model: "Page", match: { status: "Online" } })
         .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {
             if (error) {
@@ -491,7 +487,7 @@ module.exports.searchTouristSpot = (req, res) => {
         "components.data.text": { "$regex": req.body.pageName, "$options": "i" },
         "components.data.defaultName": "pageName",
         "pageType": { $ne: "service_group" },
-        status: "Online", initialStatus: "Approved"
+        status: "Online"
     }).then(pages => {
         res.status(200).json(pages)
     }).catch(error => {

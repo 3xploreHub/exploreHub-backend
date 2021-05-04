@@ -115,9 +115,9 @@ module.exports.getAllBookings = (req, res) => {
 }
 
 module.exports.getAllPendingNotifications = (req, res) => {
-    let cond = { $or: [{ status: "Pending", initialStatus: "Approved" }, { status: "Processing", initialStatus: "Approved" }] }
+    let cond = { $or: [{ status: "Pending" }, { status: "Processing" }] }
     if (req.params.pageStatus == "Online") {
-        cond = { $or: [{ status: req.params.pageStatus, initialStatus: "Approved" }, { status: "Not Operating", initialStatus: "Approved" }] }
+        cond = { $or: [{ status: req.params.pageStatus }, { status: "Not Operating" }] }
     }
     Page.find(cond)
         .populate({ path: "hostTouristSpot", model: "Page" })
