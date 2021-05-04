@@ -27,6 +27,14 @@ const Accountchema = new Schema(
       }
       return name.toUpperCase()
     }},
+
+    middleName: { type: String, required: false, trim: true, set: name => {
+      if (name.length > 1) {
+        return name[0].toUpperCase()+name.substring(1)
+      }
+      return name.toUpperCase()
+    }},
+    
     lastName: { type: String, required: false,  trim: true, set: name => {
       if (name.length > 1) {
         return name[0].toUpperCase()+name.substring(1)
@@ -37,6 +45,8 @@ const Accountchema = new Schema(
     fullName: { type: String, required: false, trim: true },
     gender: { type: String, required: false },
     age: { type: Number, required: false },
+    birthday: { type: String, required: false},
+    profile: { type: String, required: false}
   },
   { timestamps: true }
 );
@@ -47,6 +57,7 @@ Accountchema.statics.login = async function (credential) {
 
 Accountchema.statics.findById = async function (id) {
   return await this.findOne({ _id: id });
+
 };
 
 Accountchema.statics.checkContactNumber = async function (value) {
@@ -60,7 +71,8 @@ Accountchema.statics.checkEmail = async function (value) {
 Accountchema.statics.getUserInfo = async function (id) {
   return this.findOne(
     { _id: id },
-    "accountType fullName email contactNumber age gender address",
+    // "accountType fullName email contactNumber age gender address",
+    "accountType fullName firstName lastName middleName email contactNumber age gender address birthday password profile",
     function (err, accountInfo) {
       if (err) {
         return err;
@@ -69,6 +81,18 @@ Accountchema.statics.getUserInfo = async function (id) {
     }
   );
 };
+
+Accountchema.statics.updateUserInfo = async function (id, data) {
+  return await this.findByIdAndUpdate(
+    id, 
+    data,
+    { upsert: true },
+    function (err, doc) {
+      if(err) return err;
+      return doc;
+    }
+  )
+}
 
 Accountchema.statics.changePassword = async function (id, password) {
   return await this.findByIdAndUpdate(
@@ -97,5 +121,17 @@ Accountchema.statics.generateJwt = function (user, type) {
     MY_SECRET
   );
 };
+
+Accountchema.statics.addProfile = function (id, profile) {
+  return this.findByIdAndUpdate(
+    id,
+    { $set: { profile: profile } },
+    { upsert: true },
+    function (err, doc) {
+      if (err) return err;
+      return doc;
+    }
+  );
+}
 
 module.exports = mongoose.model("Account", Accountchema);
