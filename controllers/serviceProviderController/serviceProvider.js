@@ -10,7 +10,7 @@ const helper = require("./helper");
 module.exports.getPages = async (req, res) => {
 
     try {
-        let cond = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, pageType: {$ne: "service_group"}, status: { $eq: 'Unfinished' } }
+        let cond = { creator: { $eq: mongoose.Types.ObjectId(req.user._id) }, pageType: { $ne: "service_group" }, status: { $eq: 'Unfinished' } }
         if (req.params.status == "submitted") cond.status = { $ne: 'Unfinished' }
         const services = await Page.aggregate([{ $match: cond }]);
         res.status(200).json(services)
@@ -20,7 +20,7 @@ module.exports.getPages = async (req, res) => {
 }
 
 module.exports.getPage = async (req, res) => {
-    Page.findOne({_id: req.params.pageId}).populate({path: "otherServices", model: "Page"}).exec((error, page) => {
+    Page.findOne({ _id: req.params.pageId }).populate({ path: "otherServices", model: "Page" }).exec((error, page) => {
         if (error) {
             return res.status(500).json(error.message)
         }
@@ -104,6 +104,7 @@ module.exports.getConversation = async (req, res) => {
     }
 }
 
+
 module.exports.sendMessage = (req, res) => {
     const fullName = req.user && req.user.username && !req.user.fullName ? "Admin" : req.user.fullName
     const message = new messageModel({ sender: req.user._id, senderFullName: fullName, message: req.body.message })
@@ -117,6 +118,31 @@ module.exports.sendMessage = (req, res) => {
         async function (err, response) {
             if (err) {
                 return res.status(500).json({ type: "internal error", error: err.message })
+            }
+
+            if (req.body.notificationData.booking) {
+                booking.findById(req.body.notificationData.booking).then((doc, error) => {
+                    if (doc.status == "Pending" && req.body.forAdmin && doc.messaged) {
+                        booking.updateOne({ _id: mongoose.Types.ObjectId(req.body.notificationData.booking) }, { $set: { messaged: false, timeLeft: 0 } }, function (error, result) {
+                            if (error) return res.status(500).json(error.message)
+                        })
+                    }
+
+                    if (req.body.fromAdmin) {
+                        if (doc.timeLeft) {
+                            const currentTime = new Date();
+                            const remainingTime = doc.timeLeft - currentTime;
+                            let settings = { messaged: true }
+
+                            if (doc.status == "Pending" && doc.timeLeft && remainingTime <= 0) {
+                                settings["timeLeft"] = currentTime.setMinutes(currentTime.getMinutes() + 10);
+                            }
+                            booking.findByIdAndUpdate(req.body.notificationData.booking, { $set: settings }, function (error, result) {
+                                if (error) return res.status(500).json(error.message)
+                            })
+                        }
+                    }
+                })
             }
 
 
@@ -140,7 +166,7 @@ module.exports.changePageStatus = (req, res) => {
         $set: {
             status: req.body.status
         }
-    }, function (error, response) {
+    }, function (error, response) { 
         if (error) {
             return res.status(500).json(error.message)
         }

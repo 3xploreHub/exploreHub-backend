@@ -12,9 +12,10 @@ const booking = new Schema(
         bookingInfo: [inputValue],
         selectedServices: [selectedService],
         bookingType: { type: String, required: true },
-        isManual: {type: Boolean, require: false, default: false},
-        timeLeft:{ type: Date, required: false },
-        status: { type: String, enum: ['Pending','Cancelled', 'Booked', "Closed", 'Rejected', 'Unfinished'], required: false, default: 'Unfinished' }
+        isManual: { type: Boolean, require: false, default: false },
+        timeLeft: { type: Date, required: false },
+        messaged: { type: Boolean, required: false, defualt: false },
+        status: { type: String, enum: ['Pending', 'Cancelled', 'Booked', "Closed", 'Rejected', 'Unfinished'], required: false, default: 'Unfinished' }
     },
     { timestamps: true }
 );

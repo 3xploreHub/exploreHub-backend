@@ -103,12 +103,12 @@ module.exports.getAllBookings = (req, res) => {
                     //         result.push(formattedObject)
                     //     });
                     // }
- 
+
                     bookings = bookings.map(booking => {
-                        if(booking._doc.status == "Processing") {
+                        if (booking._doc.status == "Processing" || booking._doc.messaged) {
                             const currentTime = new Date();
                             const remainingTime = booking._doc.timeLeft - currentTime;
-                            
+
                             if (remainingTime > 0) {
                                 const timeLeft = (remainingTime / 1000).toFixed()
                                 booking._doc.timeLeft = timeLeft;
@@ -173,7 +173,6 @@ module.exports.getAllPendingNotifications = (req, res) => {
 
 module.exports.setBookingStatus = async (req, res) => {
 
-
     if (req.body.servicesToUpdate) {
         req.body.servicesToUpdate.forEach(service => {
             Item.updateOne({
@@ -188,12 +187,13 @@ module.exports.setBookingStatus = async (req, res) => {
             })
         })
     }
-    let timeLeft = 0;
+    let settings = { status: req.body.status, timeLeft: 0 }
     if (req.body.status == "Processing") {
         const date = new Date();
-        timeLeft = date.setMinutes(date.getMinutes() + 20);
+        settings.timeLeft = date.setMinutes(date.getMinutes() + 20);
+        settings["messaged"] = false
     }
-    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status, timeLeft: timeLeft } }, { new: true })
+    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: settings }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address profile" })
         .exec(async (err, data) => {
             if (err) {
@@ -347,3 +347,5 @@ module.exports.getNotificationCount = (req, res) => {
         res.status(200).json(docs)
     })
 }
+
+
