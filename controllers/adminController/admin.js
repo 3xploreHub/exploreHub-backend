@@ -103,7 +103,22 @@ module.exports.getAllBookings = (req, res) => {
                     //         result.push(formattedObject)
                     //     });
                     // }
+ 
+                    bookings = bookings.map(booking => {
+                        if(booking._doc.status == "Processing") {
+                            const currentTime = new Date();
+                            const remainingTime = booking._doc.timeLeft - currentTime;
+                            
+                            if (remainingTime > 0) {
+                                const timeLeft = (remainingTime / 1000).toFixed()
+                                booking._doc.timeLeft = timeLeft;
+                            } else {
+                                booking._doc.timeLeft = null
+                            }
 
+                        }
+                        return booking
+                    })
                     res.status(200).json(bookings);
                     // res.status(200).json(result);
                 } catch (error) {
@@ -173,7 +188,12 @@ module.exports.setBookingStatus = async (req, res) => {
             })
         })
     }
-    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status } }, { new: true })
+    let timeLeft = 0;
+    if (req.body.status == "Processing") {
+        const date = new Date();
+        timeLeft = date.setMinutes(date.getMinutes() + 20);
+    }
+    booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: { status: req.body.status, timeLeft: timeLeft } }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address profile" })
         .exec(async (err, data) => {
             if (err) {
