@@ -280,7 +280,7 @@ module.exports.getConvoForPageSubmission = (req, res) => {
 module.exports.createConvoForPageSubmission = (req, res) => {
     const data = req.body
     const fullName = req.user && req.user.username && !req.user.fullName ? "Admin" : req.user.fullName
-    const firstMessage = new messageModel({ sender: req.user._id, senderFullName: fullName, message: data.message })
+    const firstMessage = new messageModel({ sender: req.user._id,withMedia: data.withMedia? true: false, senderFullName: fullName, message: data.message })
     const message = new conversation({
         booking: data.booking,
         page: data.page,
