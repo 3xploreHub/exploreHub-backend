@@ -84,7 +84,28 @@ module.exports.createConversation = (req, res) => {
     message.save().then(async (message) => {
         try {
             data.notificationData["conversation"] = message._id
-            await helper.createNotification(data.notificationData)
+            
+            if (req.body.booking && req.body.fromAdmin) {
+                const doc  = await booking.findById(req.body.booking)
+                const currentTime = new Date();
+                let remainingTime = 0
+                if (doc.timeLeft) {
+                    remainingTime = doc.timeLeft - currentTime;
+                }
+                
+                let settings = { messaged: true }
+                
+                if (doc.status == "Pending" && remainingTime <= 0 || doc.status == "Pending" && !doc.messaged) {
+                    settings["timeLeft"] = currentTime.setMinutes(currentTime.getMinutes() + 10)
+                }
+                booking.findByIdAndUpdate(req.body.booking, { $set: settings }, async function (error, result) {
+                    if (error) return res.status(500).json(error.message)
+                    await helper.createNotification(data.notificationData)
+                })
+            } else {
+                await helper.createNotification(data.notificationData)
+            }
+                
         } catch (error) {
         }
         res.status(200).json(message);
@@ -125,38 +146,54 @@ module.exports.sendMessage = (req, res) => {
                     if (doc.status == "Pending" && req.body.forAdmin && doc.messaged) {
                         booking.updateOne({ _id: mongoose.Types.ObjectId(req.body.notificationData.booking) }, { $set: { messaged: false, timeLeft: 0 } }, function (error, result) {
                             if (error) return res.status(500).json(error.message)
+                            updateConversation(req, res)
                         })
                     }
-
-                    if (req.body.fromAdmin) {
+                    else if (req.body.fromAdmin) {
+                        const currentTime = new Date();
+                        let remainingTime = 0
                         if (doc.timeLeft) {
-                            const currentTime = new Date();
-                            const remainingTime = doc.timeLeft - currentTime;
-                            let settings = { messaged: true }
-
-                            if (doc.status == "Pending" && doc.timeLeft && remainingTime <= 0) {
-                                settings["timeLeft"] = currentTime.setMinutes(currentTime.getMinutes() + 10);
-                            }
-                            booking.findByIdAndUpdate(req.body.notificationData.booking, { $set: settings }, function (error, result) {
-                                if (error) return res.status(500).json(error.message)
-                            })
+                            remainingTime = doc.timeLeft - currentTime;
                         }
+
+                        let settings = { messaged: true }
+
+                        if (doc.status == "Pending" && remainingTime <= 0 || doc.status == "Pending" && !doc.messaged) {
+                            settings["timeLeft"] = currentTime.setMinutes(currentTime.getMinutes() + 10)
+                        }
+                        booking.findByIdAndUpdate(req.body.notificationData.booking, { $set: settings }, function (error, result) {
+                            if (error) return res.status(500).json(error.message)
+                            updateConversation(req, res)
+                        })
+                    } else {
+                        updateConversation(req, res)
                     }
                 })
+            } else {
+                updateConversation(req, res)
+
             }
 
 
-            req.body.notificationData["conversation"] = req.body.conversationId
-            if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
-            conversation.findOneAndUpdate({ "_id": mongoose.Types.ObjectId(req.body.conversationId) }, {
-                $set: {
-                    viewedBy: [mongoose.Types.ObjectId(req.user._id)]
-                }
-            }, function (error, convo) {
-                if (error) return res.status(500).json(error.message);
-                res.status(200).json(convo);
-            })
         })
+}
+
+async function updateConversation(req, res) {
+    try {
+
+        req.body.notificationData["conversation"] = req.body.conversationId
+        if (req.body.notificationData) await helper.createNotification(req.body.notificationData)
+        conversation.findOneAndUpdate({ "_id": mongoose.Types.ObjectId(req.body.conversationId) }, {
+            $set: {
+                viewedBy: [mongoose.Types.ObjectId(req.user._id)]
+            }
+        }, function (error, convo) {
+            if (error) return res.status(500).json(error.message);
+            res.status(200).json(convo);
+        })
+    } catch (erro) {
+        res.status(500).json(erro.message)
+    }
 }
 
 module.exports.changePageStatus = (req, res) => {
@@ -166,7 +203,7 @@ module.exports.changePageStatus = (req, res) => {
         $set: {
             status: req.body.status
         }
-    }, function (error, response) { 
+    }, function (error, response) {
         if (error) {
             return res.status(500).json(error.message)
         }

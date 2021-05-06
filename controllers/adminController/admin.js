@@ -187,11 +187,10 @@ module.exports.setBookingStatus = async (req, res) => {
             })
         })
     }
-    let settings = { status: req.body.status, timeLeft: 0 }
+    let settings = { status: req.body.status, timeLeft: 0, messaged: false }
     if (req.body.status == "Processing") {
         const date = new Date();
         settings.timeLeft = date.setMinutes(date.getMinutes() + 20);
-        settings["messaged"] = false
     }
     booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: settings }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address profile" })
@@ -202,13 +201,6 @@ module.exports.setBookingStatus = async (req, res) => {
             }
             try {
 
-
-                // const notifForProvider = helper. ({
-                //     receiver: req.body.serviceProviderReceiver,
-                //     booking: req.body.bookingId,
-                //     type: "page-booking",
-                //     message: req.body.messageForServiceProvider
-                // })
                 console.log("ADMIN ID:", req.user)
                 helper.createNotification({
                     receiver: req.body.serviceProviderReceiver,
@@ -218,14 +210,6 @@ module.exports.setBookingStatus = async (req, res) => {
                     type: "booking-provider",
                     message: req.body.messageForServiceProvider
                 })
-
-                // const notifForTourist = new notification({
-                //     receiver: req.body.touristReceiver,
-                //     booking: req.body.bookingId,
-                //     type: "booking",
-                //     message: req.body.messageForTourist
-                // })
-
                 helper.createNotification({
                     receiver: req.body.touristReceiver,
                     mainReceiver: req.body.mainReceiver,

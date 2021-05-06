@@ -232,10 +232,13 @@ module.exports.submitBooking = async (req, res) => {
             })
         }
         const status = req.body.isManual ? "Booked" : "Pending"
+        const currentTime = new Date();
+        const timeLeft = currentTime.setMinutes(currentTime.getMinutes() - 30)
         booking.findOneAndUpdate({ _id: req.params.bookingId },
             {
                 $set: {
-                    status: status
+                    status: status,
+                    timeLeft: timeLeft
                 }
             }).then((booking, error) => {
                 if (error) {
