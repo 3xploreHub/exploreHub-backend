@@ -23,7 +23,8 @@ module.exports = async (req, res) => {
     if (!userAddProfile) {
       return res.status(404).json({ message: "Failed to delete profile!" });
     }
-    res.status(200).json(userAddProfile);
+    const token = await Account.generateJwt(userAddProfile, userTokenType.accountAccess);
+    res.status(200).json({token: token, user: userAddProfile});
   } catch (error) {
     console.error("error in getting user information: ", error);    
     res.status(400).json(error.message);
