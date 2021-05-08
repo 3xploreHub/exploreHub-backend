@@ -42,7 +42,8 @@ const Accountchema = new Schema(
     fullName: { type: String, required: false, trim: true },
     gender: { type: String, required: false },
     age: { type: Number, required: false },
-    profile: { type: String, required: false }
+    profile: { type: String, required: false },
+    birthday: { type: String, required: false},
   },
   { timestamps: true }
 );
@@ -66,7 +67,7 @@ Accountchema.statics.checkEmail = async function (value) {
 Accountchema.statics.getUserInfo = async function (id) {
   return this.findOne(
     { _id: id },
-    "accountType fullName email contactNumber age gender address",
+    "accountType fullName firstName lastName middleName email contactNumber age gender address birthday password profile",
     function (err, accountInfo) {
       if (err) {
         return err;
@@ -75,6 +76,33 @@ Accountchema.statics.getUserInfo = async function (id) {
     }
   );
 };
+
+Accountchema.statics.updateUserInfo = async function (id, data) {
+  const firstName = data.firstName[0].toUpperCase() + data.firstName.substring(1)
+  const lastName = data.lastName[0].toUpperCase() + data.lastName.substring(1)
+  data['fullName'] = firstName + " " + lastName
+  return await this.findByIdAndUpdate(
+    id, 
+    data,
+    { upsert: true },
+    function (err, doc) {
+      if(err) return err;
+      return doc;
+    }
+  )
+}
+
+Accountchema.statics.addProfile = function (id, profile) {
+  return this.findByIdAndUpdate(
+    id,
+    { $set: { profile: profile } },
+    { upsert: true },
+    function (err, doc) {
+      if (err) return err;
+      return doc;
+    }
+  );
+}
 
 Accountchema.statics.changePassword = async function (id, password) {
   return await this.findByIdAndUpdate(
@@ -103,6 +131,7 @@ Accountchema.statics.generateJwt = async function (user, type) {
         fullName: user.fullName,
         accountType: user.accountType,
         gender: user.gender,
+        profile: user.profile,
         type: type,
       },
       MY_SECRET

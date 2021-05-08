@@ -30,7 +30,7 @@ module.exports.getOnlinePages = async (req, res) => {
                 status: 'Online', pageType: { $ne: "service" },
             },
             {
-                status: 'Not Operating',
+                status: 'Not Operating', pageType: { $ne: "service" },
             }
         ]
     }
@@ -51,6 +51,7 @@ module.exports.getOnlinePages = async (req, res) => {
 module.exports.viewPage = (req, res) => {
     Page.findOne({ _id: req.params.pageId })
         .populate({ path: "services.data", model: "Item" })
+        .populate({ path: "creator", model: "Account" })
         .populate({ path: "otherServices", model: "Page", match: { status: "Online" } })
         .populate({ path: "hostTouristSpot", model: "Page" })
         .exec((error, page) => {

@@ -47,11 +47,11 @@ const server = app.listen(port, () => {
 
 let io = require('socket.io')(server, {
   cors: {
-    origin: ["http://localhost:4200", "http://localhost:63997"],
+    origin: ["http://localhost:4200", "http://localhost:60688"],
     methods: ["GET", "POST"]
   }
 });
-
+ 
 io.on('connection', (socket) => {
 
       socket.on('notify', (data) => {
