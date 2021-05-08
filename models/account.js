@@ -61,7 +61,7 @@ Accountchema.statics.checkContactNumber = async function (value) {
 };
 
 Accountchema.statics.checkEmail = async function (value) {
-  return await this.findOne({ email: value });
+  return await this.findOne({ email: value.toUpperCase() });
 };
 
 Accountchema.statics.getUserInfo = async function (id) {
