@@ -42,6 +42,6 @@ module.exports = async (req, res, next) => {
     }
   } catch (err) {
     console.error("error in requesting verifiction code: ", err);
-    res.status(500).json({ message: "Unexpecter error occured!", error: err });
+    res.status(500).json({ message: "Unexpecter error occured!", error: err.message });
   }
 };

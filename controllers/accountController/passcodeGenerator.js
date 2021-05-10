@@ -1,5 +1,6 @@
 const verificationCode = require("../../models/VerificationCode");
 const sendMessage = require("../../Helpers/sendMessage");
+const userTokenType = require("./userTokenType");
 
 module.exports = async (User, sentTo, purpose, mediumInSending) => {
   return new Promise(async (resolve, reject) => {
@@ -32,8 +33,10 @@ module.exports = async (User, sentTo, purpose, mediumInSending) => {
 
         await newCode.save();
         console.error(newCode);
+        const message = purpose == userTokenType.passwordReset? `Your password reset code: ${code}, sent by ExploreHub. `:
+          `Your account verification code: ${code}, sent by ExploreHub. `
 
-        const sent = await sendMessage("Account-password-reset", sentTo, code);
+        const sent = await sendMessage("Account_verification", sentTo, message);
 
         if (!sent) {
           resolve({ type: "sending_failed" });

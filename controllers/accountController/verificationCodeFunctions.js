@@ -76,6 +76,6 @@ module.exports.checkCode = async (req, res) => {
     }
   } catch (err) {
     console.error("error in verification codes functions: ", err);
-    res.status(500).json(err);
+    res.status(500).json(err.message);
   }
 };

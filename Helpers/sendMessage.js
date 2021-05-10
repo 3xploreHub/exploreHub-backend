@@ -9,22 +9,22 @@ module.exports = (sender, number, message) => {
       });
 
       const from = "Rivas";
-      const to = Number(number);
+      const to = parseInt(number);
       const text = message;
 
-      // nexmo.message.sendSms(from, to, text, (err, responseData) => {
-      //   if (err) {
-      //     console.log(err);
-      //   } else {
-      //     if (responseData.messages[0]['status'] === "0") {
-      //       resolve(true)
-      //       console.log("Message sent successfully.");
-      //     } else {
-      //       resolve(false)
-      //       console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
-      //     }
-      //   }
-      // })
+      nexmo.message.sendSms(from, to, text, (err, responseData) => {
+        if (err) {
+          console.log(err);
+        } else {
+          if (responseData.messages[0]['status'] === "0") {
+            resolve(true)
+            console.log("Message sent successfully.");
+          } else {
+            resolve(false)
+            console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+          }
+        }
+      })
       resolve(true);
     } catch (err) {
       console.error("error in sending sms: ", err);

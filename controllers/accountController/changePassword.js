@@ -39,6 +39,6 @@ module.exports = async (req, res) => {
     res.status(200).json({ token: token });
   } catch (error) {
     console.error("error in changing the passwword: ", error);
-    res.status(500).json(error);
+    res.status(500).json(error.message);
   }
 };

@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const adminAccount = new Schema({
         username: {
             type: String,
-            required: false
+            required: true
         },
         password: {
             type: String,

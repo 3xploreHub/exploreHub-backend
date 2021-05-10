@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const Component = new Schema({
   type: { type: String, required: [true, "Component type is required"] },
-  styles: { type: Array, required: false },
+  styles: { type: Array, required: false, default: []},
   data: { type: Object, required: [true, "Component data is required"] },
   default: { type: Boolean, required: false, default: false }
 });

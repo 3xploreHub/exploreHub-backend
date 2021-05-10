@@ -14,7 +14,7 @@ async function addTouristSpotCategory(req, res) {
     if (!req.continue) {
       res.status(200).json(newCategory.data);
     } else {
-      return true;
+      return newCategory.data;
     }
   } catch (error) {
     if (error.type == "validation_error") {
@@ -24,10 +24,11 @@ async function addTouristSpotCategory(req, res) {
       });
 
     } else {
+      console.log(error)
       return res.status(400).json({
         type: "internal_error",
         message: "an error occured!",
-        error: error,
+        error: error.message,
       });
     }
   }
