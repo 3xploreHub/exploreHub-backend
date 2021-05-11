@@ -8,13 +8,15 @@ const serviceCategoriesCrud = require("./serviceCategories");
 const { serviceModel } = require("../../models/service");
 const { Item } = require("../../models/item");
 const Page = require("../../models/page");
+const account = require("../../models/account");
+const bcrypt = require("bcryptjs");
 
 module.exports.addComponent = (req, res) => {
   // const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
   helper.addNewComponent(Page, req.body, req.params.id, res, 'components');
 }
 
-function makeDefaultItem(serviceId="", pageId="") {
+function makeDefaultItem(serviceId = "", pageId = "") {
   const servicePhoto = new ComponentModel({ type: "photo", data: [], styles: [], default: false })
   const name = new ComponentModel({ type: "text", data: { placeholder: "Enter item's name", text: null, defaultName: "name" }, styles: ["bg-light", "text-left", "font-small", "fontStyle-bold", "color-dark"], default: true })
   const quantity = new ComponentModel({ type: "labelled-text", data: { label: "Quantity", text: "1", defaultName: 'quantity' }, styles: [], default: true })
@@ -29,19 +31,19 @@ module.exports.addServiceComponent = async (req, res) => {
 
     const serviceInfoDefault = new Item({ type: "text", serviceId: data._id, pageId: req.params.id, data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const defaultComponent = makeDefaultItem(data._id, req.params.id);
-    
+
     data.data = [serviceInfoDefault._id, defaultComponent._id];
     await serviceInfoDefault.save();
     await defaultComponent.save();
     Page.findByIdAndUpdate(
       req.params.id,
-      { $push: {services: data }},
+      { $push: { services: data } },
       { upsert: true },
       function (err, result) {
         if (err) {
           return res.status(500).json({
             type: "internal_error",
-            error: err,
+            error: err.message,
           });
         }
         const itemList = new ComponentModel(req.body);
@@ -97,7 +99,7 @@ module.exports.addServiceChildComponent = async (req, res) => {
       },
       function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(validComponent);
       })
@@ -131,7 +133,7 @@ module.exports.addItemChildComponentImage = (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json(err)
+          return res.status(500).json(err.message)
         }
         res.status(200).json(newImage);
       })
@@ -163,7 +165,7 @@ module.exports.editChildComponent = async (req, res) => {
           ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -174,40 +176,40 @@ module.exports.editChildComponent = async (req, res) => {
   }
 }
 
-module.exports.deleteChildComponent = (req, res) => { 
-    Page.updateOne({ "_id": req.params.parentId },
-      {
-        $pull: {
-          "services.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.componentId) },
-        }
-      },
-      {
-        "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }]
-      }, function (err, response) {
-        if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
-        }
-        res.status(200).json(response);
-      })
+module.exports.deleteChildComponent = (req, res) => {
+  Page.updateOne({ "_id": req.params.parentId },
+    {
+      $pull: {
+        "services.$[parent].data": { "_id": mongoose.Types.ObjectId(req.params.componentId) },
+      }
+    },
+    {
+      "arrayFilters": [{ "parent._id": mongoose.Types.ObjectId(req.params.serviceId) }]
+    }, function (err, response) {
+      if (err) {
+        return res.status(500).json({ type: "internal error", error: err.message })
+      }
+      res.status(200).json(response);
+    })
 }
 
 module.exports.deleteItemChild = (req, res) => {
-    Item.updateOne({ "_id": req.params.parentId },
-      {
-        $pull: {
-          "data": { "_id": mongoose.Types.ObjectId(req.params.childId) },
-        }
-      },function (err, response) {
-        if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
-        }
-        if (req.body.images) {
-          req.body.images.forEach(image => {
-            helper.deletePhoto(image)
-          });
-        }
-        res.status(200).json(response);
-      })
+  Item.updateOne({ "_id": req.params.parentId },
+    {
+      $pull: {
+        "data": { "_id": mongoose.Types.ObjectId(req.params.childId) },
+      }
+    }, function (err, response) {
+      if (err) {
+        return res.status(500).json({ type: "internal error", error: err.message })
+      }
+      if (req.body.images) {
+        req.body.images.forEach(image => {
+          helper.deletePhoto(image)
+        });
+      }
+      res.status(200).json(response);
+    })
 }
 
 
@@ -217,7 +219,7 @@ module.exports.deleteItem = async (req, res) => {
     // const Pages = req.params.pageType == "service" ? servicePage : touristSpotPage
     let images = [];
 
-    const item = await Item.findOneAndRemove({_id: req.params.itemId})
+    const item = await Item.findOneAndRemove({ _id: req.params.itemId })
     if (item.data && item.type == "item" && item.data.length > 0) {
       images = helper.getItemImages(item)
     }
@@ -234,7 +236,7 @@ module.exports.deleteItem = async (req, res) => {
         ]
       }, function (err, response) {
         if (err) {
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         console.log(images);
         images.forEach(image => {
@@ -265,7 +267,7 @@ module.exports.editServiceInfo = async (req, res) => {
         console.log("yehe: ", response)
         if (err) {
           console.log(err);
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         res.status(200).json(response);
       })
@@ -321,9 +323,9 @@ module.exports.getItemUpdatedData = async (req, res) => {
 }
 
 module.exports.getUpdatedItemListData = (req, res) => {
-  Item.find({serviceId: req.params.serviceId}).then((data, err) => {
+  Item.find({ serviceId: req.params.serviceId }).then((data, err) => {
     if (err) {
-      return res.status(500).json({ type: "internal_error", error: err })
+      return res.status(500).json({ type: "internal_error", error: err.message })
     }
     res.status(200).json(data);
   })
@@ -358,16 +360,16 @@ module.exports.deleteServiceComponent = async (req, res) => {
     // helper.deleteItem(Pages,
     //   { _id: req.params.pageId },
     //   { 'services': { '_id': req.params.serviceId } }, res, images)
-    const items = await Item.find({serviceId: req.params.serviceId})
+    const items = await Item.find({ serviceId: req.params.serviceId })
 
-    const deletedItems = await Item.deleteMany({serviceId: req.params.serviceId})
+    const deletedItems = await Item.deleteMany({ serviceId: req.params.serviceId })
     console.log("result: ", deletedItems);
 
     Page.findOneAndUpdate({ _id: req.params.pageId }, {
       $pull: { 'services': { '_id': req.params.serviceId } }
     }, function (err, result) {
       if (err) {
-        return res.status(500).json({ type: "internal_error", error: err });
+        return res.status(500).json({ type: "internal_error", error: err.message });
       }
       res.status(200).json(result);
     })
@@ -401,7 +403,7 @@ module.exports.deleteItemImage = (req, res) => {
       }, function (err, response) {
         if (err) {
           console.log(err)
-          return res.status(500).json({ type: "internal error", error: err })
+          return res.status(500).json({ type: "internal error", error: err.message })
         }
         helper.deletePhoto(req.body.imageUrl)
         res.status(200).json(response);
@@ -417,6 +419,7 @@ module.exports.createPage = async (req, res) => {
   const hostTouristSpot = req.params.pageType == 'service' ? req.body : null;
   const isService = req.params.pageType == 'service';
   const inputNameLabel = req.params.pageType == 'service' ? "Enter service name here" : "Enter tourist spot name here";
+  // const initialStatus = req.params.pageType == "tourist_spot" ? "Approved" : "Pending"
   makePage(req, res, inputNameLabel, isService, hostTouristSpot, req.params.pageType)
 }
 
@@ -435,14 +438,13 @@ module.exports.getDefaultCategories = async (req, res) => {
 async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, pageType) {
   try {
 
-
     //default components for services and offers
-    let defaultService = new serviceModel({ type: "item-list",data: [], styles: [], default: false })
+    let defaultService = new serviceModel({ type: "item-list", data: [], styles: [], default: false })
 
-    const serviceInfoDefault = new Item({ type: "text", serviceId: defaultService._id, data: { placeholder: "Enter service name or other info here", text: null,defaultName: "name" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
+    const serviceInfoDefault = new Item({ type: "text", serviceId: defaultService._id, data: { placeholder: "Enter service name or other info here", text: null, defaultName: "name" }, styles: ["bg-light", "text-center", "font-medium", "fontStyle-bold", "color-dark"], default: true })
     const item = makeDefaultItem();
     item.serviceId = defaultService._id;
-    
+
     defaultService.data = [serviceInfoDefault._id, item._id]
 
 
@@ -464,17 +466,17 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
 
 
     const defaultComponents = [photo, pageName, barangay, municipality, province, category, description];
-    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, services: defaultService, bookingInfo: [arrival, departure, adults, children] });
+    const page = new Page({ creator: req.user._id, pageType: pageType, components: defaultComponents, initialStatus: "Approved", services: defaultService, bookingInfo: [arrival, departure, adults, children] });
     item.pageId = page._id;
     serviceInfoDefault["pageId"] = page._id;
     await item.save()
     await serviceInfoDefault.save();
     if (service) {
       page['hostTouristSpot'] = hostTouristSpot._id;
-      Page.updateOne({_id: hostTouristSpot._id}, {$push: {otherServices: page._id}}).then((result, error) => {
+      Page.updateOne({ _id: hostTouristSpot._id }, { $push: { otherServices: page._id } }).then((result, error) => {
         if (error) {
           console.log(error)
-          return res.status(500).json(error);
+          return res.status(500).json(error.message);
         }
       })
     }
@@ -483,79 +485,124 @@ async function makePage(req, res, pageNameInputLabel, service, hostTouristSpot, 
         return res.status(500).json({
           type: "internal_error",
           message: "Unexpected error occured!",
-          error: error
+          error: error.message
         })
       }
       res.status(200).json(createdPage)
     })
   } catch (error) {
     console.log(error)
-    res.status(500).json(error);
+    res.status(500).json(error.message);
   }
 }
 
 module.exports.deletePage = async (req, res) => {
   try {
-    // let Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-    const page = await Page.findById(req.params.pageId);
-    let images = [];
-    if (!page) {
-      res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
+    if (req.body.password && req.body.requiredPassword) {
+      console.log("he 12");
+      const user = await account.findById(req.user._id)
+      if (!bcrypt.compareSync(req.body.password, user.password)) {
+        return res.status(400).json({ type: "incorrect_password" });
+      }
+    } if (req.body.requiredPassword && !req.body.password) {
+      console.log("he 34234")
+      return res.status(400).json({ type: "incorrent_password" })
+    } else {
+      Page.findByIdAndRemove(req.params.pageId).then((page, error) => {
+        if (error) {
+          return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
+        }
+
+        if (!page) {
+          return res.status(404).json({ type: "not_found", error: "Tourist spot page not found!" })
+        }
+        let images = [];
+
+        page.components.forEach(comp => {
+          if (comp.type == "photo") {
+            comp.data.forEach(img => {
+              images.push(img.url);
+            })
+          }
+        })
+
+        page.services.forEach(item => {
+          let imgs = helper.getImages(item);
+          if (imgs.length) {
+            images = [...images, ...imgs];
+          }
+        })
+
+
+        if (page) {
+          console.log("HERE")
+          
+          images.forEach(image => {
+            let img = image.split("/");
+            deleteImage(img[img.length - 1]);
+          })
+
+          if (req.body.otherServices && req.body.otherServices.length > 0) {
+            let address = page.components.map(com => {
+              const dName = com.data.defaultName
+              if (dName == "barangay" || dName == "municipality" || dName == "province") {
+                return com.data.text
+              }
+            })
+            console.log("address: ", address)
+            address = address.filter(data => data)
+
+            let name = page.components.filter(com => com.data.defaultName == "pageName")
+
+            const pageName = new ComponentModel({ type: "text", data: { placeholder: "", text: name.length > 0? name[0].data.text: "Untitled Page", defaultName: 'pageName' }, styles: [], default: true })
+            const location = new ComponentModel({type: "text", data: {text: address.join(", "), defaultName:"location"}})
+            const defaultComponents = [pageName, location];
+            const services = req.body.otherServices.map(service => service._id)
+            const serviceGroup = new Page({ creator: req.user._id, pageType: "service_group", otherServices: services, components: defaultComponents, status:"Online" ,initialStatus: "Approved", services: [], bookingInfo: [] });
+            serviceGroup.save().then((result, error) => {
+              if (error) {
+                console.log(error)
+                return res.status(500).json(error.message)
+              }
+              console.log(page)
+              return res.status(200).json({ message: "successfully deleted", result: page })
+            })
+          } 
+          return res.status(200).json({ message: "successfully deleted", result: page })
+        }
+      })
     }
-    page.components.forEach(comp => {
-      if (comp.type == "photo") {
-        comp.data.forEach(img => {
-          images.push(img.url);
-        })
-      }
-    })
-    page.services.forEach(item => {
-      let imgs = helper.getImages(item);
-      if (imgs.length) {
-        images = [...images, ...imgs];
-      }
-    })
-    Page.findByIdAndRemove(req.params.pageId).then((result, error) => {
-      if (error) {
-        return res.status(500).json({ type: "internal_error", message: "Error occured in deleting tourit spot page!" })
-      }
-      if (result) {
-        images.forEach(image => {
-          let img = image.split("/");
-          deleteImage(img[img.length - 1]);
-        })
-        return res.status(200).json({ message: "successfully deleted", result: result })
-      }
-    })
   } catch (error) {
-    res.status(500).json(error)
+    console.log(error)
+    res.status(500).json(error.message)
   }
 }
 
 module.exports.retrievePage = (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
   Page.findOne({ _id: req.params.pageId })
-  .populate({ path: "services.data", model: "Item" })
-  .exec((error, page) => {
-    if (error) {
-      return res.status(500).json({
-        type: "internal_error",
-        message: "unexpected error occured!",
-        error: error
-      });
-    }
-    if (!page) {
-      return res.status(404).json({ type: "not_found" })
-    }
-    res.status(200).json(page);
-  })
+    .populate({ path: "services.data", model: "Item" })
+    .populate({ path: "hostTouristSpot", model: "Page" })
+    .exec((error, page) => {
+      if (error) {
+        return res.status(500).json({
+          type: "internal_error",
+          message: "unexpected error occured!",
+          error: error.message
+        });
+      }
+      if (!page) {
+        return res.status(404).json({ type: "not_found" })
+      }
+      res.status(200).json(page);
+    })
 }
 
 module.exports.retrieveAllTouristSpotsPage = async (req, res) => {
   // const Pages = req.params.pageType == 'service' ? servicePage : touristSpotPage;
-  Page.find({ status: 'Online' }).then((pages, error) => {
+  Page.find({ status: 'Online', pageType: "tourist_spot" }).then((pages, error) => {
     if (error) {
-      return res.status(500).json(error);
+      return res.status(500).json(error.message);
     }
     res.status(200).json(pages)
   })
@@ -568,10 +615,35 @@ module.exports.submitPage = async (req, res) => {
       $set: {
         status: 'Pending',
       }
-    }, function (err, response) {
+    }, async function (err, response) {
       if (err) {
-        return res.status(500).json({ type: "internal error", error: err })
+        return res.status(500).json({ type: "internal error", error: err.message })
       }
-      res.status(200).json({ message: "Page successfully submitted" });
+      try {
+        console.log("notificationDAta: ", req.body.notificationData);
+        if (req.body.notificationData) {
+          await helper.createNotification(req.body.notificationData)
+        }
+        res.status(200).json({ message: "Page successfully submitted" });
+
+      } catch (error) {
+        console.log(error)
+        return res.status(500).json(error.message)
+      }
+    })
+}
+
+
+module.exports.editServiceSettings = (req, res) => {
+  Page.updateOne(
+    { "_id": req.body.pageId, "services._id": req.body.serviceId },
+    { $set: { "services.$.required": req.body.required,
+     "services.$.selectMultiple": req.body.selectMultiple,
+     "services.$.inputQuantity": req.body.inputQuantity
+     } })
+    .then(result => {
+      res.status(200).json(result);
+    }).catch(error => {
+      res.status(500).json({ type: 'internal_error!', error: error.message });
     })
 }

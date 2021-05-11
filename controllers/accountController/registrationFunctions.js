@@ -93,6 +93,7 @@ module.exports.addAccountInformation = async (req, res) => {
           firstName: data.firstName,
           lastName: data.lastName,
           fullName: fullname,
+          birthday: data.birthday,
           age: data.age,
           address: data.address,
           gender: data.gender,
