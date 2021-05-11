@@ -1,8 +1,6 @@
 const Account = require("../../models/account");
 const VerificationCode = require("../../models/verificationCode");
 
-//host/api/account/getUserInformation
-//getting user information
 module.exports = async (req, res) => {
   try {
     await VerificationCode.deleteMany({ expiryDate: { $lt: new Date() } });
