@@ -8,7 +8,7 @@ const morgan = require("morgan");
 require("dotenv").config();
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(dbConfig.local_db, {
+mongoose.connect(dbConfig.online_db, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
@@ -16,7 +16,7 @@ mongoose.connect(dbConfig.local_db, {
 
 var db = mongoose.connection;
 db.on("connected", () => {
-    console.log("connected to database" + dbConfig.local_db);
+    console.log("connected to database" + dbConfig.online_db);
 });
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
@@ -39,7 +39,10 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 
 app.use("/api", require("./router/mainRouter"));
 
-const port = process.env.PORT || 3000;
+let port = process.env.PORT || 3000;
+if (port == null || port == "") {
+    port = 3000;
+  }
 
 const server = app.listen(port, () => {
     console.log(`App is listening on port ${port}`);
