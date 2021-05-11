@@ -14,6 +14,7 @@ const serviceCategory = require('../../models/serviceCategory');
 const { addServiceCategory } = require('../serviceProviderController/serviceCategories');
 const page = require('../../models/page');
 const MY_SECRET = process.env.MY_SECRET;
+
 function createToken(user) {
     return jwt.sign({ _id: user.id, username: user.username }, MY_SECRET, {
         expiresIn: "12h" // 86400 expires in 24 hours
@@ -69,6 +70,7 @@ module.exports.getAllBookings = (req, res) => {
                 return res.status(500).json(error.message);
             } else {
                 try {
+
 
                     // // start get booking Info
                     // let result = []; // initialize result
@@ -171,7 +173,10 @@ module.exports.getAllPendingNotifications = (req, res) => {
     //     })
 }
 
-module.exports.setBookingStatus = async (req, res) => {
+
+
+module.exports.setBookingStatus = async(req, res) => {
+
 
     if (req.body.servicesToUpdate) {
         req.body.servicesToUpdate.forEach(service => {
@@ -179,7 +184,7 @@ module.exports.setBookingStatus = async (req, res) => {
                 _id: mongoose.Types.ObjectId(service._id)
             }, {
                 $set: service.bookingData
-            }, function (error, result) {
+            }, function(error, result) {
                 if (error) {
                     console.log(error)
                     return res.status(500).json(error.message);
@@ -195,11 +200,13 @@ module.exports.setBookingStatus = async (req, res) => {
     booking.findByIdAndUpdate({ _id: req.body.bookingId }, { $set: settings }, { new: true })
         .populate({ path: "tourist", model: "Account", select: "firstName lastName address profile" })
         .exec(async (err, data) => {
+
             if (err) {
                 console.log(err)
                 res.status(500).json({ error: err.message })
             }
             try {
+
 
                 console.log("ADMIN ID:", req.user)
                 helper.createNotification({
@@ -210,6 +217,7 @@ module.exports.setBookingStatus = async (req, res) => {
                     type: "booking-provider",
                     message: req.body.messageForServiceProvider
                 })
+
                 helper.createNotification({
                     receiver: req.body.touristReceiver,
                     mainReceiver: req.body.mainReceiver,
@@ -221,6 +229,7 @@ module.exports.setBookingStatus = async (req, res) => {
 
                 booking.findOne({ _id: req.body.bookingId })
                     .populate({ path: "tourist", model: "Account", select: "firstName lastName profile" })
+
                     .populate({ path: "pageId", model: "Page" })
                     .populate({ path: "selectedServices.service", model: "Item" })
                     .exec((error, bookingData) => {
@@ -331,5 +340,3 @@ module.exports.getNotificationCount = (req, res) => {
         res.status(200).json(docs)
     })
 }
-
-
