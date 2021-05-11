@@ -26,26 +26,27 @@ const formatComponentArray = (arr) => {
     if (!Array.isArray(arr)) {
         return
     }
-
     let item = {
             name: '',
             image: '',
             location: '',
             type: '',
-            category: ''
+            category: '',
+            description: '',
         }
         // let result = [];
     arr.forEach(({ _doc }) => {
 
         if (_doc.type == 'photo') {
-
             return item.image = _doc.data[0].url;
         }
-
         let { defaultName, text } = _doc.data
 
         if (defaultName == 'pageName') {
             return item.name = text;
+        }
+        if (defaultName == 'description') {
+            return item.description = text;
         }
 
         if (['barangay', 'municipality', 'province'].includes(defaultName)) {
@@ -55,11 +56,9 @@ const formatComponentArray = (arr) => {
             }
             return item.location
         }
-
         if (defaultName == 'category') {
             return item.category = text
         }
-
         if (defaultName == 'type') {
             return item.type = text
         }
